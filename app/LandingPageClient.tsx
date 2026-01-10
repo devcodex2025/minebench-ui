@@ -47,18 +47,30 @@ export default function LandingPageClient() {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const { data, error } = await supabase
+                // Отримуємо статистику з бенчмарків
+                const { data: benchmarkData, error: benchmarkError } = await supabase
                     .from('benchmarks')
                     .select('id, device_uid');
 
-                if (error) throw error;
+                if (benchmarkError) throw benchmarkError;
 
-                if (data) {
-                    const uniqueMiners = new Set(data.map(item => item.device_uid).filter(Boolean));
+                // Отримуємо статистику завантажень
+                const { data: globalStats, error: statsError } = await supabase
+                    .from('global_stats')
+                    .select('total_downloads')
+                    .eq('id', 1)
+                    .single();
+
+                if (statsError) {
+                    console.error('Error fetching global stats:', statsError);
+                }
+
+                if (benchmarkData) {
+                    const uniqueMiners = new Set(benchmarkData.map(item => item.device_uid).filter(Boolean));
                     setStats({
-                        benchmarks: data.length,
+                        benchmarks: benchmarkData.length,
                         miners: uniqueMiners.size,
-                        downloads: uniqueMiners.size,
+                        downloads: globalStats?.total_downloads || 0,
                     });
                 }
             } catch (err) {
@@ -90,13 +102,11 @@ export default function LandingPageClient() {
                         </div>
 
                         <h1 className="text-6xl md:text-8xl lg:text-9xl font-bold tracking-tighter text-white mb-8 leading-none">
-                            MINE
-                            <br />
-                            <span className="text-gradient">BENCH</span>
+                            Mine<span className="text-gradient">Bench</span>
                         </h1>
 
                         <h2 className="text-2xl md:text-3xl font-bold text-zinc-400 mb-6 uppercase tracking-wide">
-                            Hardware Benchmarking Platform with Blockchain Rewards
+                            Hardware Benchmarking Platform with Blockchain<br/> Rewards
                         </h2>
 
                         <p className="text-lg md:text-xl text-zinc-500 max-w-3xl mx-auto mb-12 leading-relaxed">
@@ -124,8 +134,8 @@ export default function LandingPageClient() {
                         className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-20"
                     >
                         <Counter value={stats.downloads} label="Total Downloads" />
-                        <Counter value={stats.benchmarks} label="Benchmarks Run" />
-                        <Counter value={stats.miners} label="Active Devices" />
+                        <Counter value={stats.benchmarks} label="Benchmarks completed" />
+                        <Counter value={stats.miners} label="Unique Devices" />
                     </motion.div>
 
                     {/* What is Minebench Section */}

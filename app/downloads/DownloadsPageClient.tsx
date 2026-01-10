@@ -22,6 +22,18 @@ export default function DownloadsPageClient() {
     const [gpuRelease, setGpuRelease] = useState<Release | null>(null);
     const [loading, setLoading] = useState(true);
 
+    const handleDownloadClick = async (type: 'cpu' | 'gpu') => {
+        try {
+            await fetch('/api/increment-download', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type }),
+            });
+        } catch (error) {
+            console.error('Error tracking download:', error);
+        }
+    };
+
     useEffect(() => {
         const fetchReleases = async () => {
             setLoading(true);
@@ -130,6 +142,7 @@ export default function DownloadsPageClient() {
                             ) : cpuRelease && cpuRelease.url ? (
                                 <a
                                     href={cpuRelease.url}
+                                    onClick={() => handleDownloadClick('cpu')}
                                     className="inline-flex items-center gap-3 bg-white text-black px-6 py-3 hover:bg-yellow-400 transition-all font-bold uppercase tracking-wide text-sm"
                                 >
                                     <Download className="w-5 h-5" />
@@ -178,6 +191,7 @@ export default function DownloadsPageClient() {
                                 </div>
                             ) : gpuRelease && gpuRelease.url ? (
                                 <a
+                                    onClick={() => handleDownloadClick('gpu')}
                                     href={gpuRelease.url}
                                     className="inline-flex items-center gap-3 bg-white text-black px-6 py-3 hover:bg-yellow-400 transition-all font-bold uppercase tracking-wide text-sm"
                                 >
