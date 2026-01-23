@@ -2,7 +2,9 @@
 version: "2.0"
 services:
   service-1:
-    image: karbivskyi/minebench-ui:v0.1.2.9
+    image: karbivskyi/minebench-ui:v0.1.3.4
+    env:
+      - GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN}
     expose:
       - port: 3000
         as: 80
