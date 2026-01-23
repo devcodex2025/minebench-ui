@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Github } from 'lucide-react';
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -44,9 +43,6 @@ export default function Footer() {
           <div className="flex flex-col items-start md:items-end">
             <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-4">Community</h3>
             <div className="flex gap-4">
-              <a href="https://github.com/devcodex2025/MineBench-dApp" target="_blank" rel="noopener noreferrer" className="w-10 h-10 border border-zinc-800 hover:border-yellow-400 flex items-center justify-center transition-all group">
-                <Github className="w-5 h-5 text-zinc-500 group-hover:text-yellow-400 transition-colors" />
-              </a>
               <a href="https://discord.gg/vsDyYh4rma" target="_blank" rel="noopener noreferrer" className="w-10 h-10 border border-zinc-800 hover:border-yellow-400 flex items-center justify-center transition-all group">
                 <div className="relative w-5 h-5">
                   <Image src="/img/discord-icon.svg" alt="Discord" fill className="object-contain opacity-50 group-hover:opacity-100 transition-opacity" />

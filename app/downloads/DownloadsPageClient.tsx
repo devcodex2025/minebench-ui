@@ -38,43 +38,63 @@ export default function DownloadsPageClient() {
         const fetchReleases = async () => {
             setLoading(true);
             try {
-                const [cpuRes, gpuRes] = await Promise.all([
-                    fetch('https://api.github.com/repos/karbivskyi/MineBench-CPU-ZEPH/releases/latest', {
-                        headers: { "Accept": "application/vnd.github+json" }
-                    }),
-                    fetch('https://api.github.com/repos/karbivskyi/MineBench-GPU-RVN/releases/latest', {
-                        headers: { "Accept": "application/vnd.github+json" }
-                    })
-                ]);
-
-                if (!cpuRes.ok) throw new Error('Failed to fetch CPU release');
-                if (!gpuRes.ok) throw new Error('Failed to fetch GPU release');
-
-                const cpuData = await cpuRes.json();
-                const gpuData = await gpuRes.json();
+                // Fetch from our internal API which handles the GitHub token
+                const res = await fetch('/api/releases');
+                
+                if (!res.ok) throw new Error('Failed to fetch releases');
+                
+                const { cpu: cpuData, gpu: gpuData } = await res.json();
 
                 const getAsset = (data: any) =>
-                    data.assets.find((a: any) => a.name.endsWith(".zip")) ||
-                    data.assets.find((a: any) => a.name.endsWith(".exe"));
+                    data?.assets?.find((a: any) => a.name.endsWith(".zip")) ||
+                    data?.assets?.find((a: any) => a.name.endsWith(".exe"));
 
-                const cpuAsset = getAsset(cpuData);
-                const gpuAsset = getAsset(gpuData);
+                // Handle CPU Release
+                if (cpuData) {
+                    const cpuAsset = getAsset(cpuData);
+                    setCpuRelease({
+                        version: cpuData.tag_name,
+                        url: cpuAsset ? cpuAsset.browser_download_url : null,
+                        name: cpuAsset ? cpuAsset.name : null,
+                    });
+                } else {
+                    // Fallback if CPU data is missing but we want to show something
+                     setCpuRelease({
+                        version: "v0.1.3",
+                        url: "https://github.com/karbivskyi/MineBench-CPU-ZEPH/releases/latest",
+                        name: "MineBench-CPU-ZEPH.zip"
+                    });
+                }
 
-                setCpuRelease({
-                    version: cpuData.tag_name,
-                    url: cpuAsset ? cpuAsset.browser_download_url : null,
-                    name: cpuAsset ? cpuAsset.name : null,
-                });
-
-                setGpuRelease({
-                    version: gpuData.tag_name,
-                    url: gpuAsset ? gpuAsset.browser_download_url : null,
-                    name: gpuAsset ? gpuAsset.name : null,
-                });
+                // Handle GPU Release
+                if (gpuData) {
+                    const gpuAsset = getAsset(gpuData);
+                    setGpuRelease({
+                        version: gpuData.tag_name,
+                        url: gpuAsset ? gpuAsset.browser_download_url : null,
+                        name: gpuAsset ? gpuAsset.name : null,
+                    });
+                } else {
+                    // Fallback
+                     setGpuRelease({
+                        version: "v0.1.3",
+                        url: "https://github.com/karbivskyi/MineBench-GPU-RVN/releases/latest",
+                        name: "MineBench-GPU-RVN.zip"
+                    });
+                }
             } catch (err) {
                 console.error(err);
-                setCpuRelease(null);
-                setGpuRelease(null);
+                // Fallback for any error
+                setCpuRelease({
+                    version: "v0.1.3",
+                    url: "https://github.com/karbivskyi/MineBench-CPU-ZEPH/releases/latest",
+                    name: "MineBench-CPU-ZEPH.zip"
+                });
+                setGpuRelease({
+                    version: "v0.1.3",
+                    url: "https://github.com/karbivskyi/MineBench-GPU-RVN/releases/latest",
+                    name: "MineBench-GPU-RVN.zip"
+                });
             } finally {
                 setLoading(false);
             }
