@@ -1,34 +1,70 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { Monitor, Download, Cpu, Zap, AlertTriangle } from "lucide-react";
+import { Monitor, Download, Cpu, HardDrive } from "lucide-react";
 import Image from "next/image";
-import Windows from "@/public/img/windows.svg";
-import NvidiaIcon from "@/public/img/nvidia-icon.svg";
-import RadeonIcon from "@/public/img/radeon-icon.svg";
+import WindowsIcon from "@/public/img/windows.svg";
+import MacOSIcon from "@/public/img/macos-logo.svg";
+import LinuxIcon from "@/public/img/linux-logo.svg";
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Scene3D from '@/components/Scene3D';
 import { motion } from 'framer-motion';
 
 type Release = {
-    version: string;
+    version?: string;
+    tag_name?: string;
     url: string | null;
     name: string | null;
+    assets?: any[];
+};
+
+type BuildVariant = {
+    arch: string;
+    label: string;
+    description: string;
+    url: string | null;
 };
 
 export default function DownloadsPageClient() {
-    const [cpuRelease, setCpuRelease] = useState<Release | null>(null);
-    const [gpuRelease, setGpuRelease] = useState<Release | null>(null);
     const [clientRelease, setClientRelease] = useState<Release | null>(null);
+    const [builds, setBuilds] = useState<Record<string, BuildVariant[]>>({
+        windows: [],
+        macos: [],
+        linux: [],
+    });
     const [loading, setLoading] = useState(true);
 
-    const handleDownloadClick = async (type: 'cpu' | 'gpu') => {
+    const platformInfo = {
+        windows: {
+            name: 'Windows',
+            icon: WindowsIcon,
+            description: 'Windows 10/11 (x64, ARM64)',
+            cpu: 'Intel/AMD processors, Snapdragon 7c+',
+            gpu: 'NVIDIA, AMD Radeon',
+        },
+        macos: {
+            name: 'macOS',
+            icon: MacOSIcon,
+            description: 'macOS 11+ (Intel & Apple Silicon)',
+            cpu: 'Intel Core, Apple M-series',
+            gpu: 'AMD Radeon, Intel Iris, Apple GPU',
+        },
+        linux: {
+            name: 'Linux',
+            icon: LinuxIcon,
+            description: 'Ubuntu/Debian/Fedora (x64)',
+            cpu: 'Any Linux-compatible processor',
+            gpu: 'NVIDIA, AMD Radeon',
+        },
+    };
+
+    const handleDownloadClick = async (platform: string, arch: string) => {
         try {
             await fetch('/api/increment-download', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type }),
+                body: JSON.stringify({ type: 'client', platform, arch }),
             });
         } catch (error) {
             console.error('Error tracking download:', error);
@@ -39,92 +75,188 @@ export default function DownloadsPageClient() {
         const fetchReleases = async () => {
             setLoading(true);
             try {
-                // Fetch from our internal API which handles the GitHub token
                 const res = await fetch('/api/releases');
                 
                 if (!res.ok) throw new Error('Failed to fetch releases');
                 
-                const { cpu: cpuData, gpu: gpuData, client: clientData } = await res.json();
+                const { client: clientData } = await res.json();
 
-                const getAsset = (data: any) =>
-                    data?.assets?.find((a: any) => a.name.endsWith(".zip")) ||
-                    data?.assets?.find((a: any) => a.name.endsWith(".exe"));
-
-                // Handle CPU Release
-                if (cpuData) {
-                    const cpuAsset = getAsset(cpuData);
-                    setCpuRelease({
-                        version: cpuData.tag_name,
-                        url: cpuAsset ? cpuAsset.browser_download_url : null,
-                        name: cpuAsset ? cpuAsset.name : null,
-                    });
-                } else {
-                    // Fallback if CPU data is missing but we want to show something
-                     setCpuRelease({
-                        version: "v0.1.3",
-                        url: "https://github.com/karbivskyi/MineBench-CPU-ZEPH/releases/latest",
-                        name: "MineBench-CPU-ZEPH.zip"
-                    });
-                }
-
-                // Handle GPU Release
-                if (gpuData) {
-                    const gpuAsset = getAsset(gpuData);
-                    setGpuRelease({
-                        version: gpuData.tag_name,
-                        url: gpuAsset ? gpuAsset.browser_download_url : null,
-                        name: gpuAsset ? gpuAsset.name : null,
-                    });
-                } else {
-                    // Fallback
-                     setGpuRelease({
-                        version: "v0.1.3",
-                        url: "https://github.com/karbivskyi/MineBench-GPU-RVN/releases/latest",
-                        name: "MineBench-GPU-RVN.zip"
-                    });
-                }
-
-                // Handle Client Release
                 if (clientData) {
-                    const clientAsset = getAsset(clientData);
                     setClientRelease({
+                        ...clientData,
                         version: clientData.tag_name,
-                        url: clientAsset ? clientAsset.browser_download_url : null,
-                        name: clientAsset ? clientAsset.name : null,
                     });
+                    processBuildVariants(clientData);
                 } else {
                     // Fallback
-                    setClientRelease({
-                        version: "v0.1.2",
-                        url: "https://github.com/devcodex2025/MineBench-Client/releases/latest",
-                        name: "MineBench-Client"
-                    });
+                    const fallbackRelease = {
+                        tag_name: 'v0.1.2',
+                        version: 'v0.1.2',
+                        assets: []
+                    };
+                    setClientRelease(fallbackRelease as Release);
+                    processBuildVariants(fallbackRelease);
                 }
             } catch (err) {
                 console.error(err);
-                // Fallback for any error
-                setCpuRelease({
-                    version: "v0.1.3",
-                    url: "https://github.com/karbivskyi/MineBench-CPU-ZEPH/releases/latest",
-                    name: "MineBench-CPU-ZEPH.zip"
-                });
-                setGpuRelease({
-                    version: "v0.1.3",
-                    url: "https://github.com/karbivskyi/MineBench-GPU-RVN/releases/latest",
-                    name: "MineBench-GPU-RVN.zip"
-                });
-                setClientRelease({
-                    version: "v0.1.2",
-                    url: "https://github.com/devcodex2025/MineBench-Client/releases/latest",
-                    name: "MineBench-Client"
-                });
+                const fallbackRelease = {
+                    tag_name: 'v0.1.2',
+                    version: 'v0.1.2',
+                    assets: []
+                };
+                setClientRelease(fallbackRelease as Release);
+                processBuildVariants(fallbackRelease);
             } finally {
                 setLoading(false);
             }
         };
 
+        const processBuildVariants = (release: any) => {
+            const newBuilds: Record<string, BuildVariant[]> = {
+                windows: [],
+                macos: [],
+                linux: [],
+            };
+
+            const assets = release.assets || [];
+
+            // Windows builds
+            if (assets.length > 0) {
+                newBuilds.windows = [
+                    {
+                        arch: 'x64',
+                        label: '64-bit Intel/AMD',
+                        description: 'For standard 64-bit Windows systems',
+                        url: assets.find((a: any) => a.name.includes('win') && a.name.includes('x64'))?.browser_download_url || null,
+                    },
+                    {
+                        arch: 'arm64',
+                        label: 'ARM64',
+                        description: 'For Snapdragon and ARM64 Windows devices',
+                        url: assets.find((a: any) => a.name.includes('win') && a.name.includes('arm64'))?.browser_download_url || null,
+                    },
+                ];
+                newBuilds.macos = [
+                    {
+                        arch: 'x64',
+                        label: '64-bit Intel',
+                        description: 'For Intel-based Mac computers',
+                        url: assets.find((a: any) => a.name.includes('mac') && a.name.includes('x64'))?.browser_download_url || null,
+                    },
+                    {
+                        arch: 'arm64',
+                        label: 'Apple Silicon',
+                        description: 'For M1/M2/M3 Mac computers',
+                        url: assets.find((a: any) => a.name.includes('mac') && a.name.includes('arm64'))?.browser_download_url || null,
+                    },
+                ];
+                newBuilds.linux = [
+                    {
+                        arch: 'x64',
+                        label: '64-bit',
+                        description: 'For standard Linux x86-64 systems',
+                        url: assets.find((a: any) => a.name.includes('linux') && a.name.includes('x64'))?.browser_download_url || null,
+                    },
+                ];
+            } else {
+                // Fallback URLs
+                newBuilds.windows = [
+                    { arch: 'x64', label: '64-bit Intel/AMD', description: 'For standard 64-bit Windows systems', url: 'https://github.com/devcodex2025/MineBench-Client/releases/latest' },
+                    { arch: 'arm64', label: 'ARM64', description: 'For Snapdragon and ARM64 Windows devices', url: 'https://github.com/devcodex2025/MineBench-Client/releases/latest' },
+                ];
+                newBuilds.macos = [
+                    { arch: 'x64', label: '64-bit Intel', description: 'For Intel-based Mac computers', url: 'https://github.com/devcodex2025/MineBench-Client/releases/latest' },
+                    { arch: 'arm64', label: 'Apple Silicon', description: 'For M1/M2/M3 Mac computers', url: 'https://github.com/devcodex2025/MineBench-Client/releases/latest' },
+                ];
+                newBuilds.linux = [
+                    { arch: 'x64', label: '64-bit', description: 'For standard Linux x86-64 systems', url: 'https://github.com/devcodex2025/MineBench-Client/releases/latest' },
+                ];
+            }
+
+            setBuilds(newBuilds);
+        };
+
         fetchReleases();
     }, []);
+
+    const PlatformSection = ({ platform, variants }: { platform: 'windows' | 'macos' | 'linux'; variants: BuildVariant[] }) => {
+        const info = platformInfo[platform];
+        
+        return (
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: platform === 'windows' ? 0.1 : platform === 'macos' ? 0.2 : 0.3 }}
+                className="border-2 border-zinc-800 hover:border-yellow-400 transition-all duration-300 p-8"
+            >
+                <div className="flex items-center gap-4 mb-6 pb-4 border-b border-zinc-900">
+                    <Image 
+                        src={info.icon} 
+                        alt={info.name}
+                        width={48}
+                        height={48}
+                        className="w-12 h-12"
+                    />
+                    <div>
+                        <h3 className="text-2xl font-bold text-white uppercase tracking-wide">{info.name}</h3>
+                        <p className="text-xs text-zinc-400 mt-1">{info.description}</p>
+                    </div>
+                </div>
+
+                <div className="space-y-3 mb-6">
+                    <div className="flex items-start gap-2">
+                        <Cpu className="w-4 h-4 text-yellow-400 mt-1 flex-shrink-0" />
+                        <div>
+                            <p className="text-xs font-bold text-zinc-300 uppercase tracking-wide">CPU Support</p>
+                            <p className="text-sm text-zinc-400">{info.cpu}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                        <HardDrive className="w-4 h-4 text-yellow-400 mt-1 flex-shrink-0" />
+                        <div>
+                            <p className="text-xs font-bold text-zinc-300 uppercase tracking-wide">GPU Support</p>
+                            <p className="text-sm text-zinc-400">{info.gpu}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    {variants.map((variant) => (
+                        <div
+                            key={variant.arch}
+                            className="border border-zinc-700 hover:border-yellow-400/50 p-3 transition-all"
+                        >
+                            <div className="flex items-start justify-between gap-3">
+                                <div>
+                                    <p className="font-bold text-white text-sm uppercase tracking-wide">{variant.label}</p>
+                                    <p className="text-xs text-zinc-400 mt-1">{variant.description}</p>
+                                </div>
+                                {loading ? (
+                                    <div className="px-3 py-2 text-zinc-500 text-xs font-bold uppercase whitespace-nowrap">
+                                        LOADING
+                                    </div>
+                                ) : variant.url ? (
+                                    <a
+                                        href={variant.url}
+                                        onClick={() => handleDownloadClick(platform, variant.arch)}
+                                        className="flex items-center gap-2 bg-yellow-400 text-black px-3 py-2 hover:bg-yellow-300 transition-all font-bold whitespace-nowrap rounded"
+                                        title="Download"
+                                    >
+                                        <Download className="w-5 h-5" />
+                                    </a>
+                                ) : (
+                                    <div className="px-3 py-2 border border-red-500 text-red-500 text-xs font-bold uppercase">
+                                        —
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </motion.div>
+        );
+    };
 
     return (
         <div className="min-h-screen relative overflow-hidden bg-black flex flex-col">
@@ -139,195 +271,38 @@ export default function DownloadsPageClient() {
                         animate={{ opacity: 1, y: 0 }}
                         className="text-center mb-16 border-b border-zinc-900 pb-12"
                     >
-                        <div className="inline-block border border-yellow-400 p-4 mb-8">
-                            <Download className="w-12 h-12 text-yellow-400" />
+                        <div className="flex flex-col items-center mb-8">
+                            <div className="flex items-start gap-6 mb-8">
+                                <Image 
+                                    src="/img/minebench-logo-yellow.png" 
+                                    alt="MineBench" 
+                                    width={100} 
+                                    height={100}
+                                    className="w-20 h-20 flex-shrink-0"
+                                    priority
+                                />
+                                <div className="flex flex-col">
+                                    <h1 className="text-5xl md:text-6xl font-bold text-white tracking-tight uppercase">
+                                        MineBench
+                                    </h1>
+                                    {clientRelease && (
+                                        <p className="text-lg text-yellow-400 font-bold uppercase tracking-widest mt-1 text-right">
+                                            {clientRelease.version}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
                         </div>
-                        <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight uppercase">
-                            DOWN
-                            <span className="text-yellow-400">LOADS</span>
-                        </h1>
                         <p className="text-xl text-zinc-400 max-w-2xl mx-auto font-mono-system">
-                            Get the latest MineBench clients for CPU and GPU benchmarking.
+                            Cross-platform mining benchmark software
                         </p>
                     </motion.div>
 
-                    {/* ANTIVIRUS WARNING */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.05 }}
-                        className="border-2 border-yellow-400 bg-yellow-400/10 p-6 mb-16 flex gap-4"
-                    >
-                        <AlertTriangle className="w-6 h-6 text-yellow-400 flex-shrink-0 mt-1" />
-                        <div>
-                            <h3 className="text-lg font-bold text-yellow-400 mb-2 uppercase tracking-wide">
-                                ⚠️ Important Notice
-                            </h3>
-                            <p className="text-zinc-300 leading-relaxed">
-                                <strong>This software is a cryptocurrency miner</strong> and may be flagged by your antivirus or Windows Defender as a PUA (Potentially Unwanted Application) or threat. This is normal behavior for mining software. Please add the installation folder to your antivirus whitelist if you encounter any issues. The software is open-source and safe to use.
-                            </p>
-                        </div>
-                    </motion.div>
-
-                    {/* Download Cards */}
+                    {/* Platform Sections */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-                        {/* CPU CLIENT */}
-                        <motion.div
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.1 }}
-                            className="border-2 border-zinc-800 hover:border-yellow-400 transition-all duration-300 p-8"
-                        >
-                            <div className="flex items-center gap-4 mb-6 pb-4 border-b border-zinc-900">
-                                <div className="w-12 h-12 border border-yellow-400 flex items-center justify-center">
-                                    <Cpu className="w-6 h-6 text-yellow-400" />
-                                </div>
-                                <h2 className="text-2xl font-bold text-white uppercase tracking-wide">
-                                    CPU CLIENT
-                                </h2>
-                            </div>
-
-                            <div className="flex items-center gap-3 mb-4">
-                                <Image src={Windows} alt="Windows" width={24} height={24} className="opacity-70" />
-                                <span className="text-zinc-500 text-sm uppercase tracking-wide font-bold">Windows</span>
-                            </div>
-
-                            <p className="text-zinc-400 mb-6 leading-relaxed">
-                                Benchmark your CPU performance using the Zephyr algorithm. Optimized for multi-core processors.
-                            </p>
-
-                            {loading ? (
-                                <div className="border border-zinc-800 px-6 py-3 text-zinc-500 uppercase tracking-wide text-sm font-bold">
-                                    LOADING...
-                                </div>
-                            ) : cpuRelease && cpuRelease.url ? (
-                                <a
-                                    href={cpuRelease.url}
-                                    onClick={() => handleDownloadClick('cpu')}
-                                    className="inline-flex items-center gap-3 bg-white text-black px-6 py-3 hover:bg-yellow-400 transition-all font-bold uppercase tracking-wide text-sm"
-                                >
-                                    <Download className="w-5 h-5" />
-                                    DOWNLOAD {cpuRelease.version}
-                                </a>
-                            ) : (
-                                <div className="border border-red-500 px-6 py-3 text-red-500 uppercase tracking-wide text-sm font-bold">
-                                    UNAVAILABLE
-                                </div>
-                            )}
-                        </motion.div>
-
-                        {/* GPU CLIENT */}
-                        <motion.div
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.2 }}
-                            className="border-2 border-zinc-800 hover:border-yellow-400 transition-all duration-300 p-8"
-                        >
-                            <div className="flex items-center gap-4 mb-6 pb-4 border-b border-zinc-900">
-                                <div className="w-12 h-12 border border-yellow-400 flex items-center justify-center">
-                                    <Zap className="w-6 h-6 text-yellow-400" />
-                                </div>
-                                <h2 className="text-2xl font-bold text-white uppercase tracking-wide">
-                                    GPU CLIENT
-                                </h2>
-                            </div>
-
-                            <div className="flex items-center gap-3 mb-4">
-                                <Image src={Windows} alt="Windows" width={24} height={24} className="opacity-70" />
-                                <span className="text-zinc-500 text-sm uppercase tracking-wide font-bold">Windows</span>
-                            </div>
-
-                            <div className="flex items-center gap-4 mb-4">
-                                <Image src={NvidiaIcon} alt="Nvidia" width={40} height={40} />
-                                <Image src={RadeonIcon} alt="AMD" width={40} height={40} className="filter grayscale opacity-40" />
-                            </div>
-
-                            <p className="text-zinc-400 mb-6 leading-relaxed">
-                                GPU benchmark using the Ravencoin algorithm. Currently optimized for NVIDIA cards.
-                            </p>
-
-                            {loading ? (
-                                <div className="border border-zinc-800 px-6 py-3 text-zinc-500 uppercase tracking-wide text-sm font-bold">
-                                    LOADING...
-                                </div>
-                            ) : gpuRelease && gpuRelease.url ? (
-                                <a
-                                    onClick={() => handleDownloadClick('gpu')}
-                                    href={gpuRelease.url}
-                                    className="inline-flex items-center gap-3 bg-white text-black px-6 py-3 hover:bg-yellow-400 transition-all font-bold uppercase tracking-wide text-sm"
-                                >
-                                    <Download className="w-5 h-5" />
-                                    DOWNLOAD {gpuRelease.version}
-                                </a>
-                            ) : (
-                                <div className="border border-red-500 px-6 py-3 text-red-500 uppercase tracking-wide text-sm font-bold">
-                                    UNAVAILABLE
-                                </div>
-                            )}
-                        </motion.div>
-
-                        {/* MINEBENCH CLIENT (MAIN APP) */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.3 }}
-                            className="border-2 border-zinc-800 hover:border-yellow-400 transition-all duration-300 p-8"
-                        >
-                            <div className="flex items-center gap-4 mb-6 pb-4 border-b border-zinc-900">
-                                <div className="w-12 h-12 border border-yellow-400 flex items-center justify-center">
-                                    <Monitor className="w-6 h-6 text-yellow-400" />
-                                </div>
-                                <h2 className="text-2xl font-bold text-white uppercase tracking-wide">
-                                    MAIN APP
-                                </h2>
-                            </div>
-
-                            <div className="flex flex-wrap items-center gap-3 mb-4">
-                                <div className="flex items-center gap-2">
-                                    <Image src={Windows} alt="Windows" width={24} height={24} className="opacity-70" />
-                                    <span className="text-zinc-500 text-sm uppercase tracking-wide font-bold">Windows</span>
-                                </div>
-                                <span className="text-zinc-600">•</span>
-                                <span className="text-zinc-500 text-sm uppercase tracking-wide font-bold">macOS</span>
-                                <span className="text-zinc-600">•</span>
-                                <span className="text-zinc-500 text-sm uppercase tracking-wide font-bold">Linux</span>
-                            </div>
-
-                            <p className="text-zinc-400 mb-3 leading-relaxed">
-                                Unified desktop application for mining and benchmarking. Features real-time monitoring, 3D visualization, and automatic pool synchronization.
-                            </p>
-
-                            <div className="bg-zinc-900 p-4 rounded mb-6 text-sm text-zinc-300">
-                                <p><strong>Features:</strong></p>
-                                <ul className="list-disc list-inside mt-2 space-y-1 text-xs text-zinc-400">
-                                    <li>Cross-platform (Windows, macOS, Linux)</li>
-                                    <li>Real-time hashrate and temperature monitoring</li>
-                                    <li>3D reactor visualization</li>
-                                    <li>Thread control slider</li>
-                                    <li>Pool integration & sync</li>
-                                    <li>Rewards tracking</li>
-                                </ul>
-                            </div>
-
-                            {loading ? (
-                                <div className="border border-zinc-800 px-6 py-3 text-zinc-500 uppercase tracking-wide text-sm font-bold">
-                                    LOADING...
-                                </div>
-                            ) : clientRelease && clientRelease.url ? (
-                                <a
-                                    href={clientRelease.url}
-                                    onClick={() => handleDownloadClick('cpu')}
-                                    className="inline-flex items-center gap-3 bg-yellow-400 text-black px-6 py-3 hover:bg-yellow-300 transition-all font-bold uppercase tracking-wide text-sm"
-                                >
-                                    <Download className="w-5 h-5" />
-                                    DOWNLOAD {clientRelease.version}
-                                </a>
-                            ) : (
-                                <div className="border border-red-500 px-6 py-3 text-red-500 uppercase tracking-wide text-sm font-bold">
-                                    UNAVAILABLE
-                                </div>
-                            )}
-                        </motion.div>
+                        <PlatformSection platform="windows" variants={builds.windows} />
+                        <PlatformSection platform="macos" variants={builds.macos} />
+                        <PlatformSection platform="linux" variants={builds.linux} />
                     </div>
 
                     {/* Installation Guide */}
@@ -341,62 +316,31 @@ export default function DownloadsPageClient() {
                             INSTALLATION GUIDE
                         </h3>
 
-                        {/* Main App Instructions */}
-                        <div className="mb-8">
-                            <h4 className="text-lg font-bold text-yellow-400 mb-4 uppercase tracking-wide">MineBench Client (Main App)</h4>
-                            <div className="space-y-3 text-zinc-400">
-                                <div className="flex gap-4">
-                                    <span className="text-yellow-400 font-bold font-mono-system flex-shrink-0">01.</span>
-                                    <p>Download the latest MineBench Client release for your operating system.</p>
-                                </div>
-                                <div className="flex gap-4">
-                                    <span className="text-yellow-400 font-bold font-mono-system flex-shrink-0">02.</span>
-                                    <p><strong>Windows:</strong> Run the installer (.exe) and follow the installation wizard. <strong>macOS/Linux:</strong> Extract and run the application.</p>
-                                </div>
-                                <div className="flex gap-4">
-                                    <span className="text-yellow-400 font-bold font-mono-system flex-shrink-0">03.</span>
-                                    <p>If flagged by antivirus, add the installation folder to your whitelist.</p>
-                                </div>
-                                <div className="flex gap-4">
-                                    <span className="text-yellow-400 font-bold font-mono-system flex-shrink-0">04.</span>
-                                    <p>Launch the application and configure your wallet and pool settings.</p>
-                                </div>
-                                <div className="flex gap-4">
-                                    <span className="text-yellow-400 font-bold font-mono-system flex-shrink-0">05.</span>
-                                    <p>Use the thread slider to select CPU core count and start mining or benchmarking.</p>
-                                </div>
+                        <div className="space-y-3 text-zinc-400">
+                            <div className="flex gap-4">
+                                <span className="text-yellow-400 font-bold font-mono-system flex-shrink-0">01.</span>
+                                <p>Download the appropriate version for your operating system and architecture above.</p>
                             </div>
-                        </div>
-
-                        {/* Benchmark Instructions */}
-                        <div>
-                            <h4 className="text-lg font-bold text-yellow-400 mb-4 uppercase tracking-wide">Benchmark Clients (CPU/GPU)</h4>
-                            <div className="space-y-3 text-zinc-400">
-                                <div className="flex gap-4">
-                                    <span className="text-yellow-400 font-bold font-mono-system flex-shrink-0">01.</span>
-                                    <p>Download the appropriate benchmark client (CPU Zephyr or GPU Ravencoin).</p>
-                                </div>
-                                <div className="flex gap-4">
-                                    <span className="text-yellow-400 font-bold font-mono-system flex-shrink-0">02.</span>
-                                    <p>Extract the ZIP file to a folder of your choice.</p>
-                                </div>
-                                <div className="flex gap-4">
-                                    <span className="text-yellow-400 font-bold font-mono-system flex-shrink-0">03.</span>
-                                    <p>Run the executable file as Administrator.</p>
-                                </div>
-                                <div className="flex gap-4">
-                                    <span className="text-yellow-400 font-bold font-mono-system flex-shrink-0">04.</span>
-                                    <p>Follow the on-screen instructions to complete the benchmark.</p>
-                                </div>
-                                <div className="flex gap-4">
-                                    <span className="text-yellow-400 font-bold font-mono-system flex-shrink-0">05.</span>
-                                    <p>Results will be automatically uploaded to the Minebench dashboard.</p>
-                                </div>
+                            <div className="flex gap-4">
+                                <span className="text-yellow-400 font-bold font-mono-system flex-shrink-0">02.</span>
+                                <p><strong>Windows:</strong> Run the installer and follow the wizard. <strong>macOS/Linux:</strong> Extract and run the application.</p>
+                            </div>
+                            <div className="flex gap-4">
+                                <span className="text-yellow-400 font-bold font-mono-system flex-shrink-0">03.</span>
+                                <p>Configure your wallet address and pool settings in the application.</p>
+                            </div>
+                            <div className="flex gap-4">
+                                <span className="text-yellow-400 font-bold font-mono-system flex-shrink-0">04.</span>
+                                <p>Use the thread slider to select how many CPU cores to use for mining.</p>
+                            </div>
+                            <div className="flex gap-4">
+                                <span className="text-yellow-400 font-bold font-mono-system flex-shrink-0">05.</span>
+                                <p>Start mining and monitor your hashrate, temperature, and rewards in real-time.</p>
                             </div>
                         </div>
                     </motion.div>
 
-                    {/* Antivirus Help Section */}
+                    {/* System Requirements */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
@@ -404,25 +348,27 @@ export default function DownloadsPageClient() {
                         className="border border-yellow-400/50 bg-yellow-400/5 p-8"
                     >
                         <h3 className="text-2xl font-bold text-white mb-6 uppercase tracking-wide border-b border-yellow-400/50 pb-4">
-                            Antivirus & Firewall Settings
+                            System Requirements
                         </h3>
-                        <div className="space-y-6 text-zinc-400">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-zinc-400">
                             <div>
-                                <h4 className="text-yellow-400 font-bold mb-2 uppercase text-sm">Windows Defender</h4>
-                                <ol className="list-decimal list-inside space-y-2 text-sm ml-2">
-                                    <li>Go to <strong>Virus & threat protection</strong></li>
-                                    <li>Click <strong>Manage settings</strong></li>
-                                    <li>Scroll to <strong>Exclusions</strong> and click <strong>Add exclusions</strong></li>
-                                    <li>Select <strong>Folder</strong> and choose your MineBench installation directory</li>
-                                </ol>
+                                <h4 className="text-yellow-400 font-bold mb-3 uppercase text-sm">Minimum</h4>
+                                <ul className="list-disc list-inside space-y-2 text-sm ml-2">
+                                    <li>4 GB RAM</li>
+                                    <li>2 GB free disk space</li>
+                                    <li>Quad-core processor</li>
+                                    <li>Internet connection</li>
+                                </ul>
                             </div>
                             <div>
-                                <h4 className="text-yellow-400 font-bold mb-2 uppercase text-sm">Other Antivirus</h4>
-                                <p className="text-sm">Consult your antivirus documentation for whitelisting/exclusion procedures. Mining software is commonly flagged due to its resource-intensive nature.</p>
-                            </div>
-                            <div>
-                                <h4 className="text-yellow-400 font-bold mb-2 uppercase text-sm">Firewall</h4>
-                                <p className="text-sm">Ensure your firewall allows MineBench to communicate with mining pools. You may need to allow the application through Windows Firewall.</p>
+                                <h4 className="text-yellow-400 font-bold mb-3 uppercase text-sm">Recommended</h4>
+                                <ul className="list-disc list-inside space-y-2 text-sm ml-2">
+                                    <li>8+ GB RAM</li>
+                                    <li>4 GB free disk space</li>
+                                    <li>8+ core processor</li>
+                                    <li>Gigabit internet</li>
+                                    <li>Dedicated GPU (NVIDIA/AMD)</li>
+                                </ul>
                             </div>
                         </div>
                     </motion.div>
@@ -433,3 +379,4 @@ export default function DownloadsPageClient() {
         </div>
     );
 }
+

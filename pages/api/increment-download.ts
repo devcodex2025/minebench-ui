@@ -12,9 +12,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { type } = req.body; // 'cpu' or 'gpu'
+    const { type, platform, arch } = req.body;
 
-    if (!type || !['cpu', 'gpu'].includes(type)) {
+    if (!type || !['cpu', 'gpu', 'client'].includes(type)) {
       return res.status(400).json({ error: 'Invalid download type' });
     }
 
@@ -36,11 +36,37 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Інкрементуємо відповідні лічильники
-    const updates = {
+    const updates: any = {
       total_downloads: currentStats.total_downloads + 1,
-      cpu_downloads: type === 'cpu' ? currentStats.cpu_downloads + 1 : currentStats.cpu_downloads,
-      gpu_downloads: type === 'gpu' ? currentStats.gpu_downloads + 1 : currentStats.gpu_downloads,
     };
+
+    if (type === 'cpu') {
+      updates.cpu_downloads = currentStats.cpu_downloads + 1;
+    } else if (type === 'gpu') {
+      updates.gpu_downloads = currentStats.gpu_downloads + 1;
+    } else if (type === 'client') {
+      // Для MineBench-Client, рахуємо за платформою
+      updates.client_downloads = (currentStats.client_downloads || 0) + 1;
+      
+      // Рахуємо по архітектурам
+      if (platform === 'windows') {
+        if (arch === 'x64') {
+          updates.client_windows_x64 = (currentStats.client_windows_x64 || 0) + 1;
+        } else if (arch === 'arm64') {
+          updates.client_windows_arm64 = (currentStats.client_windows_arm64 || 0) + 1;
+        }
+      } else if (platform === 'macos') {
+        if (arch === 'x64') {
+          updates.client_macos_x64 = (currentStats.client_macos_x64 || 0) + 1;
+        } else if (arch === 'arm64') {
+          updates.client_macos_arm64 = (currentStats.client_macos_arm64 || 0) + 1;
+        }
+      } else if (platform === 'linux') {
+        if (arch === 'x64') {
+          updates.client_linux_x64 = (currentStats.client_linux_x64 || 0) + 1;
+        }
+      }
+    }
 
     const { data, error } = await supabase
       .from('global_stats')

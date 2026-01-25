@@ -4,14 +4,20 @@ CREATE TABLE IF NOT EXISTS global_stats (
     total_downloads INTEGER DEFAULT 0,
     cpu_downloads INTEGER DEFAULT 0,
     gpu_downloads INTEGER DEFAULT 0,
+    client_downloads INTEGER DEFAULT 0,
+    client_windows_x64 INTEGER DEFAULT 0,
+    client_windows_arm64 INTEGER DEFAULT 0,
+    client_macos_x64 INTEGER DEFAULT 0,
+    client_macos_arm64 INTEGER DEFAULT 0,
+    client_linux_x64 INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     CONSTRAINT single_row CHECK (id = 1)
 );
 
 -- Вставляємо початковий рядок
-INSERT INTO global_stats (id, total_downloads, cpu_downloads, gpu_downloads)
-VALUES (1, 0, 0, 0)
+INSERT INTO global_stats (id, total_downloads, cpu_downloads, gpu_downloads, client_downloads)
+VALUES (1, 0, 0, 0, 0)
 ON CONFLICT (id) DO NOTHING;
 
 -- Створюємо функцію для автоматичного оновлення updated_at
