@@ -305,6 +305,39 @@ export default function DownloadsPageClient() {
                         <PlatformSection platform="linux" variants={builds.linux} />
                     </div>
 
+                    {/* Security Notice */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="border border-yellow-500/60 bg-yellow-500/5 p-6 mb-12"
+                    >
+                        <h3 className="text-2xl font-bold text-white mb-4 uppercase tracking-wide flex items-center gap-2">
+                            Security / Antivirus Notice
+                        </h3>
+                        <p className="text-zinc-300 mb-4 text-sm">
+                            Mining software can be flagged as a false-positive by antivirus. If you trust the download, add the app to exclusions to prevent deletion during install or first launch.
+                        </p>
+                        <div className="space-y-3 text-zinc-200 text-sm">
+                            <div className="flex gap-3">
+                                <span className="text-yellow-400 font-bold font-mono-system">1.</span>
+                                <p>Verify you downloaded from the official GitHub release on this page.</p>
+                            </div>
+                            <div className="flex gap-3">
+                                <span className="text-yellow-400 font-bold font-mono-system">2.</span>
+                                <p>Windows Defender: Settings → Privacy & security → Windows Security → Virus & threat protection → Manage settings → Exclusions → Add or remove exclusions → Add folder (point to the installed MineBench directory).</p>
+                            </div>
+                            <div className="flex gap-3">
+                                <span className="text-yellow-400 font-bold font-mono-system">3.</span>
+                                <p>Other AV: add the installation folder or executable to the allowlist/exclusions list before first launch.</p>
+                            </div>
+                            <div className="flex gap-3">
+                                <span className="text-yellow-400 font-bold font-mono-system">4.</span>
+                                <p>Keep antivirus enabled; only exclude the miner folder to avoid accidental removal.</p>
+                            </div>
+                        </div>
+                    </motion.div>
+
                     {/* Installation Guide */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
