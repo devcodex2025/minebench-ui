@@ -119,43 +119,52 @@ export default function DownloadsPageClient() {
             };
 
             const assets = release.assets || [];
-
-            // Windows builds
+            
             if (assets.length > 0) {
+                const findAssetUrl = (predicate: (name: string) => boolean) => {
+                    const item = assets.find((a: any) => typeof a?.name === 'string' && predicate(a.name));
+                    return item?.browser_download_url || null;
+                };
+
+                // Match Windows installers (.exe) by arch markers in name
                 newBuilds.windows = [
                     {
                         arch: 'x64',
                         label: '64-bit Intel/AMD',
                         description: 'For standard 64-bit Windows systems',
-                        url: assets.find((a: any) => a.name.includes('win') && a.name.includes('x64'))?.browser_download_url || null,
+                        url: findAssetUrl((n) => n.endsWith('.exe') && (n.includes('-x64-') || n.includes('-x64.'))),
                     },
                     {
                         arch: 'arm64',
                         label: 'ARM64',
                         description: 'For Snapdragon and ARM64 Windows devices',
-                        url: assets.find((a: any) => a.name.includes('win') && a.name.includes('arm64'))?.browser_download_url || null,
+                        url: findAssetUrl((n) => n.endsWith('.exe') && n.includes('-arm64-')),
                     },
                 ];
+
+                // Match macOS DMG by arch markers
                 newBuilds.macos = [
                     {
                         arch: 'x64',
                         label: '64-bit Intel',
                         description: 'For Intel-based Mac computers',
-                        url: assets.find((a: any) => a.name.includes('mac') && a.name.includes('x64'))?.browser_download_url || null,
+                        url: findAssetUrl((n) => n.endsWith('.dmg') && (n.includes('-x64.') || n.includes('-x64-'))),
                     },
                     {
                         arch: 'arm64',
                         label: 'Apple Silicon',
                         description: 'For M1/M2/M3 Mac computers',
-                        url: assets.find((a: any) => a.name.includes('mac') && a.name.includes('arm64'))?.browser_download_url || null,
+                        url: findAssetUrl((n) => n.endsWith('.dmg') && n.includes('-arm64')),
                     },
                 ];
+
+                // Match Linux AppImage (x86_64 denotes x64)
                 newBuilds.linux = [
                     {
                         arch: 'x64',
                         label: '64-bit',
                         description: 'For standard Linux x86-64 systems',
-                        url: assets.find((a: any) => a.name.includes('linux') && a.name.includes('x64'))?.browser_download_url || null,
+                        url: findAssetUrl((n) => n.endsWith('.AppImage') && (n.includes('x86_64') || n.includes('x64'))),
                     },
                 ];
             } else {
@@ -293,12 +302,15 @@ export default function DownloadsPageClient() {
                                 </div>
                             </div>
                         </div>
-                        <p className="text-xl text-zinc-400 max-w-2xl mx-auto font-mono-system">
+                        <p className="text-xl text-zinc-400 max-w-2xl mx-auto text-center font-sans font-semibold tracking-wide">
                             Cross-platform mining benchmark software
                         </p>
                     </motion.div>
 
                     {/* Platform Sections */}
+                    <p className="text-sm text-zinc-400 max-w-3xl mx-auto mb-6 text-center">
+                        Note: This software includes mining functionality; antivirus software may flag or block it.
+                    </p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
                         <PlatformSection platform="windows" variants={builds.windows} />
                         <PlatformSection platform="macos" variants={builds.macos} />
