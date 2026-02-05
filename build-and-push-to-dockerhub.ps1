@@ -34,23 +34,31 @@ Write-Host ""
 
 # Check if Docker is running
 try {
-    docker info | Out-Null
+    docker info 2>&1 | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        throw "Docker not running"
+    }
     Write-Host "Docker is running" -ForegroundColor Green
 } catch {
     Write-Host "Docker is not running. Please start Docker first." -ForegroundColor Red
     exit 1
 }
 
-# Login to Docker Hub
-Write-Host "Logging in to Docker Hub..." -ForegroundColor Yellow
-docker login
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "Failed to login to Docker Hub" -ForegroundColor Red
-    exit 1
+# Check if already logged in to Docker Hub
+Write-Host "Checking Docker Hub login status..." -ForegroundColor Yellow
+$loginCheck = docker info 2>&1 | Select-String "Username:"
+if (-not $loginCheck) {
+    Write-Host "Not logged in to Docker Hub. Please login:" -ForegroundColor Yellow
+    docker login
+    
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Failed to login to Docker Hub" -ForegroundColor Red
+        exit 1
+    }
+    Write-Host "Successfully logged in to Docker Hub" -ForegroundColor Green
+} else {
+    Write-Host "Already logged in to Docker Hub" -ForegroundColor Green
 }
-
-Write-Host "Successfully logged in to Docker Hub" -ForegroundColor Green
 
 # Build the Docker image
 Write-Host ""
@@ -58,15 +66,32 @@ Write-Host "Building Docker image..." -ForegroundColor Yellow
 $latestTag = "$FULL_IMAGE_NAME`:latest"
 Write-Host "Building tag: $latestTag"
 
-# Load environment variables from .env.local
-$envContent = Get-Content ".env.local"
-$supabaseUrl = ($envContent | Select-String "NEXT_PUBLIC_SUPABASE_URL=").ToString().Split("=")[1]
-$supabaseKey = ($envContent | Select-String "NEXT_PUBLIC_SUPABASE_ANON_KEY=").ToString().Split("=")[1]
+# Load environment variables from .env.local if it exists
+$buildArgs = @()
+if (Test-Path ".env.local") {
+    Write-Host "Loading environment variables from .env.local" -ForegroundColor Yellow
+    $envContent = Get-Content ".env.local" -Raw
+    
+    # Parse environment variables more reliably
+    foreach ($line in $envContent -split "`n") {
+        $line = $line.Trim()
+        if ($line -and -not $line.StartsWith("#")) {
+            $parts = $line -split "=", 2
+            if ($parts.Count -eq 2) {
+                $key = $parts[0].Trim()
+                $value = $parts[1].Trim()
+                if ($key -and $value) {
+                    $buildArgs += "--build-arg"
+                    $buildArgs += "$key=$value"
+                }
+            }
+        }
+    }
+} else {
+    Write-Host "Warning: .env.local not found. Building without environment variables." -ForegroundColor Yellow
+}
 
-docker build -t $latestTag `
-    --build-arg NEXT_PUBLIC_SUPABASE_URL=$supabaseUrl `
-    --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=$supabaseKey `
-    .
+docker build -t $latestTag @buildArgs .
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Docker build failed" -ForegroundColor Red

@@ -90,6 +90,8 @@ export default function DownloadsPageClient() {
                 } else {
                     // Fallback
                     const fallbackRelease = {
+                        url: '',
+                        name: 'v0.1.2',
                         tag_name: 'v0.1.2',
                         version: 'v0.1.2',
                         assets: []
@@ -100,6 +102,8 @@ export default function DownloadsPageClient() {
             } catch (err) {
                 console.error(err);
                 const fallbackRelease = {
+                    url: '',
+                    name: 'v0.1.2',
                     tag_name: 'v0.1.2',
                     version: 'v0.1.2',
                     assets: []
@@ -241,24 +245,9 @@ export default function DownloadsPageClient() {
                                     <p className="font-bold text-white text-sm uppercase tracking-wide">{variant.label}</p>
                                     <p className="text-xs text-zinc-400 mt-1">{variant.description}</p>
                                 </div>
-                                {loading ? (
-                                    <div className="px-3 py-2 text-zinc-500 text-xs font-bold uppercase whitespace-nowrap">
-                                        LOADING
-                                    </div>
-                                ) : variant.url ? (
-                                    <a
-                                        href={variant.url}
-                                        onClick={() => handleDownloadClick(platform, variant.arch)}
-                                        className="flex items-center gap-2 bg-yellow-400 text-black px-3 py-2 hover:bg-yellow-300 transition-all font-bold whitespace-nowrap rounded"
-                                        title="Download"
-                                    >
-                                        <Download className="w-5 h-5" />
-                                    </a>
-                                ) : (
-                                    <div className="px-3 py-2 border border-red-500 text-red-500 text-xs font-bold uppercase">
-                                        —
-                                    </div>
-                                )}
+                                <div className="px-3 py-2 border border-yellow-500/50 text-yellow-500 text-xs font-bold uppercase whitespace-nowrap">
+                                    IN DEVELOPMENT
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -308,6 +297,14 @@ export default function DownloadsPageClient() {
                     </motion.div>
 
                     {/* Platform Sections */}
+                    <div className="border border-yellow-400/60 bg-yellow-400/5 p-6 mb-6 text-center">
+                        <h3 className="text-xl font-bold text-yellow-400 mb-2 uppercase tracking-wide flex items-center justify-center gap-2">
+                            🚧 Application in Development & Testing
+                        </h3>
+                        <p className="text-zinc-300 text-sm">
+                            Currently undergoing active testing and optimization. Public release coming soon. Stay tuned for updates!
+                        </p>
+                    </div>
                     <p className="text-sm text-zinc-400 max-w-3xl mx-auto mb-6 text-center">
                         Note: This software includes mining functionality; antivirus software may flag or block it.
                     </p>
