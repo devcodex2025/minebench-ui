@@ -60,10 +60,6 @@ export default function PremiumPage() {
       return;
     }
 
-    if (!xmrWallet || xmrWallet.length < 90) { // Monero addresses are ~95 chars
-      setError('Please enter a valid Monero wallet address');
-      return;
-    }
 
     setIsProcessing(true);
     setError(null);
@@ -110,8 +106,7 @@ export default function PremiumPage() {
         .from('users')
         .upsert({ 
           solana_wallet: publicKey.toBase58(), 
-          is_premium: true,
-          xmr_wallet: xmrWallet 
+          is_premium: true
         });
 
       if (dbError) throw dbError;
@@ -239,16 +234,8 @@ export default function PremiumPage() {
               </div>
             ) : (
               <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-xs uppercase text-zinc-500 font-bold tracking-widest">Monero Wallet for Mining</label>
-                  <input 
-                    type="text" 
-                    value={xmrWallet}
-                    onChange={(e) => setXmrWallet(e.target.value)}
-                    placeholder="Enter your XMR address"
-                    className="w-full bg-black border border-zinc-800 p-3 font-mono text-sm focus:border-yellow-400 outline-none transition-colors"
-                  />
-                  <p className="text-[10px] text-zinc-600 uppercase tracking-tighter">Your hardware will mine to this address</p>
+                <div className="bg-zinc-900 border border-zinc-800 p-4 text-sm text-zinc-400">
+                  After purchase, open the <strong className="text-white">MineBench Desktop App</strong> → Settings to configure your Monero wallet address.
                 </div>
 
                 {error && (

@@ -12,7 +12,10 @@ import '@solana/wallet-adapter-react-ui/styles.css';
 
 export function SolanaWalletProvider({ children }: { children: React.ReactNode }) {
   const network = WalletAdapterNetwork.Mainnet;
-  const endpoint = React.useMemo(() => clusterApiUrl(network), [network]);
+  const endpoint = React.useMemo(
+    () => process.env.NEXT_PUBLIC_SOLANA_RPC_URL || clusterApiUrl(network),
+    [network]
+  );
 
   const wallets = React.useMemo(
     () => [
