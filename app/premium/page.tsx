@@ -22,7 +22,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { Check, Shield, Zap, Wallet, ArrowRight } from 'lucide-react';
 
 const USDC_MINT = new PublicKey('EPjFW36vc7J741696u75Rqd6j5uv69eeMT1p8rkAKz2w');
-const TREASURY_WALLET = new PublicKey('11111111111111111111111111111111'); // Placeholder
+const TREASURY_WALLET = new PublicKey('kUMEKAPv1rd2TtnxsJrTvtZ6LDdjK7bmKFF8HzwYi95'); // User's treasury wallet
 const PREMIUM_PRICE_USDC = 29;
 
 export default function PremiumPage() {
