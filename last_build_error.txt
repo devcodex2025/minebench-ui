@@ -1,0 +1,12 @@
+﻿
+>   andError
+   
+  
+> Module not found: Can
+'t
+   resolve '@solana/spl
+-t
+  oken'
+> of webpack errors
+
+

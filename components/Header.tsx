@@ -18,6 +18,7 @@ export default function Header({ onRefresh, loading }: HeaderProps = {}) {
     { name: 'Home', href: '/' },
     { name: 'Dashboard', href: '/dashboard' },
     { name: 'Downloads', href: '/downloads' },
+    { name: 'Premium', href: '/premium' },
     { name: 'Whitepaper', href: '/whitepaper' },
   ];
 

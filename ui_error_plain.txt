@@ -1,0 +1,19 @@
+﻿
+> Module not found: Can
+'t
+   resolve '@solana/spl
+-t
+  oken'
+  
+  https://nextjs.org/do
+cs
+  /messages/module-not-
+fo
+  und
+  
+  
+  > Build failed becaus
+e 
+  of webpack errors
+
+
