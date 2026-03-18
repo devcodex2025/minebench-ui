@@ -1,7 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const GITHUB_TOKEN = process.env.GITHUB_ACCESS_TOKEN;
+  const GITHUB_TOKEN =
+    process.env.GITHUB_SERVER_TOKEN || process.env.GITHUB_ACCESS_TOKEN;
 
   if (!GITHUB_TOKEN) {
     return res.status(500).json({ error: 'GitHub token not configured' });

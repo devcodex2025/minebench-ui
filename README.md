@@ -1,10 +1,34 @@
 # MineBench UI
 
-MineBench UI is the public-facing web application for the MineBench ecosystem.
-It contains the landing pages, dashboard views, downloads pages, leaderboard,
-and supporting API routes used by the web experience.
+MineBench UI is the public web surface of the MineBench ecosystem. It is the
+repository responsible for first impression, product narrative, downloads,
+dashboard access, leaderboard exposure, and the web-facing onboarding path into
+the MineBench stack.
 
-## Stack
+In architectural terms, this module is the presentation boundary. It should be
+rich in product context and light on privileged logic.
+
+## What this module owns
+
+- landing and marketing surfaces
+- public dashboard and statistics views
+- download and release discovery flows
+- whitepaper and ecosystem navigation
+- browser-facing wallet and account entry points
+- server-side API routes that aggregate non-public provider calls for the web app
+
+## Design intent
+
+This repository should explain the product clearly while keeping secrets,
+operator credentials, and backend-only logic out of the browser surface.
+
+That means:
+
+- all `NEXT_PUBLIC_*` values must be safe for client exposure
+- server-side tokens must remain in server-only environment variables
+- release and provider integrations must run behind API routes or backend services
+
+## Technology stack
 
 - Next.js
 - React
@@ -14,30 +38,25 @@ and supporting API routes used by the web experience.
 
 ## Local development
 
-1. Install dependencies:
+Install dependencies:
 
 ```bash
 npm install
 ```
 
-2. Create local config:
+Create a local environment file:
 
 ```bash
 cp .env.local.example .env.local
 ```
 
-3. Fill in your own values and start the app:
+Start the development server:
 
 ```bash
 npm run dev
 ```
 
-Open `http://localhost:3000`.
-
-## Configuration
-
-Use placeholders and browser-safe values only for `NEXT_PUBLIC_*` variables.
-Do not expose service-role keys or personal access tokens in client-side code.
+The app is served on `http://localhost:3000`.
 
 ## Build
 
@@ -46,18 +65,30 @@ npm run build
 npm start
 ```
 
-## Deployment
+## Configuration model
 
-This repository includes Docker and Akash-related files. Any tracked deployment
-examples should contain placeholders only.
+Use browser-safe values only for `NEXT_PUBLIC_*` variables.
 
-## Security
+Server-side secrets, including any GitHub release token used by API routes,
+must remain server-only and must never be exposed through client-rendered code.
 
-- Never commit `.env.local`
-- Never commit GitHub tokens or Supabase service-role keys
-- Keep public and server-only variables clearly separated
+## Documentation
 
-See `SECURITY.md` for the reporting process.
+All repository documentation lives under [`docs/`](docs/README.md).
+
+Key entry points:
+
+- [`docs/README.md`](docs/README.md)
+- [`docs/SETUP_GUIDE.md`](docs/SETUP_GUIDE.md)
+- [`docs/STATS_SETUP.md`](docs/STATS_SETUP.md)
+- [`docs/SECURITY.md`](docs/SECURITY.md)
+
+## Security posture
+
+- never commit `.env.local`
+- never expose service-role keys in client bundles
+- never hardcode GitHub personal access tokens in tracked source
+- keep server-only secrets limited to API routes or deployment-time injection
 
 ## License
 
