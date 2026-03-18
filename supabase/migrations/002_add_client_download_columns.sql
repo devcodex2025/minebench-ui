@@ -1,8 +1,0 @@
--- Додаємо нові колони для рахування MineBench-Client завантажень
-ALTER TABLE IF EXISTS global_stats
-ADD COLUMN IF NOT EXISTS client_downloads INTEGER DEFAULT 0,
-ADD COLUMN IF NOT EXISTS client_windows_x64 INTEGER DEFAULT 0,
-ADD COLUMN IF NOT EXISTS client_windows_arm64 INTEGER DEFAULT 0,
-ADD COLUMN IF NOT EXISTS client_macos_x64 INTEGER DEFAULT 0,
-ADD COLUMN IF NOT EXISTS client_macos_arm64 INTEGER DEFAULT 0,
-ADD COLUMN IF NOT EXISTS client_linux_x64 INTEGER DEFAULT 0;

@@ -29,6 +29,9 @@ yarn-error.log*
 .env
 .env.*
 
+# database migrations belong to the backend, not the public UI repo
+/supabase/migrations/
+
 # vercel
 .vercel
 
