@@ -2,11 +2,11 @@ import type { Metadata } from 'next';
 import DownloadsPageClient from './DownloadsPageClient';
 
 export const metadata: Metadata = {
-  title: 'Downloads - Minebench | Get CPU & GPU Benchmark Clients',
-  description: 'Download the latest MineBench clients for CPU and GPU benchmarking. Optimized for Windows with support for Zephyr and Ravencoin algorithms.',
+  title: 'Downloads - Minebench v0.7.0 | CPU & GPU Mining Benchmark Clients',
+  description: 'Download the latest MineBench v0.7.0 stable clients for Windows, Linux, and macOS. Optimized for RandomX (Monero) and GPU algorithms with real-time performance tracking.',
   openGraph: {
-    title: 'Downloads - Minebench',
-    description: 'Get the latest MineBench clients for CPU and GPU benchmarking. Optimized for Windows.',
+    title: 'Downloads - Minebench v0.7.0',
+    description: 'Get the latest MineBench clients for Windows, Linux, and macOS. Optimized for maximum hashrate and efficiency.',
     url: 'https://minebench.cloud/downloads',
     siteName: 'Minebench',
     images: [
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
         url: 'https://minebench.cloud/og-downloads.png',
         width: 1200,
         height: 630,
-        alt: 'Minebench Downloads - CPU & GPU Clients',
+        alt: 'Minebench Downloads - Multi-OS Support',
       },
     ],
     locale: 'en_US',
@@ -22,8 +22,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Downloads - Minebench',
-    description: 'Get the latest MineBench clients for CPU and GPU benchmarking. Optimized for Windows.',
+    title: 'Downloads - Minebench v0.7.0',
+    description: 'Get the latest MineBench clients for Windows, Linux, and macOS. Optimized for maximum hashrate.',
     images: ['https://minebench.cloud/og-downloads.png'],
     creator: '@MineBenchdapp',
   },

@@ -7,7 +7,7 @@ WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
-RUN npm ci --verbose 2>&1 || (npm cache clean --force && npm install)
+RUN npm ci --legacy-peer-deps 2>&1 || (npm cache clean --force && npm install --legacy-peer-deps)
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -20,12 +20,14 @@ COPY . .
 # Uncomment the following line in case you want to disable telemetry during the build.
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Додаємо аргументи для Supabase
+# Додаємо аргументи для Supabase та Solana
 ARG NEXT_PUBLIC_SUPABASE_URL
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ARG NEXT_PUBLIC_SOLANA_RPC_URL
 
 ENV NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+ENV NEXT_PUBLIC_SOLANA_RPC_URL=${NEXT_PUBLIC_SOLANA_RPC_URL}
 
 RUN npm run build
 

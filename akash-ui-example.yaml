@@ -1,0 +1,49 @@
+---
+version: "2.0"
+
+services:
+  frontend:
+    image: karbivskyi/minebench-ui:latest
+    env:
+      # Core Configuration
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+
+      # ⚠️ ВАЖЛИВО: Замінити на реальні значення з Supabase Dashboard!
+      # Supabase Configuration
+      - NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co  # <-- ЗАМІНИТИ
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY       # <-- ЗАМІНИТИ
+
+      # Solana RPC Configuration (set in Akash environment)
+      - NEXT_PUBLIC_SOLANA_RPC_URL=https://your-rpc-provider.com  # <-- ЗАМІНИТИ
+
+    expose:
+      - port: 3000
+        as: 80
+        to:
+          - global: true
+
+profiles:
+  compute:
+    frontend:
+      resources:
+        cpu:
+          units: 100m
+        memory:
+          size: 512Mi
+        storage:
+          size: 1Gi
+
+  placement:
+    akash:
+      pricing:
+        frontend:
+          denom: uakt
+          amount: 1000
+
+deployment:
+  frontend:
+    akash:
+      profile: frontend
+      count: 1

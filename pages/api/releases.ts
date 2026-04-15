@@ -3,33 +3,25 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const GITHUB_TOKEN =
     process.env.GITHUB_SERVER_TOKEN || process.env.GITHUB_ACCESS_TOKEN;
+  const githubHeaders: Record<string, string> = {
+    'Accept': 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28'
+  };
 
-  if (!GITHUB_TOKEN) {
-    return res.status(500).json({ error: 'GitHub token not configured' });
+  if (GITHUB_TOKEN) {
+    githubHeaders.Authorization = `Bearer ${GITHUB_TOKEN}`;
   }
 
   try {
     const [cpuRes, gpuRes, clientRes] = await Promise.all([
       fetch('https://api.github.com/repos/karbivskyi/MineBench-CPU-ZEPH/releases/latest', {
-        headers: {
-          'Authorization': `Bearer ${GITHUB_TOKEN}`,
-          'Accept': 'application/vnd.github+json',
-          'X-GitHub-Api-Version': '2022-11-28'
-        }
+        headers: githubHeaders
       }),
       fetch('https://api.github.com/repos/karbivskyi/MineBench-GPU-RVN/releases/latest', {
-        headers: {
-          'Authorization': `Bearer ${GITHUB_TOKEN}`,
-          'Accept': 'application/vnd.github+json',
-          'X-GitHub-Api-Version': '2022-11-28'
-        }
+        headers: githubHeaders
       }),
       fetch('https://api.github.com/repos/devcodex2025/MineBench-Client/releases/latest', {
-        headers: {
-          'Authorization': `Bearer ${GITHUB_TOKEN}`,
-          'Accept': 'application/vnd.github+json',
-          'X-GitHub-Api-Version': '2022-11-28'
-        }
+        headers: githubHeaders
       })
     ]);
 

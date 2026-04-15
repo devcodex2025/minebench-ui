@@ -2,11 +2,23 @@ import type { Metadata } from 'next';
 import LandingPageClient from './LandingPageClient';
 
 export const metadata: Metadata = {
-  title: 'Minebench - Hardware Benchmarking Platform with Blockchain Rewards',
-  description: 'Comprehensive benchmarking platform for cryptocurrency mining hardware. Compare GPU and CPU performance with transparent results and earn blockchain-based rewards on Solana.',
+  title: 'MineBench | Mining Benchmark Software, RandomX Benchmark, Monero Mining App',
+  description: 'MineBench is desktop mining benchmark software for CPU and GPU miners. Compare hardware performance, track RandomX benchmark results, explore the mining leaderboard, and use a Monero mining app with a cleaner UI.',
+  keywords: [
+    'mining benchmark software',
+    'cpu mining benchmark',
+    'gpu mining benchmark',
+    'randomx benchmark',
+    'monero mining app',
+    'mining leaderboard',
+    'desktop mining software',
+    'monero mining software',
+    'hardware benchmark software',
+    'hashrate benchmark',
+  ],
   openGraph: {
-    title: 'Minebench - Hardware Benchmarking Platform',
-    description: 'Comprehensive benchmarking platform for cryptocurrency mining hardware. Compare GPU and CPU performance with transparent results and earn blockchain-based rewards on Solana.',
+    title: 'MineBench | Mining Benchmark Software And Monero Mining App',
+    description: 'Compare CPU and GPU mining performance, track RandomX benchmark results, and explore a cleaner desktop mining workflow with MineBench.',
     url: 'https://minebench.cloud',
     siteName: 'Minebench',
     images: [
@@ -22,8 +34,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Minebench - Hardware Benchmarking Platform',
-    description: 'Comprehensive benchmarking platform for cryptocurrency mining hardware. Compare GPU and CPU performance with transparent results.',
+    title: 'MineBench | RandomX Benchmark And Mining Leaderboard',
+    description: 'Desktop mining benchmark software for CPU and GPU miners with RandomX benchmarking, hardware comparison, and Solana-based rewards.',
     images: ['https://minebench.cloud/og-home.png'],
     creator: '@MineBenchdapp',
   },

@@ -1,131 +1,366 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { BenchmarkResult, BenchmarkSummary } from '@/types/benchmark';
-import { calculateSummary } from '@/lib/utils';
+import { calculateSummary, formatHashrate } from '@/lib/utils';
 import BenchmarkTable from '@/components/BenchmarkTable';
 import StatsCards, { RecentTests } from '@/components/StatsCards';
-import { Settings, RefreshCw } from 'lucide-react';
-import { supabase } from '@/lib/supabaseClient';
+import { Activity, Cpu, Download, RefreshCw, TrendingUp, Users } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
+type PoolStatsResponse = {
+  poolHashrate?: number;
+  miners?: number;
+  stratum?: {
+    connections?: number;
+  };
+};
+
+type RatesResponse = {
+  xmr_usd?: number;
+  bmt_usd?: number;
+  rate_xmr_bmt?: number;
+};
+
+const POOL_STATS_URL = '/api/pool-stats';
+const RATES_URL = '/api/rates';
+
 export default function DashboardClient() {
-    const [results, setResults] = useState<BenchmarkResult[]>([]);
-    const [summary, setSummary] = useState<BenchmarkSummary | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [tests, setTests] = useState<BenchmarkResult[]>([]);
+  const [results, setResults] = useState<BenchmarkResult[]>([]);
+  const [summary, setSummary] = useState<BenchmarkSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [tests, setTests] = useState<BenchmarkResult[]>([]);
+  const [totalHashrate, setTotalHashrate] = useState(0);
+  const [onlineClients, setOnlineClients] = useState(0);
+  const [poolEffort, setPoolEffort] = useState<number | null>(null);
+  const [rates, setRates] = useState<RatesResponse>({});
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
-    const loadData = async () => {
-        setLoading(true);
-        try {
-            const { data, error } = await supabase
-                .from('benchmarks')
-                .select('*')
-                .order('created_at', { ascending: false });
-            if (error) throw error;
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [benchmarksResponse, poolStatsResponse, ratesResponse] = await Promise.allSettled([
+        fetch(`/api/benchmarks?t=${Date.now()}`, { cache: 'no-store' }),
+        fetch(`${POOL_STATS_URL}?t=${Date.now()}`, { cache: 'no-store' }),
+        fetch(`${RATES_URL}?t=${Date.now()}`, { cache: 'no-store' })
+      ]);
 
-            // Keep only the latest entry per device_uid
-            const latestMap = new Map<string, typeof data[0]>();
-            data.forEach(item => {
-                if (!latestMap.has(item.device_uid) || new Date(item.created_at) > new Date(latestMap.get(item.device_uid)!.created_at)) {
-                    latestMap.set(item.device_uid, item);
-                }
-            });
-            const uniqueData = Array.from(latestMap.values());
+      if (benchmarksResponse.status === 'fulfilled' && benchmarksResponse.value.ok) {
+        const benchmarkPayload: BenchmarkResult[] = await benchmarksResponse.value.json();
 
-            // Map data for results display
-            setResults(
-                uniqueData.map(item => ({
-                    id: item.id,
-                    algorithm: item.algorithm,
-                    device_name: item.device_name,
-                    device_type: item.device_type,
-                    avg_hashrate: Number(item.avg_hashrate),
-                    efficiency: Number(item.efficiency),
-                    created_at: item.created_at,
-                    gpu_model: item.gpu_model || item.device_name,
-                }))
-            );
+        setResults(benchmarkPayload);
+        setTests(benchmarkPayload);
 
-            // Map data for summary calculation with proper field names
-            const summaryData = uniqueData.map(item => ({
-                id: item.id,
-                algorithm: item.algorithm,
-                device_name: item.device_name,
-                device_type: item.device_type,
-                hashrate: Number(item.avg_hashrate),
-                powerConsumption: item.avg_power ? Number(item.avg_power) : undefined,
-                efficiency: Number(item.efficiency),
-                created_at: item.created_at,
-                timestamp: item.created_at,
-                gpu_model: item.gpu_model || item.device_name,
-                gpuModel: item.gpu_model || item.device_name,
-            }));
+        const summaryData = benchmarkPayload.map((item) => ({
+          id: item.id,
+          algorithm: item.algorithm,
+          device_name: item.device_name,
+          device_type: item.device_type,
+          hashrate: Number(item.avg_hashrate),
+          powerConsumption: item.avg_power ? Number(item.avg_power) : undefined,
+          efficiency: Number(item.efficiency),
+          created_at: item.created_at,
+          timestamp: item.created_at ? String(item.created_at) : undefined,
+          gpu_model: item.gpu_model || item.device_name,
+          gpuModel: item.gpu_model || item.device_name,
+        }));
 
-            setTests(uniqueData);
-            setSummary(calculateSummary(summaryData));
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
-    };
+        setSummary(calculateSummary(summaryData));
+      } else {
+        console.error('Failed to fetch benchmark data');
+      }
 
-    useEffect(() => {
-        loadData();
-    }, []);
+      if (poolStatsResponse.status === 'fulfilled' && poolStatsResponse.value.ok) {
+        const poolStatsPayload: PoolStatsResponse & { stratum?: { current_effort?: number } } = await poolStatsResponse.value.json();
+        setTotalHashrate(Number(poolStatsPayload.poolHashrate || 0));
+        setOnlineClients(Number(poolStatsPayload.stratum?.connections || poolStatsPayload.miners || 0));
+        setPoolEffort(poolStatsPayload.stratum?.current_effort !== undefined ? poolStatsPayload.stratum.current_effort : null);
+        setLastUpdated(new Date().toISOString());
+      } else {
+        setTotalHashrate(0);
+        setOnlineClients(0);
+        setPoolEffort(null);
+        setLastUpdated(null);
+      }
 
-    const handleRefresh = () => loadData();
-
-    if (loading && results.length === 0) {
-        return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
-                <RefreshCw className="w-12 h-12 animate-spin text-yellow-400" />
-                <p className="ml-4 text-yellow-400">Loading benchmark data…</p>
-            </div>
-        );
+      if (ratesResponse.status === 'fulfilled' && ratesResponse.value.ok) {
+        const ratesPayload: RatesResponse = await ratesResponse.value.json();
+        setRates(ratesPayload);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
+  }, []);
 
+  useEffect(() => {
+    loadData();
+
+    const intervalId = setInterval(() => {
+      loadData();
+    }, 30000);
+
+    return () => clearInterval(intervalId);
+  }, [loadData]);
+
+  const handleRefresh = () => loadData();
+
+  if (loading && results.length === 0) {
     return (
-        <div className="min-h-screen bg-black text-zinc-400">
-            <Header />
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-20">
-                {summary && <StatsCards summary={summary} />}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-                    <div className="lg:col-span-2 bg-black border border-zinc-800 rounded-lg p-4">
-                        <BenchmarkTable results={results} onRefresh={handleRefresh} />
-                    </div>
-                    <div className="space-y-6">
-                        <RecentTests tests={tests} />
-                        <div className="bg-black border border-zinc-800 rounded-lg p-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-semibold text-white">System Info</h3>
-                                <Settings className="w-5 h-5 text-zinc-500" />
-                            </div>
-                            <div className="space-y-2">
-                                <div className="flex justify-between">
-                                    <span className="text-sm text-zinc-500">Version:</span>
-                                    <span className="text-sm font-medium text-white">0.1.3</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-sm text-zinc-500">Environment:</span>
-                                    <span className="text-sm font-medium text-white">Production</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-sm text-zinc-500">Data Points:</span>
-                                    <span className="text-sm font-medium text-white">{results.length}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-sm text-zinc-500">Status:</span>
-                                    <span className="text-sm font-medium text-yellow-400">Active</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </main>
-            <Footer />
-        </div>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <RefreshCw className="w-12 h-12 animate-spin text-yellow-400" />
+        <p className="ml-4 text-yellow-400">Loading benchmark data...</p>
+      </div>
     );
+  }
+
+  const cpuResults = results.filter((r) => r.device_type?.toLowerCase() === 'cpu');
+  const gpuResults = results.filter((r) => r.device_type?.toLowerCase() === 'gpu');
+
+  return (
+    <div className="min-h-screen bg-black text-zinc-400">
+      <Header />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+        <section className="border border-zinc-800 bg-zinc-950/60 p-8 md:p-10 mb-10">
+          <div className="flex flex-col gap-8">
+            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+              <div className="max-w-3xl space-y-4">
+                <div className="inline-flex items-center gap-2 border border-yellow-400/30 bg-yellow-400/10 px-3 py-1">
+                  <Activity className="w-4 h-4 text-yellow-400" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-400">Live Network Feed</span>
+                </div>
+                <h1 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter">
+                  CPU Mining Benchmark <span className="text-yellow-400">Dashboard</span>
+                </h1>
+                <p className="text-zinc-400 text-lg leading-relaxed">
+                  Track live hashrate, active benchmark clients, and ranked hardware results across the MineBench network. Use this page to compare CPU mining benchmark data, review GPU mining performance, and test where your rig stands on the leaderboard.
+                </p>
+              </div>
+              <button
+                onClick={handleRefresh}
+                className="inline-flex items-center justify-center gap-3 self-start border border-zinc-700 px-6 py-3 text-sm font-black uppercase tracking-[0.2em] text-white transition-all hover:border-yellow-400 hover:text-yellow-400"
+                disabled={loading}
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                {loading ? 'Refreshing...' : 'Refresh Live Data'}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="border border-zinc-800 bg-black p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Current Pool Hashrate</span>
+                  <TrendingUp className="w-5 h-5 text-yellow-400" />
+                </div>
+                <p className="text-4xl md:text-5xl font-black text-yellow-400 font-mono-system tracking-tighter">
+                  {formatHashrate(totalHashrate)}
+                </p>
+                <p className="text-xs text-zinc-500 uppercase tracking-widest mt-2">
+                  Live total from active pool miners
+                </p>
+              </div>
+              <div className="border border-zinc-800 bg-black p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Miners Online</span>
+                  <Users className="w-5 h-5 text-yellow-400" />
+                </div>
+                <p className="text-4xl md:text-5xl font-black text-white font-mono-system tracking-tighter">
+                  {onlineClients.toLocaleString()}
+                </p>
+                <p className="text-xs text-zinc-500 uppercase tracking-widest mt-2">
+                  Network participants
+                </p>
+              </div>
+              <div className="border border-zinc-800 bg-black p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">XMR / BMT Exchange</span>
+                  <Activity className="w-5 h-5 text-yellow-400" />
+                </div>
+                <div className="flex justify-between items-end">
+                  <div>
+                    <div className="text-[10px] text-zinc-500 uppercase font-mono mb-1">XMR Price:</div>
+                    <p className="text-2xl font-black text-white font-mono-system tracking-tighter">
+                      ${rates.xmr_usd ? rates.xmr_usd.toFixed(2) : '0.00'}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[10px] text-zinc-500 uppercase font-mono mb-1">BMT Price:</div>
+                    <a 
+                      href="https://pump.fun/coin/67ipDsgK6D7bqTW89H8T1KTxUvVuaFy92GX7Q2XFVdev" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-2xl font-black text-yellow-400 font-mono-system tracking-tighter hover:text-white transition-colors cursor-pointer"
+                    >
+                      ${rates.bmt_usd ? rates.bmt_usd.toFixed(8) : '0.00'}
+                    </a>
+                  </div>
+                </div>
+                <p className="text-xs text-zinc-500 uppercase tracking-widest mt-3 pt-3 border-t border-zinc-900">
+                  Last synced {lastUpdated ? new Date(lastUpdated).toLocaleTimeString() : 'just now'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link
+                href="/downloads"
+                className="inline-flex items-center justify-center gap-3 bg-yellow-400 px-8 py-4 text-sm font-black uppercase tracking-[0.2em] text-black transition-all hover:bg-white"
+              >
+                <Download className="w-5 h-5" />
+                Run Performance Check
+              </Link>
+              <Link
+                href="/downloads"
+                className="inline-flex items-center justify-center gap-3 border border-zinc-700 px-8 py-4 text-sm font-black uppercase tracking-[0.2em] text-white transition-all hover:border-yellow-400 hover:text-yellow-400"
+              >
+                Download Benchmark Client
+              </Link>
+              <Link
+                href="/premium"
+                className="inline-flex items-center justify-center gap-3 border border-zinc-700 px-8 py-4 text-sm font-black uppercase tracking-[0.2em] text-white transition-all hover:border-yellow-400 hover:text-yellow-400"
+              >
+                Unlock Premium Controls
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {summary && <StatsCards summary={summary} />}
+
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-14">
+          <div className="border border-zinc-800 bg-zinc-950 p-7">
+            <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-4">
+              Search The Best <span className="text-yellow-400">CPU Mining Benchmark</span>
+            </h2>
+            <p className="text-sm leading-relaxed text-zinc-400">
+              If you are looking for a CPU mining benchmark, RandomX benchmark leaderboard, or the best CPU for Monero mining, this dashboard gives you live performance data from real MineBench client submissions.
+            </p>
+          </div>
+          <div className="border border-zinc-800 bg-zinc-950 p-7">
+            <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-4">
+              Compare <span className="text-yellow-400">GPU And CPU Mining Performance</span>
+            </h2>
+            <p className="text-sm leading-relaxed text-zinc-400">
+              Use the leaderboard to compare hardware, review current hashrate, and validate your own rig. It is a practical reference for miners searching GPU mining benchmark data, CPU mining results, and hardware leaderboard visibility.
+            </p>
+          </div>
+        </section>
+
+        <div className="space-y-16 pb-20">
+          <section>
+            <div className="flex items-center gap-6 mb-8">
+              <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter whitespace-nowrap">
+                Top <span className="text-yellow-400">CPU</span> Performance
+              </h2>
+              <div className="h-0.5 bg-gradient-to-r from-zinc-800 to-transparent flex-grow"></div>
+            </div>
+            <div className="bg-black border border-zinc-800 rounded-xl overflow-hidden shadow-2xl shadow-yellow-500/5">
+              <BenchmarkTable results={cpuResults} />
+            </div>
+          </section>
+
+          {gpuResults.length > 0 && (
+            <section>
+              <div className="flex items-center gap-6 mb-8">
+                <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter whitespace-nowrap">
+                  Top <span className="text-yellow-400">GPU</span> Performance
+                </h2>
+                <div className="h-0.5 bg-gradient-to-r from-zinc-800 to-transparent flex-grow"></div>
+              </div>
+              <div className="bg-black border border-zinc-800 rounded-xl overflow-hidden shadow-2xl shadow-yellow-500/5">
+                <BenchmarkTable results={gpuResults} />
+              </div>
+            </section>
+          )}
+
+          <section className="border border-zinc-800 bg-zinc-950 p-8">
+            <div className="max-w-4xl space-y-5">
+              <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter">
+                Run Your Own <span className="text-yellow-400">Hardware Performance Check</span>
+              </h2>
+              <p className="text-zinc-400 leading-relaxed">
+                Want to see where your processor or graphics card ranks? Download the MineBench client, run a benchmark, and publish your result to the live mining benchmark dashboard. This is the fastest way to test CPU mining performance, compare RandomX benchmark output, and measure your rig against real network data.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 pt-2">
+                <Link
+                  href="/downloads"
+                  className="inline-flex items-center justify-center gap-3 bg-yellow-400 px-8 py-4 text-sm font-black uppercase tracking-[0.2em] text-black transition-all hover:bg-white"
+                >
+                  <Download className="w-5 h-5" />
+                  Download And Test Your Rig
+                </Link>
+                <Link
+                  href="/premium"
+                  className="inline-flex items-center justify-center gap-3 border border-zinc-700 px-8 py-4 text-sm font-black uppercase tracking-[0.2em] text-white transition-all hover:border-yellow-400 hover:text-yellow-400"
+                >
+                  Explore Premium Mining Controls
+                </Link>
+              </div>
+            </div>
+          </section>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-12 border-t border-zinc-900/50 mt-12">
+            <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-6 overflow-hidden relative group shadow-xl h-[270px] flex flex-col">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <TrendingUp className="w-16 h-16 text-yellow-400" />
+              </div>
+              <h3 className="text-lg font-black text-white mb-4 uppercase tracking-tighter italic">Network Health</h3>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-[10px] font-mono text-zinc-500 uppercase">Sync Status</span>
+                    <span className="text-[10px] font-mono text-yellow-400">100%</span>
+                  </div>
+                  <div className="w-full bg-zinc-900 h-1">
+                    <div className="bg-yellow-400 h-full w-full shadow-[0_0_10px_rgba(250,204,21,0.5)]"></div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 text-sm pt-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                  <span className="text-zinc-400 uppercase tracking-widest font-black text-[9px]">All Pool Nodes Optimal</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-black border border-zinc-800 rounded-lg p-6 hover:border-zinc-700 transition-colors shadow-xl h-[270px] flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-black text-white uppercase tracking-tight italic">System Index</h3>
+                <Cpu className="w-4 h-4 text-zinc-500" />
+              </div>
+              <div className="space-y-2 font-mono text-[10px]">
+                <div className="flex justify-between border-b border-zinc-900 pb-1">
+                  <span className="text-zinc-500 uppercase">VERSION:</span>
+                  <span className="text-white font-bold">v0.1.5.0</span>
+                </div>
+                <div className="flex justify-between border-b border-zinc-900 pb-1">
+                  <span className="text-zinc-500 uppercase">NETWORK:</span>
+                  <span className="text-white font-bold text-blue-400 text-[9px]">SOLANA MAINNET</span>
+                </div>
+                <div className="flex justify-between border-b border-zinc-900 pb-1">
+                  <span className="text-zinc-500 uppercase">WORKERS (LIVE):</span>
+                  <span className="text-white font-bold text-yellow-400">{onlineClients}</span>
+                </div>
+                <div className="flex justify-between border-b border-zinc-900 pb-1">
+                  <span className="text-zinc-500 uppercase">CURRENT EFFORT:</span>
+                  <span className="text-white font-bold">{poolEffort !== null ? poolEffort.toFixed(1) + '%' : 'N/A'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-500 uppercase">XMR/BMT RATIO:</span>
+                  <span className="text-white font-bold">{rates.rate_xmr_bmt ? rates.rate_xmr_bmt.toFixed(0) : '0'}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="lg:col-span-1 h-[270px]">
+              <RecentTests tests={tests} />
+            </div>
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
 }

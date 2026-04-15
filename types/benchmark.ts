@@ -12,7 +12,7 @@ export interface StatsCardsProps {
 }
 export interface BenchmarkTableProps {
   results: BenchmarkResult[];
-  onRefresh: () => void;
+  onRefresh?: () => void;
 }
 
 export interface BenchmarkResult {

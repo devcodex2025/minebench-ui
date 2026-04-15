@@ -12,10 +12,11 @@ import '@solana/wallet-adapter-react-ui/styles.css';
 
 export function SolanaWalletProvider({ children }: { children: React.ReactNode }) {
   const network = WalletAdapterNetwork.Mainnet;
-  const endpoint = React.useMemo(
-    () => process.env.NEXT_PUBLIC_SOLANA_RPC_URL || clusterApiUrl(network),
-    [network]
-  );
+  const endpoint = React.useMemo(() => {
+    // Використовуємо RPC URL змінної середовища, якщо вона є, інакше fallback на публічний
+    const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL;
+    return rpcUrl || clusterApiUrl(network);
+  }, [network]);
 
   const wallets = React.useMemo(
     () => [

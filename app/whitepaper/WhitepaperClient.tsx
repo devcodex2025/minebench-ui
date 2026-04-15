@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Scene3D from '@/components/Scene3D';
-import { FileText, Cpu, Coins, Globe, ExternalLink, Award, Zap, ShieldCheck } from 'lucide-react';
+import { FileText, Cpu, Coins, Globe, ExternalLink, Award, Zap, ShieldCheck, TrendingUp, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function WhitepaperClient() {
@@ -52,10 +52,10 @@ export default function WhitepaperClient() {
                             </div>
                             <div className="space-y-4 text-zinc-400 leading-relaxed">
                                 <p>
-                                    Minebench is a revolutionary web-based benchmarking platform designed to bridge the gap between hardware performance testing and eco-friendly crypto mining. Built on the high-performance <strong className="text-white">Solana blockchain</strong>, Minebench provides a transparent, immutable, and verifiable way to test and rank mining hardware.
+                                    Minebench is a revolutionary web-based benchmarking platform designed to seamlessly evaluate and rank <strong className="text-white">CPU and GPU hardware performance</strong>. Our core value is providing a completely transparent, verifiable, and open-source standard for the global crypto-mining and rendering industry.
                                 </p>
                                 <p>
-                                    By leveraging Solana&apos;s low latency and high throughput, we ensure that every benchmark result is cryptographically signed and recorded, creating a trustless standard for the mining industry.
+                                    As opposed to generic synthetic benchmarks, Minebench focuses strictly on real-world capabilities. By utilizing our proprietary benchmarking tools, users help establish a trusted hardware leaderboard accessible to the entire community.
                                 </p>
                             </div>
                         </motion.section>
@@ -145,24 +145,73 @@ export default function WhitepaperClient() {
                                 <p>
                                     The <strong className="text-white">BenchMark Token (BMT)</strong> is the native utility token of the Minebench ecosystem. It is designed to incentivize participation, ensure accurate data reporting, and govern the platform.
                                 </p>
-
                                 <div className="grid sm:grid-cols-3 gap-4">
                                     <div className="border border-zinc-900 p-6 hover:border-yellow-400 transition-all">
+                                        <div className="text-yellow-400 font-bold text-lg mb-2 uppercase tracking-wide">Validate</div>
+                                        <div className="text-sm text-zinc-500">Run detailed real-time benchmarks on GPUs and CPUs</div>
+                                    </div>
+                                    <div className="border border-zinc-900 p-6 hover:border-yellow-400 transition-all">
+                                        <div className="text-yellow-400 font-bold text-lg mb-2 uppercase tracking-wide">Contribute</div>
+                                        <div className="text-sm text-zinc-500">Support open-source development and hardware metrics collection</div>
+                                    </div>
+                                    <div className="border border-zinc-900 p-6 hover:border-yellow-400 transition-all">
                                         <div className="text-yellow-400 font-bold text-lg mb-2 uppercase tracking-wide">Earn</div>
-                                        <div className="text-sm text-zinc-500">Run benchmarks on GPUs, CPUs, and ASICs</div>
-                                    </div>
-                                    <div className="border border-zinc-900 p-6 hover:border-yellow-400 transition-all">
-                                        <div className="text-yellow-400 font-bold text-lg mb-2 uppercase tracking-wide">Stake</div>
-                                        <div className="text-sm text-zinc-500">Lock BMT to access premium tiers</div>
-                                    </div>
-                                    <div className="border border-zinc-900 p-6 hover:border-yellow-400 transition-all">
-                                        <div className="text-yellow-400 font-bold text-lg mb-2 uppercase tracking-wide">Govern</div>
-                                        <div className="text-sm text-zinc-500">Vote on protocol upgrades</div>
+                                        <div className="text-sm text-zinc-500">Participate in network testing and gain token rewards automatically</div>
                                     </div>
                                 </div>
 
                                 <div className="border-l-4 border-yellow-400 bg-zinc-900/30 p-4 text-sm">
                                     <strong className="text-white">Note:</strong> Detailed token distribution schedules and vesting periods are outlined in our full technical documentation.
+                                </div>
+                            </div>
+                        </motion.section>
+
+                        {/* Market & Trading */}
+                        <motion.section
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="bg-yellow-400 p-8 text-black"
+                        >
+                            <div className="flex items-center gap-4 mb-6 pb-4 border-b border-black/20">
+                                <TrendingUp className="w-6 h-6" />
+                                <h2 className="text-2xl font-bold uppercase tracking-tight text-black">Market & Trading</h2>
+                            </div>
+                            <div className="space-y-6">
+                                <p className="font-bold text-lg leading-snug">
+                                    $BMT is actively traded on the Solana network. The token serves as the primary settlement asset for hardware benchmarks and ecosystem rewards.
+                                </p>
+                                <div className="space-y-6">
+                                    <Link 
+                                        href="https://pump.fun/coin/67ipDsgK6D7bqTW89H8T1KTxUvVuaFy92GX7Q2XFVdev" 
+                                        target="_blank"
+                                        className="bg-black text-white p-8 flex flex-col md:flex-row gap-8 hover:bg-zinc-900 transition-all group border-none items-center"
+                                    >
+                                        <div className="flex-1 space-y-4">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="font-bold uppercase tracking-widest text-xs opacity-60">Primary Liquidity Pair</span>
+                                                <ExternalLink className="w-4 h-4 text-yellow-400" />
+                                            </div>
+                                            <img src="/img/pumpfun_logo.png" alt="PumpFun" className="h-10 w-auto mb-4" />
+                                            <h3 className="text-3xl font-black italic">LAUNCHED ON PUMP.FUN</h3>
+                                            <p className="text-xs text-zinc-500 uppercase font-bold tracking-wider leading-relaxed">
+                                                The $BMT token launch was successfully executed on Pump.fun, ensuring fair distribution and immediate liquidity for all hardware contributors.
+                                            </p>
+                                            <span className="inline-block mt-4 text-[10px] uppercase font-bold text-yellow-400 border border-yellow-400/30 px-3 py-1 group-hover:bg-yellow-400 group-hover:text-black transition-all">Trade on Pump.fun &rarr;</span>
+                                        </div>
+                                        <div className="flex-1 w-full max-w-sm border border-zinc-800 p-2 bg-zinc-950 shadow-2xl group-hover:border-yellow-400/30 transition-all">
+                                            <img 
+                                                src="/screenshots/benchmark-token-pumpfun-screenshot.png" 
+                                                alt="PumpFun Exchange" 
+                                                className="w-full h-auto opacity-70 group-hover:opacity-100 transition-opacity" 
+                                            />
+                                        </div>
+                                    </Link>
+                                </div>
+                                <div className="pt-4 border-t border-black/10">
+                                    <p className="text-[10px] font-mono uppercase font-black tracking-[0.2em]">
+                                        Contract: 67ipDsgK6D7bqTW89H8T1KTxUvVuaFy92GX7Q2XFVdev
+                                    </p>
                                 </div>
                             </div>
                         </motion.section>
@@ -235,38 +284,38 @@ export default function WhitepaperClient() {
                             <div className="space-y-6">
                                 <div className="border border-zinc-900 p-6 hover:border-yellow-400 transition-all">
                                     <div className="flex items-center gap-3 mb-3">
-                                        <span className="text-yellow-400 font-bold font-mono-system">Q1 2025</span>
+                                        <span className="text-yellow-400 font-bold font-mono-system">Q4 2025</span>
                                         <span className="text-xs text-zinc-600 uppercase tracking-widest font-bold">COMPLETED</span>
                                     </div>
                                     <ul className="space-y-2 text-zinc-400 text-sm">
                                         <li>✓ Launch CPU and GPU benchmark clients</li>
-                                        <li>✓ Integrate Solana blockchain for result verification</li>
-                                        <li>✓ Deploy web dashboard with real-time analytics</li>
+                                        <li>✓ Participation in <Link href="https://arena.colosseum.org/projects/explore/minebench-mining-benchmark" target="_blank" className="text-yellow-400 underline">Colosseum hackathon</Link></li>
                                     </ul>
                                 </div>
 
                                 <div className="border border-zinc-900 p-6 hover:border-yellow-400 transition-all">
                                     <div className="flex items-center gap-3 mb-3">
-                                        <span className="text-yellow-400 font-bold font-mono-system">Q2 2025</span>
+                                        <span className="text-yellow-400 font-bold font-mono-system">Q1 2026</span>
                                         <span className="text-xs text-yellow-400 uppercase tracking-widest font-bold">IN PROGRESS</span>
                                     </div>
                                     <ul className="space-y-2 text-zinc-400 text-sm">
-                                        <li>→ Launch BMT token on Solana</li>
-                                        <li>→ Implement staking mechanism</li>
-                                        <li>→ Add AMD GPU support</li>
+                                        <li>→ TGE on <Link href="https://pump.fun/coin/67ipDsgK6D7bqTW89H8T1KTxUvVuaFy92GX7Q2XFVdev" target="_blank" className="text-yellow-400 underline">pump.fun</Link></li>
+                                        <li>→ Switch from 2miners pool to our own mining pool</li>
+                                        <li>→ Creation of the new version of the application</li>
+                                        <li>→ Adding statistic cards (pool hashrate, online miners, shares, etc)</li>
                                     </ul>
                                 </div>
 
                                 <div className="border border-zinc-900 p-6 hover:border-yellow-400 transition-all">
                                     <div className="flex items-center gap-3 mb-3">
-                                        <span className="text-yellow-400 font-bold font-mono-system">Q3-Q4 2025</span>
+                                        <span className="text-yellow-400 font-bold font-mono-system">Q2 2026</span>
                                         <span className="text-xs text-zinc-600 uppercase tracking-widest font-bold">PLANNED</span>
                                     </div>
                                     <ul className="space-y-2 text-zinc-400 text-sm">
-                                        <li>→ Mobile app for iOS and Android</li>
-                                        <li>→ ASIC benchmarking support</li>
-                                        <li>→ Community governance implementation</li>
-                                        <li>→ Hardware manufacturer partnerships</li>
+                                        <li>→ Release of new application version on minebench.cloud</li>
+                                        <li>→ Engagement of first official testers</li>
+                                        <li>→ Return to the opensource model</li>
+                                        <li>→ Source codes published at: <Link href="https://github.com/devcodex2025/MineBench-Client" target="_blank" className="text-yellow-400 underline break-all">github.com/devcodex2025/MineBench-Client</Link></li>
                                     </ul>
                                 </div>
                             </div>
