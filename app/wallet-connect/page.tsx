@@ -75,6 +75,7 @@ const WalletConnectContent = () => {
           const redirectUrl = new URL(callbackUrl);
           redirectUrl.searchParams.set('publicKey', publicKey.toBase58());
           redirectUrl.searchParams.set('signature', signatureB64);
+          redirectUrl.searchParams.set('message', new TextDecoder().decode(message));
           
           console.log('[WalletConnect] Sending callback to:', redirectUrl.toString());
           const response = await fetch(redirectUrl.toString(), {
