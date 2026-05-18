@@ -65,6 +65,27 @@ npm run build
 npm start
 ```
 
+## Windows Docker Build And Push
+
+Use Docker Desktop on Windows from the `MineBench-UI` directory. The script reads
+browser-safe `NEXT_PUBLIC_*` build args from `.env.local`.
+
+Validate the image locally:
+
+```powershell
+.\scripts\build-and-push-windows-docker.ps1 -Load -Tags latest,10248ca
+docker run --rm -p 3099:3000 docker.io/karbivskyi/minebench-ui:latest
+```
+
+Build and push the production image to Docker Hub:
+
+```powershell
+docker login
+.\scripts\build-and-push-windows-docker.ps1 -Push -Tags latest,10248ca
+```
+
+The default target is `docker.io/karbivskyi/minebench-ui`.
+
 ## Configuration model
 
 Use browser-safe values only for `NEXT_PUBLIC_*` variables.
