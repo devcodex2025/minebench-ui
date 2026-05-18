@@ -98,8 +98,8 @@ export default function DownloadsPageClient() {
         linux: [],
     });
     const [loading, setLoading] = useState(true);
-    const [showcaseProgress, setShowcaseProgress] = useState(0);
     const showcaseVideoRef = useRef<HTMLVideoElement>(null);
+    const showcaseProgressRef = useRef<HTMLDivElement>(null);
 
     const platformInfo = {
         windows: {
@@ -202,13 +202,13 @@ export default function DownloadsPageClient() {
                         arch: 'x64',
                         label: '64-bit Intel/AMD',
                         description: 'For standard 64-bit Windows systems',
-                        url: findAssetUrl((n) => n.endsWith('.exe') && (n.includes('x64-') || n.includes('x64.'))),
+                        url: findAssetUrl((n) => n.endsWith('.exe') && (n.includes('x64-') || n.includes('x64.'))) || DIRECT_DOWNLOAD_FALLBACKS.windows.x64,
                     },
                     {
                         arch: 'msi',
                         label: 'MSI Installer',
                         description: 'For managed Windows installs and enterprise deployment',
-                        url: findAssetUrl((n) => n.endsWith('.msi')),
+                        url: findAssetUrl((n) => n.endsWith('.msi')) || DIRECT_DOWNLOAD_FALLBACKS.windows.msi,
                     },
                 ];
 
@@ -219,7 +219,7 @@ export default function DownloadsPageClient() {
                         arch: 'universal',
                         label: 'Universal',
                         description: 'For Intel and Apple Silicon Mac computers',
-                        url: universalMacDmg || findAssetUrl((n) => n.endsWith('.dmg')),
+                        url: universalMacDmg || findAssetUrl((n) => n.endsWith('.dmg')) || DIRECT_DOWNLOAD_FALLBACKS.macos.universal,
                     },
                 ];
 
@@ -229,19 +229,19 @@ export default function DownloadsPageClient() {
                         arch: 'appimage',
                         label: 'AppImage',
                         description: 'Portable Linux package for x86-64 systems',
-                        url: findAssetUrl((n) => n.endsWith('.AppImage')),
+                        url: findAssetUrl((n) => n.endsWith('.AppImage')) || DIRECT_DOWNLOAD_FALLBACKS.linux.appimage,
                     },
                     {
                         arch: 'deb',
                         label: 'Debian/Ubuntu',
                         description: 'DEB package for Debian-based distributions',
-                        url: findAssetUrl((n) => n.endsWith('.deb')),
+                        url: findAssetUrl((n) => n.endsWith('.deb')) || DIRECT_DOWNLOAD_FALLBACKS.linux.deb,
                     },
                     {
                         arch: 'rpm',
                         label: 'Fedora/RHEL',
                         description: 'RPM package for Fedora, RHEL, and compatible distributions',
-                        url: findAssetUrl((n) => n.endsWith('.rpm')),
+                        url: findAssetUrl((n) => n.endsWith('.rpm')) || DIRECT_DOWNLOAD_FALLBACKS.linux.rpm,
                     },
                 ];
             } else {
@@ -396,15 +396,18 @@ export default function DownloadsPageClient() {
                                     onTimeUpdate={(e) => {
                                         const video = e.currentTarget;
                                         const progress = video.duration ? (video.currentTime / video.duration) * 100 : 0;
-                                        setShowcaseProgress(progress);
+                                        if (showcaseProgressRef.current) {
+                                            showcaseProgressRef.current.style.width = `${progress}%`;
+                                        }
                                     }}
                                 >
                                     <source src="/video/MineBench-0.6.1.-showcase.mp4" type="video/mp4" />
                                 </video>
                                 <div className="absolute left-0 right-0 top-0 z-10 h-1 bg-black/40">
                                     <div
+                                        ref={showcaseProgressRef}
                                         className="h-full bg-yellow-400 transition-[width] duration-150"
-                                        style={{ width: `${showcaseProgress}%` }}
+                                        style={{ width: '0%' }}
                                     />
                                 </div>
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-6">

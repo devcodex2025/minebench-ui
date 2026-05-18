@@ -73,7 +73,7 @@ browser-safe `NEXT_PUBLIC_*` build args from `.env.local`.
 Validate the image locally:
 
 ```powershell
-.\scripts\build-and-push-windows-docker.ps1 -Load -Tags latest,v0.1.5.5
+.\scripts\build-and-push-windows-docker.ps1 -Load -Tags latest,v0.1.5.6
 docker run --rm -p 3099:3000 docker.io/karbivskyi/minebench-ui:latest
 ```
 
@@ -81,7 +81,7 @@ Build and push the production image to Docker Hub:
 
 ```powershell
 docker login
-.\scripts\build-and-push-windows-docker.ps1 -Push -Tags latest,v0.1.5.5
+.\scripts\build-and-push-windows-docker.ps1 -Push -Tags latest,v0.1.5.6
 ```
 
 The default target is `docker.io/karbivskyi/minebench-ui`.
