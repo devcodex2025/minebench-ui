@@ -1,5 +1,5 @@
-# Use the official Node.js 18 image as base
-FROM node:18 AS base
+# Use Node.js 22 to match the release workflow and current wallet dependencies.
+FROM node:22 AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -7,7 +7,8 @@ WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
-RUN npm ci --legacy-peer-deps 2>&1 || (npm cache clean --force && npm install --legacy-peer-deps)
+RUN npm_config_strict_ssl=false npm install -g npm@11.6.2 \
+    && npm_config_strict_ssl=false npm install --legacy-peer-deps
 
 # Rebuild the source code only when needed
 FROM base AS builder

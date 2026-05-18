@@ -108,7 +108,13 @@ interface RecentTestsProps {
 }
 
 export function RecentTests({ tests }: RecentTestsProps) {
-  const nonZeroTests = tests.filter(t => t.avg_hashrate != null && t.avg_hashrate > 0);
+  const nonZeroTests = [...tests]
+    .filter(t => t.avg_hashrate != null && t.avg_hashrate > 0)
+    .sort((a, b) => {
+      const aTime = new Date(String(a.created_at ?? a.timestamp ?? 0)).getTime();
+      const bTime = new Date(String(b.created_at ?? b.timestamp ?? 0)).getTime();
+      return bTime - aTime;
+    });
 
   if (nonZeroTests.length === 0) return (
     <div className="border border-zinc-900/50 rounded-xl p-8 text-center bg-zinc-950/20 backdrop-blur-sm">
@@ -133,6 +139,9 @@ export function RecentTests({ tests }: RecentTestsProps) {
       <div className="divide-y divide-zinc-900/50 bg-black/20 overflow-y-auto flex-1 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
         {nonZeroTests.map((test, index) => {
           const isGPU = test.device_type?.toLowerCase() === 'gpu';
+          const testDate = test.created_at || test.timestamp
+            ? new Date(String(test.created_at ?? test.timestamp))
+            : null;
           
           return (
             <motion.div
@@ -162,8 +171,15 @@ export function RecentTests({ tests }: RecentTestsProps) {
                   {test.avg_hashrate != null ? formatHashrate(test.avg_hashrate) : '0.0 H/S'}
                 </p>
                 <p className="text-[8px] font-bold text-zinc-600 uppercase tracking-tighter">
-                  {test.created_at ? new Date(test.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'JUST NOW'}
+                  {testDate
+                    ? testDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    : 'JUST NOW'}
                 </p>
+                {testDate && (
+                  <p className="text-[8px] font-bold text-zinc-700 uppercase tracking-tighter">
+                    {testDate.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                  </p>
+                )}
               </div>
             </motion.div>
           );

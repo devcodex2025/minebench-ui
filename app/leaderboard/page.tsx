@@ -2,22 +2,40 @@ import type { Metadata } from 'next';
 import LeaderboardClient from './LeaderboardClient';
 
 export const metadata: Metadata = {
-  title: 'Leaderboard - Top Mining Hardware | GPU & CPU Performance Rankings',
-  description: 'Who has the most powerful rig? Compare NVIDIA, AMD, and Intel hardware performance. Live rankings for Monero (RandomX) and GPU mining efficiency.',
-  openGraph: {
-    title: 'Mining Leaderboard - Minebench',
-    description: 'Real-time mining hardware rankings. Compare GPU and CPU efficiency.',
-    url: 'https://minebench.cloud/leaderboard',
-    images: [{ url: 'https://minebench.cloud/og-leaderboard.png', width: 1200, height: 630 }],
+  title: 'Mining Benchmark Leaderboard | CPU and GPU Mining Rankings | MineBench',
+  description: 'Compare MineBench CPU and GPU mining benchmark rankings, RandomX hashrate, power draw, thermals, and unique hardware performance results.',
+  alternates: {
+    canonical: '/leaderboard',
   },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Leaderboard - Minebench Hardware Rankings',
-    description: 'Top performing GPUs and CPUs in the mining world.',
-    images: ['https://minebench.cloud/og-leaderboard.png'],
+  openGraph: {
+    title: 'MineBench Mining Benchmark Leaderboard',
+    description: 'Ranked CPU and GPU mining benchmark results from real MineBench client submissions.',
+    url: '/leaderboard',
+    type: 'website',
   },
 };
 
 export default function LeaderboardPage() {
-  return <LeaderboardClient />;
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'MineBench Mining Benchmark Leaderboard',
+    description: 'CPU and GPU mining benchmark rankings with hashrate, power, thermal, and hardware performance data.',
+    about: [
+      'CPU mining benchmark',
+      'GPU mining benchmark',
+      'RandomX hashrate leaderboard',
+      'Monero mining hardware comparison'
+    ],
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <LeaderboardClient />
+    </>
+  );
 }

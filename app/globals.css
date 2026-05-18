@@ -4,37 +4,49 @@
 
 @layer base {
   :root {
-    --background: 0 0% 4%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 4%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 4%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 263 90% 60%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 47 100% 50%;
-    --secondary-foreground: 0 0% 0%;
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 65%;
-    --accent: 180 100% 50%;
-    --accent-foreground: 0 0% 0%;
-    --destructive: 0 100% 50%;
+    --background: 220 18% 7%;
+    --foreground: 45 24% 96%;
+    --card: 220 18% 11%;
+    --card-foreground: 45 24% 96%;
+    --popover: 220 18% 9%;
+    --popover-foreground: 45 24% 96%;
+    --primary: 47 95% 63%;
+    --primary-foreground: 220 18% 8%;
+    --secondary: 220 16% 16%;
+    --secondary-foreground: 45 16% 94%;
+    --muted: 220 14% 18%;
+    --muted-foreground: 220 10% 68%;
+    --accent: 47 95% 63%;
+    --accent-foreground: 220 18% 8%;
+    --destructive: 0 74% 56%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 20%;
-    --input: 0 0% 15%;
-    --ring: 263 90% 60%;
+    --border: 220 14% 20%;
+    --input: 220 14% 18%;
+    --ring: 47 95% 63%;
+    --canvas: 220 18% 7%;
+    --canvas-elevated: 220 18% 9%;
+    --panel: 220 18% 11%;
+    --panel-strong: 220 18% 14%;
+    --text-soft: 45 18% 84%;
+    --text-muted: 220 10% 68%;
+    --accent-ink: 220 18% 8%;
+    --signal: 152 62% 50%;
   }
 
   html {
-    font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+    scroll-behavior: smooth;
+    font-family: "Space Grotesk", "Inter", system-ui, sans-serif;
   }
 
   body {
-    @apply bg-black text-white selection:bg-yellow-400 selection:text-black;
+    @apply text-white selection:text-black;
+    background-color: hsl(var(--canvas));
     background-image:
+      radial-gradient(circle at top left, rgba(255, 214, 102, 0.08), transparent 28%),
+      radial-gradient(circle at 82% 18%, rgba(71, 188, 140, 0.08), transparent 22%),
       linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-    background-size: 50px 50px;
+    background-size: auto, auto, 56px 56px, 56px 56px;
     background-attachment: fixed;
   }
 
@@ -54,15 +66,15 @@
 
 @layer components {
   .neo-brutalist {
-    @apply bg-black border border-zinc-800 hover:border-white/50 transition-all duration-300;
+    @apply border border-white/10 bg-[hsl(var(--panel))] transition-all duration-300 hover:border-white/20;
   }
 
   .btn-primary {
-    @apply bg-white text-black font-bold py-3 px-6 hover:bg-yellow-400 hover:scale-105 transition-all duration-200 uppercase tracking-wide text-sm;
+    @apply bg-white px-6 py-3 text-sm font-bold uppercase tracking-wide text-black transition-all duration-200 hover:scale-105 hover:bg-yellow-400;
   }
 
   .btn-secondary {
-    @apply bg-transparent text-white border border-zinc-700 font-bold py-3 px-6 hover:border-white hover:bg-white/5 transition-all duration-200 uppercase tracking-wide text-sm;
+    @apply border border-zinc-700 bg-transparent px-6 py-3 text-sm font-bold uppercase tracking-wide text-white transition-all duration-200 hover:border-white hover:bg-white/5;
   }
 
   .card {
@@ -70,13 +82,25 @@
   }
 
   .input-field {
-    @apply w-full px-4 py-3 bg-zinc-900/50 border border-zinc-800 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 transition-all duration-200 placeholder:text-zinc-600 text-white font-mono;
+    @apply w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white transition-all duration-200 placeholder:text-zinc-600 focus:border-[hsl(var(--accent))] focus:ring-1 focus:ring-[hsl(var(--accent))];
+  }
+
+  .surface-panel {
+    @apply rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] shadow-[0_24px_80px_-32px_rgba(0,0,0,0.55)];
+  }
+
+  .section-kicker {
+    @apply mb-3 text-[11px] font-semibold uppercase tracking-[0.28em] text-[hsl(var(--text-soft))];
+  }
+
+  .utility-chip {
+    @apply rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--text-soft))] backdrop-blur-sm;
   }
 }
 
 @layer utilities {
   .text-gradient {
-    @apply bg-gradient-to-r from-white via-zinc-400 to-zinc-600 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-white via-zinc-300 to-zinc-500 bg-clip-text text-transparent;
   }
 
   .animate-float {
@@ -84,7 +108,8 @@
   }
 
   .font-mono-system {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+      "Liberation Mono", "Courier New", monospace;
   }
 }
 

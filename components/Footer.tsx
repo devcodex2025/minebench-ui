@@ -59,7 +59,7 @@ export default function Footer() {
                   <Image src="/img/pumpfun_logo.png" alt="pump.fun" fill className="object-contain opacity-50 group-hover:opacity-100 transition-opacity" />
                 </div>
               </a>
-              <a href="https://github.com/devcodex2025/MineBench-Client" target="_blank" rel="noopener noreferrer" className="w-10 h-10 border border-zinc-800 hover:border-yellow-400 flex items-center justify-center transition-all group">
+              <a href="https://github.com/devcodex2025/minebench-mining-benchmark-client" target="_blank" rel="noopener noreferrer" className="w-10 h-10 border border-zinc-800 hover:border-yellow-400 flex items-center justify-center transition-all group">
                 <Github className="w-5 h-5 text-zinc-500 group-hover:text-white transition-colors" />
               </a>
             </div>

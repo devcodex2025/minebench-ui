@@ -3,6 +3,9 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'MineBench Premium | Monero Mining Software With Full UI Control',
   description: 'Upgrade to MineBench Premium and control Monero mining through a powerful UI instead of console-only miners. Direct wallet mining, P2Pool, RandomX tuning, huge pages, and Windows, macOS, Linux support.',
+  alternates: {
+    canonical: 'https://minebench.cloud/premium',
+  },
   keywords: [
     'Monero mining software',
     'Monero premium mining',
@@ -30,13 +33,13 @@ export const metadata: Metadata = {
     description: 'A Monero mining app with direct wallet mining, P2Pool, RandomX tuning, and full UI/UX controls across Windows, macOS, and Linux.',
     url: 'https://minebench.cloud/premium',
     siteName: 'Minebench',
-    images: [{ url: 'https://minebench.cloud/og-premium.png' }],
+    images: [{ url: 'https://minebench.cloud/og-downloads.png' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'MineBench Premium | Monero Mining With Full UI Control',
     description: 'Mine Monero with direct wallet payouts, P2Pool, RandomX tuning, and a clean UI instead of console-only workflows.',
-    images: ['https://minebench.cloud/og-premium.png'],
+    images: ['https://minebench.cloud/og-downloads.png'],
   },
 };
 

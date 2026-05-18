@@ -1,24 +1,30 @@
 import type { Metadata } from 'next';
+import { createClient } from '@supabase/supabase-js';
 import LandingPageClient from './LandingPageClient';
+import type { LandingStats } from './LandingPageClient';
+import { getLeaderboardDeviceCount } from '@/lib/leaderboard';
+import type { BenchmarkResult } from '@/types/benchmark';
+
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'MineBench | Mining Benchmark Software, RandomX Benchmark, Monero Mining App',
-  description: 'MineBench is desktop mining benchmark software for CPU and GPU miners. Compare hardware performance, track RandomX benchmark results, explore the mining leaderboard, and use a Monero mining app with a cleaner UI.',
+  title: 'MineBench | Mining Benchmark Software And RandomX Hardware Comparison',
+  description: 'Compare CPU and GPU mining hardware, track RandomX benchmark results, inspect the live dashboard, and download the MineBench client for a cleaner mining workflow.',
   keywords: [
     'mining benchmark software',
     'cpu mining benchmark',
     'gpu mining benchmark',
     'randomx benchmark',
-    'monero mining app',
-    'mining leaderboard',
+    'hardware comparison for miners',
+    'mining results dashboard',
     'desktop mining software',
     'monero mining software',
     'hardware benchmark software',
     'hashrate benchmark',
   ],
   openGraph: {
-    title: 'MineBench | Mining Benchmark Software And Monero Mining App',
-    description: 'Compare CPU and GPU mining performance, track RandomX benchmark results, and explore a cleaner desktop mining workflow with MineBench.',
+    title: 'MineBench | Mining Benchmark Software And RandomX Comparison',
+    description: 'Compare mining hardware, inspect the live dashboard, and download the MineBench client.',
     url: 'https://minebench.cloud',
     siteName: 'Minebench',
     images: [
@@ -34,13 +40,49 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'MineBench | RandomX Benchmark And Mining Leaderboard',
-    description: 'Desktop mining benchmark software for CPU and GPU miners with RandomX benchmarking, hardware comparison, and Solana-based rewards.',
+    title: 'MineBench | RandomX Benchmark And Hardware Results Dashboard',
+    description: 'Mining benchmark software for CPU and GPU miners with hardware comparison and cleaner client UX.',
     images: ['https://minebench.cloud/og-home.png'],
     creator: '@MineBenchdapp',
   },
 };
 
-export default function LandingPage() {
-  return <LandingPageClient />;
+async function getLandingStats(): Promise<LandingStats> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    return { benchmarks: 0, miners: 0, downloads: 0 };
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  const [benchmarksResult, globalStatsResult] = await Promise.allSettled([
+    supabase
+      .from('benchmarks')
+      .select('id, device_uid, device_name, device_type, avg_hashrate, created_at'),
+    supabase
+      .from('global_stats')
+      .select('total_downloads')
+      .eq('id', 1)
+      .single()
+  ]);
+
+  const benchmarks = benchmarksResult.status === 'fulfilled' && !benchmarksResult.value.error
+    ? (benchmarksResult.value.data || []) as BenchmarkResult[]
+    : [];
+  const downloads = globalStatsResult.status === 'fulfilled' && !globalStatsResult.value.error
+    ? Number(globalStatsResult.value.data?.total_downloads || 0)
+    : 0;
+
+  return {
+    benchmarks: benchmarks.length,
+    miners: getLeaderboardDeviceCount(benchmarks),
+    downloads: Number.isFinite(downloads) ? downloads : 0,
+  };
+}
+
+export default async function LandingPage() {
+  const initialStats = await getLandingStats();
+  return <LandingPageClient initialStats={initialStats} />;
 }

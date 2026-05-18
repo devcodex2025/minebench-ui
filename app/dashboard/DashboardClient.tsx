@@ -4,9 +4,9 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { BenchmarkResult, BenchmarkSummary } from '@/types/benchmark';
 import { calculateSummary, formatHashrate } from '@/lib/utils';
-import BenchmarkTable from '@/components/BenchmarkTable';
+import { getLeaderboardRows } from '@/lib/leaderboard';
 import StatsCards, { RecentTests } from '@/components/StatsCards';
-import { Activity, Cpu, Download, RefreshCw, TrendingUp, Users } from 'lucide-react';
+import { Activity, Award, Cpu, Download, RefreshCw, TrendingUp, Users } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
@@ -53,7 +53,8 @@ export default function DashboardClient() {
         setResults(benchmarkPayload);
         setTests(benchmarkPayload);
 
-        const summaryData = benchmarkPayload.map((item) => ({
+        const leaderboardRows = getLeaderboardRows(benchmarkPayload);
+        const summaryData = leaderboardRows.map((item) => ({
           id: item.id,
           algorithm: item.algorithm,
           device_name: item.device_name,
@@ -117,8 +118,9 @@ export default function DashboardClient() {
     );
   }
 
-  const cpuResults = results.filter((r) => r.device_type?.toLowerCase() === 'cpu');
-  const gpuResults = results.filter((r) => r.device_type?.toLowerCase() === 'gpu');
+  const leaderboardRows = getLeaderboardRows(results);
+  const cpuLeaderboardCount = getLeaderboardRows(results, 'cpu').length;
+  const gpuLeaderboardCount = getLeaderboardRows(results, 'gpu').length;
 
   return (
     <div className="min-h-screen bg-black text-zinc-400">
@@ -136,7 +138,7 @@ export default function DashboardClient() {
                   CPU Mining Benchmark <span className="text-yellow-400">Dashboard</span>
                 </h1>
                 <p className="text-zinc-400 text-lg leading-relaxed">
-                  Track live hashrate, active benchmark clients, and ranked hardware results across the MineBench network. Use this page to compare CPU mining benchmark data, review GPU mining performance, and test where your rig stands on the leaderboard.
+                  Track live hashrate, active benchmark clients, and ranked hardware results across the MineBench network. Use this page to compare CPU mining benchmark data, review GPU mining performance, and see where your rig stands in the live results feed.
                 </p>
               </div>
               <button
@@ -236,7 +238,7 @@ export default function DashboardClient() {
               Search The Best <span className="text-yellow-400">CPU Mining Benchmark</span>
             </h2>
             <p className="text-sm leading-relaxed text-zinc-400">
-              If you are looking for a CPU mining benchmark, RandomX benchmark leaderboard, or the best CPU for Monero mining, this dashboard gives you live performance data from real MineBench client submissions.
+              If you are looking for a CPU mining benchmark, RandomX benchmark results, or the best CPU for Monero mining, this dashboard gives you live performance data from real MineBench client submissions.
             </p>
           </div>
           <div className="border border-zinc-800 bg-zinc-950 p-7">
@@ -244,37 +246,56 @@ export default function DashboardClient() {
               Compare <span className="text-yellow-400">GPU And CPU Mining Performance</span>
             </h2>
             <p className="text-sm leading-relaxed text-zinc-400">
-              Use the leaderboard to compare hardware, review current hashrate, and validate your own rig. It is a practical reference for miners searching GPU mining benchmark data, CPU mining results, and hardware leaderboard visibility.
+              Use the dashboard to compare hardware, review current hashrate, and validate your own rig. It is a practical reference for miners searching GPU mining benchmark data, CPU mining results, and ranked hardware visibility.
             </p>
           </div>
         </section>
 
         <div className="space-y-16 pb-20">
-          <section>
-            <div className="flex items-center gap-6 mb-8">
-              <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter whitespace-nowrap">
-                Top <span className="text-yellow-400">CPU</span> Performance
-              </h2>
-              <div className="h-0.5 bg-gradient-to-r from-zinc-800 to-transparent flex-grow"></div>
+          <section className="border border-zinc-800 bg-zinc-950 p-8 md:p-10">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+              <div className="space-y-4">
+                <div className="inline-flex items-center gap-2 border border-yellow-400/30 bg-yellow-400/10 px-3 py-1">
+                  <Award className="w-4 h-4 text-yellow-400" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-400">Ranked Hardware Moved</span>
+                </div>
+                <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter">
+                  Benchmark tables now live on the <span className="text-yellow-400">Leaderboard</span>
+                </h2>
+                <p className="max-w-3xl text-sm md:text-base leading-relaxed text-zinc-400">
+                  Dashboard stays focused on live pool health, rewards, and network totals. The leaderboard page now owns CPU and GPU ranking tables with search-friendly mining benchmark content.
+                </p>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="border border-zinc-800 bg-black p-4">
+                  <div className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Devices</div>
+                  <div className="mt-2 font-mono-system text-3xl font-black text-yellow-400">{leaderboardRows.length}</div>
+                </div>
+                <div className="border border-zinc-800 bg-black p-4">
+                  <div className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">CPU</div>
+                  <div className="mt-2 font-mono-system text-3xl font-black text-white">{cpuLeaderboardCount}</div>
+                </div>
+                <div className="border border-zinc-800 bg-black p-4">
+                  <div className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">GPU</div>
+                  <div className="mt-2 font-mono-system text-3xl font-black text-white">{gpuLeaderboardCount}</div>
+                </div>
+              </div>
             </div>
-            <div className="bg-black border border-zinc-800 rounded-xl overflow-hidden shadow-2xl shadow-yellow-500/5">
-              <BenchmarkTable results={cpuResults} />
+            <div className="mt-8 flex flex-col sm:flex-row gap-4">
+              <Link
+                href="/leaderboard"
+                className="inline-flex items-center justify-center gap-3 bg-yellow-400 px-8 py-4 text-sm font-black uppercase tracking-[0.2em] text-black transition-all hover:bg-white active:scale-[0.98]"
+              >
+                Open Mining Leaderboard
+              </Link>
+              <Link
+                href="/downloads"
+                className="inline-flex items-center justify-center gap-3 border border-zinc-700 px-8 py-4 text-sm font-black uppercase tracking-[0.2em] text-white transition-all hover:border-yellow-400 hover:text-yellow-400 active:scale-[0.98]"
+              >
+                Submit New Benchmark
+              </Link>
             </div>
           </section>
-
-          {gpuResults.length > 0 && (
-            <section>
-              <div className="flex items-center gap-6 mb-8">
-                <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter whitespace-nowrap">
-                  Top <span className="text-yellow-400">GPU</span> Performance
-                </h2>
-                <div className="h-0.5 bg-gradient-to-r from-zinc-800 to-transparent flex-grow"></div>
-              </div>
-              <div className="bg-black border border-zinc-800 rounded-xl overflow-hidden shadow-2xl shadow-yellow-500/5">
-                <BenchmarkTable results={gpuResults} />
-              </div>
-            </section>
-          )}
 
           <section className="border border-zinc-800 bg-zinc-950 p-8">
             <div className="max-w-4xl space-y-5">

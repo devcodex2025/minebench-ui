@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Download, Cpu, HardDrive, TrendingUp, Zap, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Download, Cpu, HardDrive, TrendingUp, Zap } from "lucide-react";
 import Image from "next/image";
 import WindowsIcon from "@/public/img/windows.svg";
 import MacOSIcon from "@/public/img/macos-logo.svg";
@@ -10,7 +10,10 @@ import LinuxIcon from "@/public/img/linux-logo.svg";
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Scene3D from '@/components/Scene3D';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import ShaderScreenshotSlider, {
+    ShaderSlide,
+} from '@/components/downloads/ShaderScreenshotSlider';
 
 type Release = {
     version?: string;
@@ -29,30 +32,65 @@ type BuildVariant = {
 
 const DIRECT_DOWNLOAD_FALLBACKS = {
     windows: {
-        x64: 'https://github.com/devcodex2025/MineBench-Client/releases/download/v0.7.0/MineBench.Client-0.7.0-Windows-x64-setup.exe',
-        arm64: 'https://github.com/devcodex2025/MineBench-Client/releases/download/v0.7.0/MineBench.Client-0.7.0-Windows-arm64-setup.exe',
+        x64: 'https://github.com/devcodex2025/minebench-mining-benchmark-client/releases/download/v0.8.9/MineBench.Client_0.8.9_x64-setup.exe',
+        msi: 'https://github.com/devcodex2025/minebench-mining-benchmark-client/releases/download/v0.8.9/MineBench.Client_0.8.9_x64_en-US.msi',
     },
     macos: {
-        x64: null,
-        arm64: null,
+        universal: 'https://github.com/devcodex2025/minebench-mining-benchmark-client/releases/download/v0.8.9/MineBench.Client_0.8.9_universal.dmg',
     },
     linux: {
-        x64: 'https://github.com/devcodex2025/MineBench-Client/releases/download/v0.7.0/MineBench.Client-0.7.0-Linux-x86_64.AppImage',
+        appimage: 'https://github.com/devcodex2025/minebench-mining-benchmark-client/releases/download/v0.8.9/MineBench.Client_0.8.9_amd64.AppImage',
+        deb: 'https://github.com/devcodex2025/minebench-mining-benchmark-client/releases/download/v0.8.9/MineBench.Client_0.8.9_amd64.deb',
+        rpm: 'https://github.com/devcodex2025/minebench-mining-benchmark-client/releases/download/v0.8.9/MineBench.Client-0.8.9-1.x86_64.rpm',
     },
 } as const;
 
-const APP_SCREENSHOTS = [
-    { file: "dashboard.png", title: "Global Dashboard" },
-    { file: "mining.png", title: "Mining Engine" },
-    { file: "benchmarks.png", title: "Verification Lab" },
-    { file: "statistics.png", title: "Pool Analytics" },
-    { file: "settings.png", title: "Advanced Tuning" },
-    { file: "premium.png", title: "Premium Console" },
-    { file: "system-logs.png", title: "System Diagnostics" }
+const APP_SCREENSHOTS: ShaderSlide[] = [
+    {
+        src: "/screenshots/app-overview-screenshots/dashboard.png",
+        title: "Global Dashboard",
+        eyebrow: "Dashboard",
+        description: "See balances, rates, and mining health in a single command-center view built for fast scanning.",
+    },
+    {
+        src: "/screenshots/app-overview-screenshots/mining.png",
+        title: "Mining Engine",
+        eyebrow: "Mining mode",
+        description: "Start, pause, and inspect the miner without leaving the desktop workflow or dropping into the terminal.",
+    },
+    {
+        src: "/screenshots/app-overview-screenshots/benchmarks.png",
+        title: "Verification Lab",
+        eyebrow: "Benchmarks",
+        description: "Run hashrate checks with duration, telemetry, and a cleaner result surface for hardware comparison.",
+    },
+    {
+        src: "/screenshots/app-overview-screenshots/statistics.png",
+        title: "Pool Analytics",
+        eyebrow: "Statistics",
+        description: "Review workers, accepted shares, and rolling performance data beside the rest of the client flow.",
+    },
+    {
+        src: "/screenshots/app-overview-screenshots/settings.png",
+        title: "Advanced Tuning",
+        eyebrow: "Settings",
+        description: "Adjust miner behavior and system-level options through a tighter control panel instead of scattered dialogs.",
+    },
+    {
+        src: "/screenshots/app-overview-screenshots/premium.png",
+        title: "Premium Console",
+        eyebrow: "Premium",
+        description: "Expose deeper mining controls and routing without breaking the visual language of the core client.",
+    },
+    {
+        src: "/screenshots/app-overview-screenshots/system-logs.png",
+        title: "System Diagnostics",
+        eyebrow: "Logs",
+        description: "Inspect logs and runtime signals while keeping the rest of the application context close at hand.",
+    },
 ];
 
 export default function DownloadsPageClient() {
-    const [activeScreenshotIndex, setActiveScreenshotIndex] = useState<number | null>(null);
     const [clientRelease, setClientRelease] = useState<Release | null>(null);
     const [builds, setBuilds] = useState<Record<string, BuildVariant[]>>({
         windows: [],
@@ -119,9 +157,9 @@ export default function DownloadsPageClient() {
                     // Fallback
                     const fallbackRelease = {
                         url: '',
-                        name: 'v0.7.0',
-                        tag_name: 'v0.7.0',
-                        version: 'v0.7.0',
+                        name: 'v0.8.9',
+                        tag_name: 'v0.8.9',
+                        version: 'v0.8.9',
                         assets: []
                     };
                     setClientRelease(fallbackRelease as Release);
@@ -131,9 +169,9 @@ export default function DownloadsPageClient() {
                 console.error(err);
                 const fallbackRelease = {
                     url: '',
-                    name: 'v0.7.0',
-                    tag_name: 'v0.7.0',
-                    version: 'v0.7.0',
+                    name: 'v0.8.9',
+                    tag_name: 'v0.8.9',
+                    version: 'v0.8.9',
                     assets: []
                 };
                 setClientRelease(fallbackRelease as Release);
@@ -164,53 +202,61 @@ export default function DownloadsPageClient() {
                         arch: 'x64',
                         label: '64-bit Intel/AMD',
                         description: 'For standard 64-bit Windows systems',
-                        url: findAssetUrl((n) => n.endsWith('.exe') && (n.includes('-x64-') || n.includes('-x64.'))),
+                        url: findAssetUrl((n) => n.endsWith('.exe') && (n.includes('x64-') || n.includes('x64.'))),
                     },
                     {
-                        arch: 'arm64',
-                        label: 'ARM64',
-                        description: 'For Snapdragon and ARM64 Windows devices',
-                        url: findAssetUrl((n) => n.endsWith('.exe') && n.includes('-arm64-')),
+                        arch: 'msi',
+                        label: 'MSI Installer',
+                        description: 'For managed Windows installs and enterprise deployment',
+                        url: findAssetUrl((n) => n.endsWith('.msi')),
                     },
                 ];
 
-                // Match macOS DMG by arch markers
+                // Match macOS universal DMG first, then arch-specific names.
+                const universalMacDmg = findAssetUrl((n) => n.endsWith('.dmg') && n.includes('universal'));
                 newBuilds.macos = [
                     {
-                        arch: 'x64',
-                        label: '64-bit Intel',
-                        description: 'For Intel-based Mac computers',
-                        url: findAssetUrl((n) => n.endsWith('.dmg') && (n.includes('-x64.') || n.includes('-x64-'))),
-                    },
-                    {
-                        arch: 'arm64',
-                        label: 'Apple Silicon',
-                        description: 'For M1/M2/M3 Mac computers',
-                        url: findAssetUrl((n) => n.endsWith('.dmg') && n.includes('-arm64')),
+                        arch: 'universal',
+                        label: 'Universal',
+                        description: 'For Intel and Apple Silicon Mac computers',
+                        url: universalMacDmg || findAssetUrl((n) => n.endsWith('.dmg')),
                     },
                 ];
 
-                // Match Linux AppImage (x86_64 denotes x64)
+                // Match Linux packages.
                 newBuilds.linux = [
                     {
-                        arch: 'x64',
-                        label: '64-bit',
-                        description: 'For standard Linux x86-64 systems',
-                        url: findAssetUrl((n) => n.endsWith('.AppImage') && (n.includes('x86_64') || n.includes('x64'))),
+                        arch: 'appimage',
+                        label: 'AppImage',
+                        description: 'Portable Linux package for x86-64 systems',
+                        url: findAssetUrl((n) => n.endsWith('.AppImage')),
+                    },
+                    {
+                        arch: 'deb',
+                        label: 'Debian/Ubuntu',
+                        description: 'DEB package for Debian-based distributions',
+                        url: findAssetUrl((n) => n.endsWith('.deb')),
+                    },
+                    {
+                        arch: 'rpm',
+                        label: 'Fedora/RHEL',
+                        description: 'RPM package for Fedora, RHEL, and compatible distributions',
+                        url: findAssetUrl((n) => n.endsWith('.rpm')),
                     },
                 ];
             } else {
                 // Direct-download fallback URLs when GitHub API assets are unavailable.
                 newBuilds.windows = [
                     { arch: 'x64', label: '64-bit Intel/AMD', description: 'For standard 64-bit Windows systems', url: DIRECT_DOWNLOAD_FALLBACKS.windows.x64 },
-                    { arch: 'arm64', label: 'ARM64', description: 'For Snapdragon and ARM64 Windows devices', url: DIRECT_DOWNLOAD_FALLBACKS.windows.arm64 },
+                    { arch: 'msi', label: 'MSI Installer', description: 'For managed Windows installs and enterprise deployment', url: DIRECT_DOWNLOAD_FALLBACKS.windows.msi },
                 ];
                 newBuilds.macos = [
-                    { arch: 'x64', label: '64-bit Intel', description: 'For Intel-based Mac computers', url: DIRECT_DOWNLOAD_FALLBACKS.macos.x64 },
-                    { arch: 'arm64', label: 'Apple Silicon', description: 'For M1/M2/M3 Mac computers', url: DIRECT_DOWNLOAD_FALLBACKS.macos.arm64 },
+                    { arch: 'universal', label: 'Universal', description: 'For Intel and Apple Silicon Mac computers', url: DIRECT_DOWNLOAD_FALLBACKS.macos.universal },
                 ];
                 newBuilds.linux = [
-                    { arch: 'x64', label: '64-bit', description: 'For standard Linux x86-64 systems', url: DIRECT_DOWNLOAD_FALLBACKS.linux.x64 },
+                    { arch: 'appimage', label: 'AppImage', description: 'Portable Linux package for x86-64 systems', url: DIRECT_DOWNLOAD_FALLBACKS.linux.appimage },
+                    { arch: 'deb', label: 'Debian/Ubuntu', description: 'DEB package for Debian-based distributions', url: DIRECT_DOWNLOAD_FALLBACKS.linux.deb },
+                    { arch: 'rpm', label: 'Fedora/RHEL', description: 'RPM package for Fedora, RHEL, and compatible distributions', url: DIRECT_DOWNLOAD_FALLBACKS.linux.rpm },
                 ];
             }
 
@@ -397,30 +443,7 @@ export default function DownloadsPageClient() {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-                            {APP_SCREENSHOTS.map((img, i) => (
-                                <motion.div
-                                    key={img.file}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
-                                    transition={{ delay: i * 0.05 }}
-                                    onClick={() => setActiveScreenshotIndex(i)}
-                                    className="group relative border border-zinc-800 bg-zinc-950 p-1 hover:border-yellow-400 transition-all duration-300 cursor-pointer overflow-hidden"
-                                >
-                                    <div className="overflow-hidden aspect-video bg-zinc-900">
-                                        <img 
-                                            src={`/screenshots/app-overview-screenshots/${img.file}`} 
-                                            alt={img.title}
-                                            className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
-                                        />
-                                    </div>
-                                    <div className="absolute inset-0 bg-yellow-400/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                        <TrendingUp className="w-4 h-4 text-yellow-400" />
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </div>
+                        <ShaderScreenshotSlider slides={APP_SCREENSHOTS} />
                     </div>
 
                     <p className="text-xl text-zinc-400 max-w-2xl mx-auto text-center font-sans font-semibold tracking-wide uppercase">
@@ -434,7 +457,7 @@ export default function DownloadsPageClient() {
                             { title: "HYBRID CORE", desc: "Simultaneous CPU & GPU optimization for maximum hashrate." },
                             { title: "AUTO-NODE", desc: "Automatically switches to the lowest latency mining node." },
                             { title: "SILENT MODE", desc: "Runs in background with minimal system impact and noise." },
-                            { title: "REAL-TIME", desc: "Instant sync with global leaderboards and network stats." }
+                            { title: "REAL-TIME", desc: "Instant sync with the live dashboard and network stats." }
                         ].map((f, i) => (
                             <div key={i} className="p-6 border border-zinc-900 bg-zinc-950">
                                 <h4 className="text-yellow-400 font-bold uppercase text-xs tracking-widest mb-2">{f.title}</h4>
@@ -471,7 +494,7 @@ export default function DownloadsPageClient() {
                         <div className="max-w-3xl mx-auto space-y-4 text-zinc-300 text-sm leading-relaxed">
                             <p>
                                 The automated reward system is currently in <strong className="text-white">Beta Testing</strong>.
-                                Benchmark submissions still appear on the leaderboard, but <span className="text-orange-400 font-bold">direct rewards are temporarily disabled</span> while the payout flow is being verified.
+                                Benchmark submissions still appear on the live dashboard, but <span className="text-orange-400 font-bold">direct rewards are temporarily disabled</span> while the payout flow is being verified.
                             </p>
                             <p>
                                 Reward eligibility for the public launch is planned around valid benchmark submissions, stable miner participation, a configured wallet, and compliance with the anti-spam / anti-duplicate device rules that will be announced before payouts go live.
@@ -634,12 +657,12 @@ export default function DownloadsPageClient() {
                                 .
                             </p>
                             <p>
-                                MineBench adds its own desktop UI, benchmark workflow, leaderboard integration, telemetry views, and release packaging on top of that mining stack.
+                                MineBench adds its own desktop UI, benchmark workflow, dashboard integration, telemetry views, and release packaging on top of that mining stack.
                             </p>
                             <p>
                                 You can study the MineBench application source code on GitHub here:{' '}
                                 <a
-                                    href="https://github.com/devcodex2025/MineBench-Client"
+                                    href="https://github.com/devcodex2025/minebench-mining-benchmark-client"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="font-bold text-yellow-400 underline decoration-yellow-400/40 underline-offset-4 transition-colors hover:text-white"
@@ -655,74 +678,6 @@ export default function DownloadsPageClient() {
 
             <Footer />
 
-            {/* Screenshots Lightbox Modal */}
-            <AnimatePresence>
-                {activeScreenshotIndex !== null && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={() => setActiveScreenshotIndex(null)}
-                        className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 md:p-12"
-                    >
-                        {/* Close Button */}
-                        <motion.button
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="absolute top-8 right-8 w-12 h-12 bg-yellow-400 flex items-center justify-center hover:bg-white transition-colors z-[210]"
-                            onClick={() => setActiveScreenshotIndex(null)}
-                        >
-                            <X className="w-6 h-6 text-black" />
-                        </motion.button>
-
-                        {/* Navigation Buttons */}
-                        <button
-                            className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-16 h-16 flex items-center justify-center bg-zinc-900/50 hover:bg-yellow-400 text-white hover:text-black transition-all z-[210]"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveScreenshotIndex((prev) => 
-                                    prev !== null ? (prev === 0 ? APP_SCREENSHOTS.length - 1 : prev - 1) : null
-                                );
-                            }}
-                        >
-                            <ChevronLeft className="w-8 h-8" />
-                        </button>
-
-                        <button
-                            className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-16 h-16 flex items-center justify-center bg-zinc-900/50 hover:bg-yellow-400 text-white hover:text-black transition-all z-[210]"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveScreenshotIndex((prev) => 
-                                    prev !== null ? (prev === APP_SCREENSHOTS.length - 1 ? 0 : prev + 1) : null
-                                );
-                            }}
-                        >
-                            <ChevronRight className="w-8 h-8" />
-                        </button>
-
-                        <motion.div
-                            key={activeScreenshotIndex}
-                            initial={{ scale: 0.9, opacity: 0, x: 20 }}
-                            animate={{ scale: 1, opacity: 1, x: 0 }}
-                            exit={{ scale: 0.9, opacity: 0, x: -20 }}
-                            onClick={(e) => e.stopPropagation()}
-                            className="relative max-w-7xl w-full aspect-video border-[1px] border-zinc-800 shadow-[0_0_50px_rgba(250,204,21,0.1)] bg-zinc-950 p-1"
-                        >
-                            <img 
-                                src={`/screenshots/app-overview-screenshots/${APP_SCREENSHOTS[activeScreenshotIndex].file}`} 
-                                alt={APP_SCREENSHOTS[activeScreenshotIndex].title}
-                                className="w-full h-full object-contain"
-                            />
-                            
-                            <div className="absolute -bottom-10 left-0 right-0 flex justify-between items-center px-2">
-                                <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
-                                    {activeScreenshotIndex + 1} / {APP_SCREENSHOTS.length} : {APP_SCREENSHOTS[activeScreenshotIndex].title}
-                                </span>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </div>
     );
 }

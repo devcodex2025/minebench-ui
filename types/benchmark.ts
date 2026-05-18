@@ -39,8 +39,9 @@ export interface BenchmarkResult {
   device_name?: string;
   device_type?: string;
   coin_name?: string;
-  created_at?: Date;
+  created_at?: string;
   avg_temp?: number;
+  avg_power?: number;
   avg_hashrate?: number;
   max_hashrate?: number;
   duration_seconds?: number;

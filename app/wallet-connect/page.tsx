@@ -1,106 +1,116 @@
 'use client';
 
-import { Suspense, useRef } from 'react';
+import { Suspense, useCallback, useRef } from 'react';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { useWallet } from '@solana/wallet-adapter-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import '@solana/wallet-adapter-react-ui/styles.css';
+
+type PhantomProvider = {
+  isPhantom?: boolean;
+  publicKey?: { toBase58: () => string };
+  connect: () => Promise<{ publicKey: { toBase58: () => string } }>;
+  signMessage: (message: Uint8Array, encoding?: string) => Promise<{ signature: Uint8Array } | Uint8Array>;
+};
+
+const getPhantomProvider = (): PhantomProvider | null => {
+  if (typeof window === 'undefined') return null;
+  const solana = (window as any).solana as PhantomProvider | undefined;
+  return solana?.isPhantom ? solana : null;
+};
 
 const WalletConnectContent = () => {
   const searchParams = useSearchParams();
-  const { publicKey, signMessage, connected } = useWallet();
+  const [publicKey, setPublicKey] = useState<string | null>(null);
   const [callbackUrl, setCallbackUrl] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [fadeOut, setFadeOut] = useState(false);
+  const [phantomDetected, setPhantomDetected] = useState(false);
   
   // Use ref to prevent duplicate authentication attempts
   const authAttemptedRef = useRef(false);
 
   useEffect(() => {
+    let attempts = 0;
+    const detect = () => {
+      const found = !!getPhantomProvider();
+      setPhantomDetected(found);
+      attempts += 1;
+      if (!found && attempts < 20) {
+        window.setTimeout(detect, 250);
+      }
+    };
+    detect();
+  }, []);
+
+  useEffect(() => {
     // Get callback URL from query params
     const url = searchParams?.get('callbackUrl');
     console.log('[WalletConnect] Callback URL from params:', url);
-    console.log('[WalletConnect] Wallet connected:', connected);
-    console.log('[WalletConnect] Public key:', publicKey?.toBase58());
     if (url) {
       setCallbackUrl(url);
     }
-  }, [searchParams, connected, publicKey]);
+  }, [searchParams]);
 
-  useEffect(() => {
-    // Only execute if we haven't already succeeded or attempted
-    if (success || authAttemptedRef.current) {
-      console.log('[WalletConnect] Already authenticated or attempt in progress, skipping');
+  const authenticateWallet = useCallback(async (
+    publicKeyText: string,
+    sign: (message: Uint8Array) => Promise<Uint8Array | { signature: Uint8Array }>
+  ) => {
+    if (!callbackUrl || success || authAttemptedRef.current || isProcessing) return;
+
+    authAttemptedRef.current = true;
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      console.log('[WalletConnect] Starting authentication...');
+      const timestamp = Date.now();
+      const message = new TextEncoder().encode(
+        `MineBench Wallet Authentication\nTimestamp: ${timestamp}\nPublic Key: ${publicKeyText}`
+      );
+
+      console.log('[WalletConnect] Requesting signature from wallet...');
+      const signed = await sign(message);
+      const signature = signed instanceof Uint8Array ? signed : signed.signature;
+      const signatureB64 = Buffer.from(signature).toString('base64');
+
+      const redirectUrl = new URL(callbackUrl);
+      redirectUrl.searchParams.set('publicKey', publicKeyText);
+      redirectUrl.searchParams.set('signature', signatureB64);
+      redirectUrl.searchParams.set('message', new TextDecoder().decode(message));
+
+      console.log('[WalletConnect] Sending callback to:', redirectUrl.toString());
+      await fetch(redirectUrl.toString(), {
+        method: 'GET',
+        mode: 'no-cors'
+      });
+
+      setSuccess(true);
+      setCountdown(5);
+    } catch (err: any) {
+      console.error('[WalletConnect] Error during authentication:', err);
+      setError(err.message || 'Authentication failed');
+      authAttemptedRef.current = false;
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [callbackUrl, isProcessing, success]);
+
+  const connectPhantomDirectly = useCallback(async () => {
+    const provider = getPhantomProvider();
+    if (!provider) {
+      setError('Phantom extension was not detected in this browser. Open this page in the Chrome profile where Phantom is installed.');
       return;
     }
 
-    const handleWalletConnection = async () => {
-      console.log('[WalletConnect] Checking connection:', { 
-        publicKey: !!publicKey, 
-        callbackUrl: !!callbackUrl, 
-        isProcessing,
-        success,
-        signMessage: !!signMessage 
-      });
-      
-      // Only process if we have all required data
-      if (publicKey && callbackUrl && signMessage && !isProcessing) {
-        // Mark that we're attempting authentication
-        authAttemptedRef.current = true;
-        setIsProcessing(true);
-        try {
-          console.log('[WalletConnect] Starting authentication...');
-          
-          // Create message to sign with unique timestamp to prevent replay
-          const timestamp = Date.now();
-          const message = new TextEncoder().encode(
-            `MineBench Wallet Authentication\nTimestamp: ${timestamp}\nPublic Key: ${publicKey.toBase58()}`
-          );
-          
-          console.log('[WalletConnect] Requesting signature from wallet...');
-          // Request signature from wallet
-          const signature = await signMessage(message);
-          
-          console.log('[WalletConnect] Got signature, converting to base64...');
-          // Convert signature to base64
-          const signatureB64 = Buffer.from(signature).toString('base64');
-          
-          // Send data to Electron callback
-          const redirectUrl = new URL(callbackUrl);
-          redirectUrl.searchParams.set('publicKey', publicKey.toBase58());
-          redirectUrl.searchParams.set('signature', signatureB64);
-          redirectUrl.searchParams.set('message', new TextDecoder().decode(message));
-          
-          console.log('[WalletConnect] Sending callback to:', redirectUrl.toString());
-          const response = await fetch(redirectUrl.toString(), {
-              method: 'GET',
-              mode: 'no-cors' // Allow request to local server without strict CORS
-          });
-          
-          console.log('[WalletConnect] Callback sent successfully');
-
-          // Show success state and start countdown
-          setSuccess(true);
-          setIsProcessing(false);
-          setCountdown(5);
-        } catch (err: any) {
-          console.error('[WalletConnect] Error during authentication:', err);
-          setError(err.message || 'Authentication failed');
-          setIsProcessing(false);
-          // Reset the attempt flag if there was an error
-          authAttemptedRef.current = false;
-        }
-      }
-    };
-
-    handleWalletConnection();
-  }, [publicKey, callbackUrl, signMessage]);
+    const result = await provider.connect();
+    const publicKeyText = result.publicKey.toBase58();
+    setPublicKey(publicKeyText);
+    await authenticateWallet(publicKeyText, (message) => provider.signMessage(message, 'utf8'));
+  }, [authenticateWallet]);
 
   // Countdown timer after success
   useEffect(() => {
@@ -140,10 +150,15 @@ const WalletConnectContent = () => {
                   </p>
                 </div>
 
-                <div className="flex justify-center">
-                  <WalletMultiButton 
-                    className="!bg-yellow-400 hover:!bg-yellow-500 !text-black !font-bold !uppercase !tracking-wide !transition-all !duration-200" 
-                  />
+                <div className="flex flex-col items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={connectPhantomDirectly}
+                    disabled={isProcessing}
+                    className="bg-yellow-400 hover:bg-yellow-500 disabled:opacity-60 disabled:cursor-not-allowed text-black font-bold uppercase tracking-wide px-5 py-3"
+                  >
+                    {phantomDetected ? 'Connect Phantom' : 'Detecting Phantom...'}
+                  </button>
                 </div>
 
                 <div className="text-center text-xs text-zinc-500 space-y-1 font-mono">
@@ -177,7 +192,7 @@ const WalletConnectContent = () => {
                       : 'You can close this window now.'}
                   </p>
                   <p className="text-xs text-zinc-400 text-center font-mono break-all bg-black border border-zinc-800 p-3 rounded">
-                    {publicKey.toBase58()}
+                    {publicKey}
                   </p>
                 </div>
               </div>
@@ -196,7 +211,7 @@ const WalletConnectContent = () => {
                     Wallet Connection
                   </p>
                   <p className="text-xs text-zinc-400 text-center mt-4 font-mono break-all bg-black border border-zinc-800 p-3 rounded">
-                    {publicKey.toBase58()}
+                    {publicKey}
                   </p>
                 </div>
 

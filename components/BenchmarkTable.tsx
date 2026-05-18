@@ -1,18 +1,12 @@
-import { useState, useEffect } from 'react';
-import { Search, Zap, Cpu, Monitor, ChevronUp, ChevronDown } from 'lucide-react';
+﻿import { useState, useEffect } from 'react';
+import { Search, Zap, Cpu, Monitor, ChevronUp, ChevronDown, Clock3 } from 'lucide-react';
 import Image from 'next/image';
 import { BenchmarkTableProps, BenchmarkResult } from '@/types/benchmark';
 import { formatHashrate } from '@/lib/utils';
+import { getBenchmarkHashrate, getLeaderboardRows, normalizeDeviceName } from '@/lib/leaderboard';
 import { motion } from 'framer-motion';
 
-interface FilterOptions {
-  algorithm?: string;
-  device_name?: string;
-  device_type?: string;
-}
-
 export default function BenchmarkTable({ results }: BenchmarkTableProps) {
-  const [filters, setFilters] = useState<FilterOptions>({});
   const [sortField, setSortField] = useState<keyof BenchmarkResult>('avg_hashrate');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,12 +25,32 @@ export default function BenchmarkTable({ results }: BenchmarkTableProps) {
     }
   };
 
-  const getUniqueValues = (field: keyof BenchmarkResult) => {
-    return Array.from(new Set(results.map(r => r[field] as string))).sort();
+  const getFirstPositiveMetric = (...values: Array<number | null | undefined>) => {
+    for (const value of values) {
+      if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+        return value;
+      }
+    }
+    return null;
   };
 
-  const hashrateList = results.map(r => r.avg_hashrate || 0);
-  const maxHashrate = hashrateList.length > 0 ? Math.max(...hashrateList) : 1;
+  const getDisplayPower = (result: BenchmarkResult) => getFirstPositiveMetric(
+    result.avg_power,
+    result.powerConsumption,
+    result.power,
+    result.watts,
+    result.metrics?.power,
+    result.sensors?.power
+  );
+
+  const getDisplayTemp = (result: BenchmarkResult) => getFirstPositiveMetric(
+    result.avg_temp,
+    result.temperature,
+    result.temp,
+    result.temp_c,
+    result.metrics?.temperature,
+    result.sensors?.temperature
+  );
 
   const getVendorIcon = (deviceName: string) => {
     const name = deviceName?.toLowerCase() || '';
@@ -52,24 +66,10 @@ export default function BenchmarkTable({ results }: BenchmarkTableProps) {
     return null;
   };
 
-  const deduplicatedResults = Object.values(
-    results.reduce((acc, current) => {
-      const key = `${current.device_name?.toLowerCase()}-${current.algorithm}`;
-      if (!acc[key] || (current.avg_hashrate || 0) > (acc[key].avg_hashrate || 0)) {
-        acc[key] = current;
-      }
-      return acc;
-    }, {} as Record<string, BenchmarkResult>)
-  );
+  const deduplicatedResults = getLeaderboardRows(results);
 
   const filteredResults = deduplicatedResults
     .filter(r => {
-      const avgRate = r.avg_hashrate || 0;
-      if (avgRate <= 0) return false;
-      
-      if (filters.algorithm && r.algorithm !== filters.algorithm) return false;
-      if (filters.device_name && r.device_name !== filters.device_name) return false;
-      if (filters.device_type && r.device_type !== filters.device_type) return false;
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
         return (
@@ -95,6 +95,10 @@ export default function BenchmarkTable({ results }: BenchmarkTableProps) {
       return 0;
     });
 
+  const maxHashrate = filteredResults.length > 0
+    ? Math.max(...filteredResults.map(r => getBenchmarkHashrate(r)), 1)
+    : 1;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -108,7 +112,7 @@ export default function BenchmarkTable({ results }: BenchmarkTableProps) {
         </h2>
       </div>
 
-      <div className="p-6 border-b border-zinc-900 bg-zinc-950/40 grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="p-6 border-b border-zinc-900 bg-zinc-950/40 grid grid-cols-1 gap-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-500 w-4 h-4" />
           <input
@@ -119,39 +123,6 @@ export default function BenchmarkTable({ results }: BenchmarkTableProps) {
             className="input-field pl-10"
           />
         </div>
-
-        <select
-          value={filters.algorithm || ''}
-          onChange={e => setFilters({ ...filters, algorithm: e.target.value || undefined })}
-          className="bg-zinc-950 border border-zinc-800 text-white px-4 py-2 focus:outline-none focus:border-yellow-400 hover:border-yellow-400 transition-all uppercase tracking-wide text-sm"
-        >
-          <option value="">All Algorithms</option>
-          {getUniqueValues('algorithm').map(a => (
-            <option key={a} value={a}>{a}</option>
-          ))}
-        </select>
-
-        <select
-          value={filters.device_name || ''}
-          onChange={e => setFilters({ ...filters, device_name: e.target.value || undefined })}
-          className="bg-zinc-950 border border-zinc-800 text-white px-4 py-2 focus:outline-none focus:border-yellow-400 hover:border-yellow-400 transition-all uppercase tracking-wide text-sm"
-        >
-          <option value="">All Devices</option>
-          {getUniqueValues('device_name').map(d => (
-            <option key={d} value={d}>{d}</option>
-          ))}
-        </select>
-
-        <select
-          value={filters.device_type || ''}
-          onChange={e => setFilters({ ...filters, device_type: e.target.value || undefined })}
-          className="bg-zinc-950 border border-zinc-800 text-white px-4 py-2 focus:outline-none focus:border-yellow-400 hover:border-yellow-400 transition-all uppercase tracking-wide text-sm"
-        >
-          <option value="">All Types</option>
-          {getUniqueValues('device_type').map(d => (
-            <option key={d} value={d}>{d}</option>
-          ))}
-        </select>
       </div>
 
       <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
@@ -159,13 +130,13 @@ export default function BenchmarkTable({ results }: BenchmarkTableProps) {
           <thead className="bg-zinc-950">
             <tr>
               {[
-                { key: 'device_name', label: 'Hardware/Vendor' },
+                { key: 'device_name', label: 'Hardware' },
                 { key: 'avg_hashrate', label: 'Average Rate' },
                 { key: '_power_bar', label: 'Performance Index' },
                 { key: 'avg_power', label: 'Consumption' },
                 { key: 'avg_temp', label: 'Thermal' },
                 { key: 'algorithm', label: 'Algo' },
-                { key: 'duration_seconds', label: 'Stability' },
+                { key: 'duration_seconds', label: 'Duration' },
               ].map(({ key, label }) => (
                 <th
                   key={key}
@@ -173,6 +144,7 @@ export default function BenchmarkTable({ results }: BenchmarkTableProps) {
                   onClick={() => key !== '_power_bar' && handleSort(key as keyof BenchmarkResult)}
                 >
                   <div className="flex items-center space-x-2">
+                    {key === 'duration_seconds' && <Clock3 className="w-3 h-3 text-zinc-500" />}
                     <span>{label}</span>
                     {sortField === key && (
                       sortDirection === 'asc' ? <ChevronUp className="w-3 h-3 text-yellow-400" /> : <ChevronDown className="w-3 h-3 text-yellow-400" />
@@ -184,9 +156,12 @@ export default function BenchmarkTable({ results }: BenchmarkTableProps) {
           </thead>
           <tbody className="divide-y divide-zinc-900 bg-zinc-950/20">
             {filteredResults.map((r, index) => {
-              const vendor = getVendorIcon(r.device_name || '');
-              const rates = r.avg_hashrate || 0;
+              const deviceName = normalizeDeviceName(r);
+              const vendor = getVendorIcon(deviceName);
+              const rates = getBenchmarkHashrate(r);
               const relativePower = (rates / maxHashrate) * 100;
+              const displayPower = getDisplayPower(r);
+              const displayTemp = getDisplayTemp(r);
               
               return (
               <motion.tr
@@ -208,14 +183,14 @@ export default function BenchmarkTable({ results }: BenchmarkTableProps) {
                       )}
                     </div>
                     <div>
-                      <div className="font-black text-sm text-white uppercase tracking-tight leading-none mb-1">{r.device_name}</div>
-                      <div className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">{r.device_type} / {r.id}</div>
+                      <div className="font-black text-sm text-white uppercase tracking-tight leading-none mb-1">{deviceName}</div>
+                      <div className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">{r.device_type}</div>
                     </div>
                   </div>
                 </td>
                 <td className="px-6 py-5 whitespace-nowrap">
                   <div className="flex flex-col">
-                    <span className="text-yellow-400 font-black text-lg font-mono tracking-tighter">{formatHashrate(r.avg_hashrate || 0)}</span>
+                    <span className="text-yellow-400 font-black text-lg font-mono tracking-tighter">{formatHashrate(getBenchmarkHashrate(r))}</span>
                     <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-tighter">Peak: {formatHashrate(r.max_hashrate || 0)}</span>
                   </div>
                 </td>
@@ -237,29 +212,35 @@ export default function BenchmarkTable({ results }: BenchmarkTableProps) {
                 </td>
                 <td className="px-6 py-5">
                   <div className="flex flex-col">
-                    {r.avg_power && r.avg_power > 0 ? (
+                    {displayPower ? (
                       <>
                         <span className="text-white font-black font-mono text-sm leading-none mb-1">
-                          {r.avg_power.toFixed(0)}W
+                          {displayPower.toFixed(0)}W
                         </span>
                         <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Load</span>
                       </>
                     ) : (
-                      <span className="text-zinc-600 font-black font-mono text-sm leading-none mb-1">&nbsp;</span>
+                      <>
+                        <span className="text-zinc-500 font-black font-mono text-sm leading-none mb-1">N/A</span>
+                        <span className="text-[10px] text-zinc-700 font-bold uppercase tracking-widest">Sensor unavailable</span>
+                      </>
                     )}
                   </div>
                 </td>
                 <td className="px-6 py-5">
                   <div className="flex flex-col">
-                    {r.avg_temp && r.avg_temp > 0 ? (
+                    {displayTemp ? (
                       <>
-                        <span className={`font-black font-mono text-sm leading-none mb-1 ${r.avg_temp > 75 ? 'text-red-500' : r.avg_temp > 65 ? 'text-orange-500' : 'text-yellow-400'}`}>
-                          {r.avg_temp.toFixed(1)}°C
+                        <span className={`font-black font-mono text-sm leading-none mb-1 ${displayTemp > 75 ? 'text-red-500' : displayTemp > 65 ? 'text-orange-500' : 'text-yellow-400'}`}>
+                          {displayTemp.toFixed(1)}°C
                         </span>
                         <span className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Thermal</span>
                       </>
                     ) : (
-                      <span className="text-zinc-600 font-black font-mono text-sm leading-none mb-1">&nbsp;</span>
+                      <>
+                        <span className="text-zinc-500 font-black font-mono text-sm leading-none mb-1">N/A</span>
+                        <span className="text-[10px] text-zinc-700 font-bold uppercase tracking-widest">Sensor unavailable</span>
+                      </>
                     )}
                   </div>
                 </td>
@@ -270,8 +251,8 @@ export default function BenchmarkTable({ results }: BenchmarkTableProps) {
                 </td>
                 <td className="px-6 py-5">
                   <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                    <span className="text-zinc-400 text-xs font-bold font-mono uppercase">{(r.duration_seconds || 0).toFixed(0)}s ACTIVE</span>
+                    <Clock3 className="w-3.5 h-3.5 text-yellow-400" />
+                    <span className="text-zinc-400 text-xs font-bold font-mono">{(r.duration_seconds || 0).toFixed(0)}s</span>
                   </div>
                 </td>
               </motion.tr>
@@ -280,9 +261,10 @@ export default function BenchmarkTable({ results }: BenchmarkTableProps) {
         </table>
       </div>
       <div className="bg-zinc-950 px-6 py-3 border-t border-zinc-900 flex justify-between text-xs text-zinc-500 uppercase tracking-wide">
-        <span>Showing {filteredResults.length} of {deduplicatedResults.length} unique nodes</span>
+        <span>Showing {filteredResults.length} leaderboard devices from {results.length} submissions</span>
         <span>Last updated: {mounted ? new Date().toLocaleString() : '---'}</span>
       </div>
     </motion.div>
   );
 }
+

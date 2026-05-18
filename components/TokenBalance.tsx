@@ -230,7 +230,7 @@ export default function TokenBalanceCard() {
 
               {rewards.rank > 0 && (
                 <div className="flex items-center justify-between">
-                  <span className="text-zinc-500 text-sm">Leaderboard Rank</span>
+              <span className="text-zinc-500 text-sm">Network Rank</span>
                   <span className="text-white font-medium flex items-center">
                     <TrendingUp className="w-4 h-4 text-yellow-400 mr-1" />
                     #{rewards.rank}

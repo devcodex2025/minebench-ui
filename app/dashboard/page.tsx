@@ -2,21 +2,24 @@ import type { Metadata } from 'next';
 import DashboardClient from './DashboardClient';
 
 export const metadata: Metadata = {
-  title: 'MineBench Dashboard | Live CPU Mining Benchmark And Hashrate Leaderboard',
-  description: 'Track live hashrate, online benchmark clients, CPU mining benchmark results, GPU mining performance, and the hardware leaderboard for MineBench.',
+  title: 'MineBench Dashboard | Live CPU Mining Benchmark And Hardware Results',
+  description: 'Track live hashrate, online benchmark clients, CPU mining benchmark results, GPU mining performance, and ranked hardware results for MineBench.',
+  alternates: {
+    canonical: 'https://minebench.cloud/dashboard',
+  },
   keywords: [
     'cpu mining benchmark',
     'randomx benchmark',
     'gpu mining benchmark',
-    'mining leaderboard',
     'live hashrate dashboard',
     'monero mining benchmark',
-    'hardware benchmark leaderboard',
+    'hardware benchmark results',
     'cpu mining performance',
+    'mining results dashboard',
   ],
   openGraph: {
     title: 'MineBench Dashboard | Live CPU Mining Benchmark',
-    description: 'Live hashrate, online clients, CPU mining benchmark results, and GPU mining leaderboard data from MineBench.',
+    description: 'Live hashrate, online clients, CPU mining benchmark results, and ranked GPU and CPU data from MineBench.',
     url: 'https://minebench.cloud/dashboard',
     siteName: 'Minebench',
     images: [
@@ -32,7 +35,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'MineBench Dashboard | Live Mining Benchmark Leaderboard',
+    title: 'MineBench Dashboard | Live Mining Benchmark Results',
     description: 'Monitor live hashrate, online clients, CPU benchmark results, and GPU mining performance.',
     images: ['https://minebench.cloud/og-dashboard.png'],
     creator: '@MineBenchdapp',

@@ -27,18 +27,29 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import NetworkStrip from '@/components/NetworkStrip';
 import { supabase } from '@/lib/supabaseClient';
+import { getLeaderboardDeviceCount } from '@/lib/leaderboard';
+import { BenchmarkResult } from '@/types/benchmark';
+
+export type LandingStats = {
+    benchmarks: number;
+    miners: number;
+    downloads: number;
+};
+
+const formatCounterValue = (value: number) => {
+    if (value >= 1000) {
+        return (value / 1000).toFixed(1) + 'K';
+    }
+    return Math.round(value).toString();
+};
 
 function Counter({ value, label }: { value: number; label: string }) {
     const ref = useRef(null);
     const isInView = useInView(ref, { once: true, margin: '-50px' });
     const motionValue = useMotionValue(0);
     const springValue = useSpring(motionValue, { damping: 30, stiffness: 100 });
-    const displayValue = useTransform(springValue, (latest) => {
-        if (latest >= 1000) {
-            return (latest / 1000).toFixed(1) + 'K';
-        }
-        return Math.round(latest).toString();
-    });
+    const displayValue = useTransform(springValue, formatCounterValue);
+    const staticValue = formatCounterValue(value);
 
     useEffect(() => {
         if (isInView) {
@@ -49,20 +60,16 @@ function Counter({ value, label }: { value: number; label: string }) {
     return (
         <div ref={ref} className="border border-zinc-800 p-6 transition-all duration-300 hover:border-yellow-400">
             <div className="mb-2 text-4xl font-bold text-yellow-400 md:text-5xl font-mono-system">
-                <motion.span>{displayValue}</motion.span>
+                <motion.span>{isInView ? displayValue : staticValue}</motion.span>
             </div>
             <div className="text-xs font-bold uppercase tracking-widest text-zinc-500">{label}</div>
         </div>
     );
 }
 
-export default function LandingPageClient() {
+export default function LandingPageClient({ initialStats }: { initialStats: LandingStats }) {
     const tokenContract = '67ipDsgK6D7bqTW89H8T1KTxUvVuaFy92GX7Q2XFVdev';
-    const [stats, setStats] = useState({
-        benchmarks: 0,
-        miners: 0,
-        downloads: 0,
-    });
+    const [stats, setStats] = useState<LandingStats>(initialStats);
     const [discordStats, setDiscordStats] = useState({
         members: null as number | null,
         online: null as number | null,
@@ -103,7 +110,7 @@ export default function LandingPageClient() {
             try {
                 const { data: benchmarkData, error: benchmarkError } = await supabase
                     .from('benchmarks')
-                    .select('id, device_uid');
+                    .select('id, device_uid, device_name, device_type, avg_hashrate, created_at');
 
                 if (benchmarkError) throw benchmarkError;
 
@@ -118,10 +125,9 @@ export default function LandingPageClient() {
                 }
 
                 if (benchmarkData) {
-                    const uniqueMiners = new Set(benchmarkData.map((item) => item.device_uid).filter(Boolean));
                     setStats({
                         benchmarks: benchmarkData.length,
-                        miners: uniqueMiners.size,
+                        miners: getLeaderboardDeviceCount(benchmarkData as BenchmarkResult[]),
                         downloads: globalStats?.total_downloads || 0,
                     });
                 }
@@ -171,7 +177,7 @@ export default function LandingPageClient() {
                     >
                         <div className="mb-8 inline-block border border-yellow-400 bg-yellow-400/5 px-4 py-2 backdrop-blur-sm">
                             <span className="font-mono-system text-sm font-bold uppercase tracking-widest text-yellow-400">
-                                v0.7.0 Stable Release
+                                v0.8.9 Stable Release
                             </span>
                         </div>
 
@@ -199,7 +205,7 @@ export default function LandingPageClient() {
                         <div className="flex flex-col items-center justify-center gap-6 sm:flex-row">
                             <Link href="/downloads" className="btn-primary inline-flex items-center gap-3 px-10 py-5 text-lg transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(250,204,21,0.22)]">
                                 <Download className="h-6 w-6" />
-                                Download v0.7.0
+                                Download v0.8.9
                             </Link>
                             <Link href="/dashboard" className="btn-secondary inline-flex items-center gap-3 px-10 py-5 text-lg transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] hover:border-yellow-400 hover:text-yellow-400 hover:shadow-[0_0_30px_rgba(250,204,21,0.14)]">
                                 <Activity className="h-6 w-6" />
@@ -421,7 +427,7 @@ export default function LandingPageClient() {
                                 <p className="mb-10 text-sm font-medium leading-relaxed text-zinc-500">
                                     Review the code, inspect the benchmark logic, and build with us in the open around decentralized mining infrastructure.
                                 </p>
-                                <Link href="https://github.com/devcodex2025/MineBench-Client" target="_blank" className="mt-auto inline-flex items-center justify-center rounded-full border border-yellow-400/40 bg-yellow-400/10 px-5 py-3 text-xs font-black uppercase tracking-[0.28em] text-yellow-400 transition-all duration-300 hover:-translate-y-0.5 hover:border-yellow-400 hover:bg-yellow-400 hover:text-black hover:shadow-[0_0_22px_rgba(250,204,21,0.28)]">
+                                <Link href="https://github.com/devcodex2025/minebench-mining-benchmark-client" target="_blank" className="mt-auto inline-flex items-center justify-center rounded-full border border-yellow-400/40 bg-yellow-400/10 px-5 py-3 text-xs font-black uppercase tracking-[0.28em] text-yellow-400 transition-all duration-300 hover:-translate-y-0.5 hover:border-yellow-400 hover:bg-yellow-400 hover:text-black hover:shadow-[0_0_22px_rgba(250,204,21,0.28)]">
                                     Go To GitHub &rarr;
                                 </Link>
                             </motion.div>
@@ -585,7 +591,7 @@ export default function LandingPageClient() {
                             <div className="flex flex-col items-center justify-center gap-6 lg:flex-row">
                                 <Link href="/downloads" className="btn-primary inline-flex items-center gap-4 px-12 py-6 text-xl">
                                     <Download className="h-6 w-6" />
-                                    Get v0.7.0 Now
+                                    Get v0.8.9 Now
                                 </Link>
                                 <Link href="/premium" className="border-2 border-yellow-400 px-10 py-6 text-xl font-black uppercase tracking-[0.2em] text-yellow-400 transition-all hover:bg-yellow-400 hover:text-black">
                                     Upgrade To Premium

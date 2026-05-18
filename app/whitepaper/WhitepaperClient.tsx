@@ -55,7 +55,7 @@ export default function WhitepaperClient() {
                                     Minebench is a revolutionary web-based benchmarking platform designed to seamlessly evaluate and rank <strong className="text-white">CPU and GPU hardware performance</strong>. Our core value is providing a completely transparent, verifiable, and open-source standard for the global crypto-mining and rendering industry.
                                 </p>
                                 <p>
-                                    As opposed to generic synthetic benchmarks, Minebench focuses strictly on real-world capabilities. By utilizing our proprietary benchmarking tools, users help establish a trusted hardware leaderboard accessible to the entire community.
+                        As opposed to generic synthetic benchmarks, Minebench focuses strictly on real-world capabilities. By utilizing our proprietary benchmarking tools, users help establish a trusted hardware results record accessible to the entire community.
                                 </p>
                             </div>
                         </motion.section>
@@ -315,7 +315,7 @@ export default function WhitepaperClient() {
                                         <li>→ Release of new application version on minebench.cloud</li>
                                         <li>→ Engagement of first official testers</li>
                                         <li>→ Return to the opensource model</li>
-                                        <li>→ Source codes published at: <Link href="https://github.com/devcodex2025/MineBench-Client" target="_blank" className="text-yellow-400 underline break-all">github.com/devcodex2025/MineBench-Client</Link></li>
+                                        <li>→ Source codes published at: <Link href="https://github.com/devcodex2025/minebench-mining-benchmark-client" target="_blank" className="text-yellow-400 underline break-all">github.com/devcodex2025/minebench-mining-benchmark-client</Link></li>
                                     </ul>
                                 </div>
                             </div>

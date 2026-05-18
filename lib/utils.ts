@@ -96,6 +96,20 @@ export const generateMockData = (): BenchmarkResult[] => {
 
 export const calculateSummary = (results: BenchmarkResult[]): BenchmarkSummary => {
   const totalTests = results.length;
+  if (totalTests === 0) {
+    return {
+      totalTests: 0,
+      averageHashrate: 0,
+      averageEfficiency: 0,
+      bestPerformer: {
+        algorithm: 'N/A',
+        hashrate: 0,
+        gpuModel: 'Unknown',
+      },
+      recentTests: [],
+    };
+  }
+
   const averageHashrate =
     results.reduce((sum, r) => sum + (r.hashrate ?? 0), 0) / totalTests;
 
@@ -121,10 +135,10 @@ export const calculateSummary = (results: BenchmarkResult[]): BenchmarkSummary =
 
 
   const recentTests = results
+    .slice()
     .sort((a, b) =>
       new Date(b.timestamp ?? 0).getTime() - new Date(a.timestamp ?? 0).getTime()
     )
-
     .slice(0, 10);
 
   return {

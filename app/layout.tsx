@@ -8,39 +8,35 @@ export const viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Minebench - Top CPU & GPU Mining Benchmark Platform',
-  description: 'MineBench is the ultimate benchmarking platform for cryptocurrency mining hardware. Compare GPU mining and CPU mining performance with transparent, verifiable results. Track hashrate, efficiency, and mining profitability across multiple algorithms like RandomX (Monero), Zephyr, and Ravencoin.',
+  metadataBase: new URL('https://minebench.cloud'),
+  title: 'MineBench | Mining Benchmark Software And Live Hardware Results',
+  description: 'MineBench is mining benchmark software for CPU and GPU miners. Compare hardware results, track RandomX benchmark performance, and download a cleaner mining client with a live results dashboard.',
   keywords: [
     'MineBench',
-    'Mining Benchmark',
-    'crypto mining',
+    'mining benchmark software',
+    'cpu mining benchmark',
+    'gpu mining benchmark',
+    'randomx benchmark',
+    'live hardware results',
+    'monero mining software',
+    'live hashrate dashboard',
     'CPU mining',
     'GPU mining',
     'Monero mining',
-    'RandomX benchmark',
-    'Zephyr mining',
     'hashrate',
     'mining hardware',
-    'benchmark software',
-    'Solana crypto',
-    'BMT token',
-    'mining rewards',
-    'NVIDIA mining performance',
-    'AMD mining performance',
-    'mining leaderboard',
-    'hardware testing',
-    'cryptocurrency tools',
-    'miner software'
+    'miner software',
+    'mining results dashboard'
   ].join(', '),
   authors: [{ name: 'Minebench Team' }],
   openGraph: {
-    title: 'Minebench - Decentralized Mining Benchmark',
-    description: 'The decentralized standard for hardware benchmarking and mining efficiency on the Solana blockchain.',
+    title: 'MineBench | Mining Benchmark Software And Live Hardware Results',
+    description: 'Compare CPU and GPU mining performance, inspect RandomX benchmark data, and download the MineBench client.',
     url: 'https://minebench.cloud',
     siteName: 'Minebench',
     images: [
       {
-        url: 'https://minebench.cloud/og-image.png',
+        url: 'https://minebench.cloud/og-home.png',
         width: 1200,
         height: 630,
       },
@@ -50,9 +46,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Minebench - Decentralized Mining Benchmark',
-    description: 'The decentralized standard for hardware benchmarking and mining efficiency on the Solana blockchain.',
-    images: ['https://minebench.cloud/og-image.png'],
+    title: 'MineBench | Mining Benchmark Software And Live Hardware Results',
+    description: 'Track benchmark results, compare hardware, and download a cleaner mining client.',
+    images: ['https://minebench.cloud/og-home.png'],
     creator: '@MineBenchdapp',
   },
   robots: {
@@ -94,8 +90,8 @@ export default function RootLayout({
     '@type': 'SoftwareApplication',
     name: 'Minebench',
     applicationCategory: 'UtilitiesApplication',
-    operatingSystem: 'Windows, Linux',
-    description: 'Decentralized blockchain-based benchmarking platform for cryptocurrency mining hardware. Provides transparent, verifiable performance metrics for GPU, CPU, and ASIC mining equipment on the Solana blockchain.',
+    operatingSystem: 'Windows, Linux, macOS',
+    description: 'Mining benchmark software for CPU and GPU miners with a live results dashboard, RandomX benchmark visibility, download builds, and miner-focused telemetry.',
     url: 'https://minebench.cloud',
     offers: {
       '@type': 'Offer',
@@ -103,16 +99,15 @@ export default function RootLayout({
       priceCurrency: 'USD',
     },
     featureList: [
-      'Real-time mining hardware benchmarking',
-      'GPU and CPU performance comparison',
-      'Blockchain-verified results on Solana',
-      'Hashrate and efficiency tracking',
-      'Multiple algorithm support (Zephyr, Ravencoin)',
-      'Power consumption analytics',
-      'Hardware performance leaderboards',
-      'Transparent and immutable benchmark data'
+      'CPU and GPU mining benchmark runs',
+      'RandomX benchmark visibility',
+      'Live hardware results dashboard',
+      'Hashrate, duration, and telemetry tracking',
+      'Windows, Linux, and macOS client downloads',
+      'Open mining stack and benchmark workflow',
+      'Pool statistics and recent test visibility'
     ],
-    screenshot: 'https://minebench.cloud/og-image.png',
+    screenshot: 'https://minebench.cloud/og-home.png',
     author: {
       '@type': 'Organization',
       name: 'Minebench Team',

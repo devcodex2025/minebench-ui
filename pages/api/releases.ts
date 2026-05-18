@@ -20,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       fetch('https://api.github.com/repos/karbivskyi/MineBench-GPU-RVN/releases/latest', {
         headers: githubHeaders
       }),
-      fetch('https://api.github.com/repos/devcodex2025/MineBench-Client/releases/latest', {
+      fetch('https://api.github.com/repos/devcodex2025/minebench-mining-benchmark-client/releases/latest', {
         headers: githubHeaders
       })
     ]);
