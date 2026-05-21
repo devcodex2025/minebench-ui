@@ -1,6 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { getLatestClientRelease } from '@/lib/clientRelease';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  res.setHeader('Cache-Control', 'no-store, max-age=0');
+
   const GITHUB_TOKEN =
     process.env.GITHUB_SERVER_TOKEN || process.env.GITHUB_ACCESS_TOKEN;
   const githubHeaders: Record<string, string> = {
@@ -13,16 +16,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const [cpuRes, gpuRes, clientRes] = await Promise.all([
+    const [cpuRes, gpuRes, clientData] = await Promise.all([
       fetch('https://api.github.com/repos/karbivskyi/MineBench-CPU-ZEPH/releases/latest', {
         headers: githubHeaders
       }),
       fetch('https://api.github.com/repos/karbivskyi/MineBench-GPU-RVN/releases/latest', {
         headers: githubHeaders
       }),
-      fetch('https://api.github.com/repos/devcodex2025/minebench-mining-benchmark-client/releases/latest', {
-        headers: githubHeaders
-      })
+      getLatestClientRelease()
     ]);
 
     // Check responses specifically
@@ -32,13 +33,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!gpuRes.ok) {
         console.error(`GPU Release fetch failed: ${gpuRes.status} ${gpuRes.statusText}`);
     }
-    if (!clientRes.ok) {
-        console.error(`Client Release fetch failed: ${clientRes.status} ${clientRes.statusText}`);
-    }
-
     const cpuData = cpuRes.ok ? await cpuRes.json() : null;
     const gpuData = gpuRes.ok ? await gpuRes.json() : null;
-    const clientData = clientRes.ok ? await clientRes.json() : null;
 
     res.status(200).json({ cpu: cpuData, gpu: gpuData, client: clientData });
   } catch (err: any) {

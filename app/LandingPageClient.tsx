@@ -67,9 +67,16 @@ function Counter({ value, label }: { value: number; label: string }) {
     );
 }
 
-export default function LandingPageClient({ initialStats }: { initialStats: LandingStats }) {
+export default function LandingPageClient({
+    initialStats,
+    clientVersion,
+}: {
+    initialStats: LandingStats;
+    clientVersion: string;
+}) {
     const tokenContract = '67ipDsgK6D7bqTW89H8T1KTxUvVuaFy92GX7Q2XFVdev';
     const [stats, setStats] = useState<LandingStats>(initialStats);
+    const [latestClientVersion, setLatestClientVersion] = useState(clientVersion);
     const [discordStats, setDiscordStats] = useState({
         members: null as number | null,
         online: null as number | null,
@@ -161,6 +168,24 @@ export default function LandingPageClient({ initialStats }: { initialStats: Land
         fetchDiscordStats();
     }, []);
 
+    useEffect(() => {
+        const fetchLatestRelease = async () => {
+            try {
+                const response = await fetch('/api/releases', { cache: 'no-store' });
+                if (!response.ok) return;
+
+                const { client } = await response.json();
+                if (client?.tag_name) {
+                    setLatestClientVersion(client.tag_name);
+                }
+            } catch (err) {
+                console.error('Error fetching client release:', err);
+            }
+        };
+
+        fetchLatestRelease();
+    }, []);
+
     return (
         <div className="relative flex min-h-screen flex-col overflow-hidden bg-black">
             <Scene3D />
@@ -177,7 +202,7 @@ export default function LandingPageClient({ initialStats }: { initialStats: Land
                     >
                         <div className="mb-8 inline-block border border-yellow-400 bg-yellow-400/5 px-4 py-2 backdrop-blur-sm">
                             <span className="font-mono-system text-sm font-bold uppercase tracking-widest text-yellow-400">
-                                v0.8.9 Stable Release
+                                {latestClientVersion} Stable Release
                             </span>
                         </div>
 
@@ -205,7 +230,7 @@ export default function LandingPageClient({ initialStats }: { initialStats: Land
                         <div className="flex flex-col items-center justify-center gap-6 sm:flex-row">
                             <Link href="/downloads" className="btn-primary inline-flex items-center gap-3 px-10 py-5 text-lg transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(250,204,21,0.22)]">
                                 <Download className="h-6 w-6" />
-                                Download v0.8.9
+                                Download {latestClientVersion}
                             </Link>
                             <Link href="/dashboard" className="btn-secondary inline-flex items-center gap-3 px-10 py-5 text-lg transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] hover:border-yellow-400 hover:text-yellow-400 hover:shadow-[0_0_30px_rgba(250,204,21,0.14)]">
                                 <Activity className="h-6 w-6" />
@@ -591,7 +616,7 @@ export default function LandingPageClient({ initialStats }: { initialStats: Land
                             <div className="flex flex-col items-center justify-center gap-6 lg:flex-row">
                                 <Link href="/downloads" className="btn-primary inline-flex items-center gap-4 px-12 py-6 text-xl">
                                     <Download className="h-6 w-6" />
-                                    Get v0.8.9 Now
+                                    Get {latestClientVersion} Now
                                 </Link>
                                 <Link href="/premium" className="border-2 border-yellow-400 px-10 py-6 text-xl font-black uppercase tracking-[0.2em] text-yellow-400 transition-all hover:bg-yellow-400 hover:text-black">
                                     Upgrade To Premium

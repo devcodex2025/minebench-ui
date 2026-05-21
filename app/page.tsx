@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import LandingPageClient from './LandingPageClient';
 import type { LandingStats } from './LandingPageClient';
 import { getLeaderboardDeviceCount } from '@/lib/leaderboard';
+import { getLatestClientRelease } from '@/lib/clientRelease';
 import type { BenchmarkResult } from '@/types/benchmark';
 
 export const dynamic = 'force-dynamic';
@@ -83,6 +84,10 @@ async function getLandingStats(): Promise<LandingStats> {
 }
 
 export default async function LandingPage() {
-  const initialStats = await getLandingStats();
-  return <LandingPageClient initialStats={initialStats} />;
+  const [initialStats, clientRelease] = await Promise.all([
+    getLandingStats(),
+    getLatestClientRelease(),
+  ]);
+
+  return <LandingPageClient initialStats={initialStats} clientVersion={clientRelease.version || clientRelease.tag_name} />;
 }

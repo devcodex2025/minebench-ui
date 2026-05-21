@@ -21,6 +21,7 @@ type LandingHeroProps = {
     guildName: string;
   };
   discordLoading: boolean;
+  clientVersion?: string;
 };
 
 function formatMetric(value: number) {
@@ -36,6 +37,7 @@ export default function LandingHero({
   statsLoading,
   discordStats,
   discordLoading,
+  clientVersion = 'Latest',
 }: LandingHeroProps) {
   const rootRef = useRef<HTMLElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -185,7 +187,7 @@ export default function LandingHero({
                   </h2>
                 </div>
                 <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-[hsl(var(--text-soft))]">
-                  v0.8.9 stable
+                  {clientVersion} stable
                 </div>
               </div>
             </div>

@@ -14,11 +14,13 @@ import { motion } from 'framer-motion';
 import ShaderScreenshotSlider, {
     ShaderSlide,
 } from '@/components/downloads/ShaderScreenshotSlider';
+import { CLIENT_RELEASES_URL } from '@/lib/clientReleaseConstants';
 
 type Release = {
     version?: string;
     tag_name?: string;
-    url: string | null;
+    url?: string | null;
+    html_url?: string | null;
     name: string | null;
     assets?: any[];
 };
@@ -29,21 +31,6 @@ type BuildVariant = {
     description: string;
     url: string | null;
 };
-
-const DIRECT_DOWNLOAD_FALLBACKS = {
-    windows: {
-        x64: 'https://github.com/devcodex2025/minebench-mining-benchmark-client/releases/download/v0.8.9/MineBench.Client_0.8.9_x64-setup.exe',
-        msi: 'https://github.com/devcodex2025/minebench-mining-benchmark-client/releases/download/v0.8.9/MineBench.Client_0.8.9_x64_en-US.msi',
-    },
-    macos: {
-        universal: 'https://github.com/devcodex2025/minebench-mining-benchmark-client/releases/download/v0.8.9/MineBench.Client_0.8.9_universal.dmg',
-    },
-    linux: {
-        appimage: 'https://github.com/devcodex2025/minebench-mining-benchmark-client/releases/download/v0.8.9/MineBench.Client_0.8.9_amd64.AppImage',
-        deb: 'https://github.com/devcodex2025/minebench-mining-benchmark-client/releases/download/v0.8.9/MineBench.Client_0.8.9_amd64.deb',
-        rpm: 'https://github.com/devcodex2025/minebench-mining-benchmark-client/releases/download/v0.8.9/MineBench.Client-0.8.9-1.x86_64.rpm',
-    },
-} as const;
 
 const APP_SCREENSHOTS: ShaderSlide[] = [
     {
@@ -90,8 +77,8 @@ const APP_SCREENSHOTS: ShaderSlide[] = [
     },
 ];
 
-export default function DownloadsPageClient() {
-    const [clientRelease, setClientRelease] = useState<Release | null>(null);
+export default function DownloadsPageClient({ initialClientRelease }: { initialClientRelease: Release }) {
+    const [clientRelease, setClientRelease] = useState<Release | null>(initialClientRelease);
     const [builds, setBuilds] = useState<Record<string, BuildVariant[]>>({
         windows: [],
         macos: [],
@@ -141,7 +128,7 @@ export default function DownloadsPageClient() {
         const fetchReleases = async () => {
             setLoading(true);
             try {
-                const res = await fetch('/api/releases');
+                const res = await fetch('/api/releases', { cache: 'no-store' });
                 
                 if (!res.ok) throw new Error('Failed to fetch releases');
                 
@@ -154,28 +141,13 @@ export default function DownloadsPageClient() {
                     });
                     processBuildVariants(clientData);
                 } else {
-                    // Fallback
-                    const fallbackRelease = {
-                        url: '',
-                        name: 'v0.8.9',
-                        tag_name: 'v0.8.9',
-                        version: 'v0.8.9',
-                        assets: []
-                    };
-                    setClientRelease(fallbackRelease as Release);
-                    processBuildVariants(fallbackRelease);
+                    setClientRelease(initialClientRelease);
+                    processBuildVariants(initialClientRelease);
                 }
             } catch (err) {
                 console.error(err);
-                const fallbackRelease = {
-                    url: '',
-                    name: 'v0.8.9',
-                    tag_name: 'v0.8.9',
-                    version: 'v0.8.9',
-                    assets: []
-                };
-                setClientRelease(fallbackRelease as Release);
-                processBuildVariants(fallbackRelease);
+                setClientRelease(initialClientRelease);
+                processBuildVariants(initialClientRelease);
             } finally {
                 setLoading(false);
             }
@@ -202,13 +174,13 @@ export default function DownloadsPageClient() {
                         arch: 'x64',
                         label: '64-bit Intel/AMD',
                         description: 'For standard 64-bit Windows systems',
-                        url: findAssetUrl((n) => n.endsWith('.exe') && (n.includes('x64-') || n.includes('x64.'))) || DIRECT_DOWNLOAD_FALLBACKS.windows.x64,
+                        url: findAssetUrl((n) => n.endsWith('.exe') && (n.includes('x64-') || n.includes('x64.'))) || release.html_url || CLIENT_RELEASES_URL,
                     },
                     {
                         arch: 'msi',
                         label: 'MSI Installer',
                         description: 'For managed Windows installs and enterprise deployment',
-                        url: findAssetUrl((n) => n.endsWith('.msi')) || DIRECT_DOWNLOAD_FALLBACKS.windows.msi,
+                        url: findAssetUrl((n) => n.endsWith('.msi')) || release.html_url || CLIENT_RELEASES_URL,
                     },
                 ];
 
@@ -219,7 +191,7 @@ export default function DownloadsPageClient() {
                         arch: 'universal',
                         label: 'Universal',
                         description: 'For Intel and Apple Silicon Mac computers',
-                        url: universalMacDmg || findAssetUrl((n) => n.endsWith('.dmg')) || DIRECT_DOWNLOAD_FALLBACKS.macos.universal,
+                        url: universalMacDmg || findAssetUrl((n) => n.endsWith('.dmg')) || release.html_url || CLIENT_RELEASES_URL,
                     },
                 ];
 
@@ -229,34 +201,34 @@ export default function DownloadsPageClient() {
                         arch: 'appimage',
                         label: 'AppImage',
                         description: 'Portable Linux package for x86-64 systems',
-                        url: findAssetUrl((n) => n.endsWith('.AppImage')) || DIRECT_DOWNLOAD_FALLBACKS.linux.appimage,
+                        url: findAssetUrl((n) => n.endsWith('.AppImage')) || release.html_url || CLIENT_RELEASES_URL,
                     },
                     {
                         arch: 'deb',
                         label: 'Debian/Ubuntu',
                         description: 'DEB package for Debian-based distributions',
-                        url: findAssetUrl((n) => n.endsWith('.deb')) || DIRECT_DOWNLOAD_FALLBACKS.linux.deb,
+                        url: findAssetUrl((n) => n.endsWith('.deb')) || release.html_url || CLIENT_RELEASES_URL,
                     },
                     {
                         arch: 'rpm',
                         label: 'Fedora/RHEL',
                         description: 'RPM package for Fedora, RHEL, and compatible distributions',
-                        url: findAssetUrl((n) => n.endsWith('.rpm')) || DIRECT_DOWNLOAD_FALLBACKS.linux.rpm,
+                        url: findAssetUrl((n) => n.endsWith('.rpm')) || release.html_url || CLIENT_RELEASES_URL,
                     },
                 ];
             } else {
                 // Direct-download fallback URLs when GitHub API assets are unavailable.
                 newBuilds.windows = [
-                    { arch: 'x64', label: '64-bit Intel/AMD', description: 'For standard 64-bit Windows systems', url: DIRECT_DOWNLOAD_FALLBACKS.windows.x64 },
-                    { arch: 'msi', label: 'MSI Installer', description: 'For managed Windows installs and enterprise deployment', url: DIRECT_DOWNLOAD_FALLBACKS.windows.msi },
+                    { arch: 'x64', label: '64-bit Intel/AMD', description: 'For standard 64-bit Windows systems', url: release.html_url || CLIENT_RELEASES_URL },
+                    { arch: 'msi', label: 'MSI Installer', description: 'For managed Windows installs and enterprise deployment', url: release.html_url || CLIENT_RELEASES_URL },
                 ];
                 newBuilds.macos = [
-                    { arch: 'universal', label: 'Universal', description: 'For Intel and Apple Silicon Mac computers', url: DIRECT_DOWNLOAD_FALLBACKS.macos.universal },
+                    { arch: 'universal', label: 'Universal', description: 'For Intel and Apple Silicon Mac computers', url: release.html_url || CLIENT_RELEASES_URL },
                 ];
                 newBuilds.linux = [
-                    { arch: 'appimage', label: 'AppImage', description: 'Portable Linux package for x86-64 systems', url: DIRECT_DOWNLOAD_FALLBACKS.linux.appimage },
-                    { arch: 'deb', label: 'Debian/Ubuntu', description: 'DEB package for Debian-based distributions', url: DIRECT_DOWNLOAD_FALLBACKS.linux.deb },
-                    { arch: 'rpm', label: 'Fedora/RHEL', description: 'RPM package for Fedora, RHEL, and compatible distributions', url: DIRECT_DOWNLOAD_FALLBACKS.linux.rpm },
+                    { arch: 'appimage', label: 'AppImage', description: 'Portable Linux package for x86-64 systems', url: release.html_url || CLIENT_RELEASES_URL },
+                    { arch: 'deb', label: 'Debian/Ubuntu', description: 'DEB package for Debian-based distributions', url: release.html_url || CLIENT_RELEASES_URL },
+                    { arch: 'rpm', label: 'Fedora/RHEL', description: 'RPM package for Fedora, RHEL, and compatible distributions', url: release.html_url || CLIENT_RELEASES_URL },
                 ];
             }
 
@@ -264,7 +236,7 @@ export default function DownloadsPageClient() {
         };
 
         fetchReleases();
-    }, []);
+    }, [initialClientRelease]);
 
     const PlatformSection = ({ platform, variants }: { platform: 'windows' | 'macos' | 'linux'; variants: BuildVariant[] }) => {
         const info = platformInfo[platform];
