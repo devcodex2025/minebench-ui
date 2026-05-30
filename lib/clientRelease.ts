@@ -46,7 +46,7 @@ export async function getLatestClientRelease(): Promise<GithubRelease> {
   try {
     const response = await fetch(`https://api.github.com/repos/${CLIENT_RELEASE_REPO}/releases/latest`, {
       headers: githubHeaders(),
-      cache: 'no-store',
+      next: { revalidate: 300 },
     });
 
     if (!response.ok) {
