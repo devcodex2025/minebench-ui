@@ -13,9 +13,39 @@ import Footer from '@/components/Footer';
 type PoolStatsResponse = {
   poolHashrate?: number;
   miners?: number;
+  pools?: PoolNodeStats[];
+  verifiedShares?: number;
   stratum?: {
     connections?: number;
+    current_effort?: number;
   };
+};
+
+type PoolNodeStats = {
+  id?: string;
+  region?: string;
+  poolHashrate?: number;
+  miners?: number;
+  updatedAt?: string;
+  stratum?: {
+    connections?: number;
+    incoming_connections?: number;
+    current_effort?: number;
+    average_effort?: number;
+    hashrate_15m?: number;
+    hashrate_1h?: number;
+    hashrate_24h?: number;
+    total_hashes?: number;
+    total_stratum_shares?: number;
+    shares_found?: number;
+    shares_failed?: number;
+    workers?: string[];
+  };
+};
+
+type PoolCard = {
+  key: 'default' | 'us' | 'eu';
+  label: string;
 };
 
 type RatesResponse = {
@@ -26,6 +56,11 @@ type RatesResponse = {
 
 const POOL_STATS_URL = '/api/pool-stats';
 const RATES_URL = '/api/rates';
+const POOL_CARDS: PoolCard[] = [
+  { key: 'default', label: 'Default Proxy' },
+  { key: 'us', label: 'US Proxy' },
+  { key: 'eu', label: 'EU Proxy' },
+];
 
 export default function DashboardClient() {
   const [results, setResults] = useState<BenchmarkResult[]>([]);
@@ -35,6 +70,8 @@ export default function DashboardClient() {
   const [totalHashrate, setTotalHashrate] = useState(0);
   const [onlineClients, setOnlineClients] = useState(0);
   const [poolEffort, setPoolEffort] = useState<number | null>(null);
+  const [verifiedShares, setVerifiedShares] = useState(0);
+  const [poolNodes, setPoolNodes] = useState<PoolNodeStats[]>([]);
   const [rates, setRates] = useState<RatesResponse>({});
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
@@ -74,15 +111,19 @@ export default function DashboardClient() {
       }
 
       if (poolStatsResponse.status === 'fulfilled' && poolStatsResponse.value.ok) {
-        const poolStatsPayload: PoolStatsResponse & { stratum?: { current_effort?: number } } = await poolStatsResponse.value.json();
+        const poolStatsPayload: PoolStatsResponse = await poolStatsResponse.value.json();
         setTotalHashrate(Number(poolStatsPayload.poolHashrate || 0));
         setOnlineClients(Number(poolStatsPayload.stratum?.connections || poolStatsPayload.miners || 0));
         setPoolEffort(poolStatsPayload.stratum?.current_effort !== undefined ? poolStatsPayload.stratum.current_effort : null);
+        setVerifiedShares(Number(poolStatsPayload.verifiedShares || 0));
+        setPoolNodes(Array.isArray(poolStatsPayload.pools) ? poolStatsPayload.pools : []);
         setLastUpdated(new Date().toISOString());
       } else {
         setTotalHashrate(0);
         setOnlineClients(0);
         setPoolEffort(null);
+        setVerifiedShares(0);
+        setPoolNodes([]);
         setLastUpdated(null);
       }
 
@@ -121,6 +162,26 @@ export default function DashboardClient() {
   const leaderboardRows = getLeaderboardRows(results);
   const cpuLeaderboardCount = getLeaderboardRows(results, 'cpu').length;
   const gpuLeaderboardCount = getLeaderboardRows(results, 'gpu').length;
+  const nonAggregatePools = poolNodes.filter((pool) => (pool.id || '').toLowerCase() !== 'aggregate');
+  const visiblePoolCards = POOL_CARDS.filter((card) => (
+    card.key === 'default' || nonAggregatePools.some((pool) => {
+      const id = (pool.id || '').toLowerCase();
+      const region = (pool.region || '').toLowerCase();
+      if (card.key === 'eu') return id.includes('eu') || region.includes('eu');
+      if (card.key === 'us') return id.includes('us') || region.includes('us');
+      return false;
+    })
+  ));
+  const findPoolNode = (card: PoolCard) => nonAggregatePools.find((pool) => {
+    const id = (pool.id || '').toLowerCase();
+    const region = (pool.region || '').toLowerCase();
+
+    if (card.key === 'eu') return id.includes('eu') || region.includes('eu');
+    if (card.key === 'us') return id.includes('us') || region.includes('us');
+    return id.includes('default') || id.includes('proxy') || id.includes('primary') || (
+      !id.includes('eu') && !region.includes('eu') && !id.includes('us') && !region.includes('us')
+    );
+  });
 
   return (
     <div className="min-h-screen bg-black text-zinc-400">
@@ -151,17 +212,17 @@ export default function DashboardClient() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="border border-zinc-800 bg-black p-6">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Current Pool Hashrate</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Total Pool Hashrate</span>
                   <TrendingUp className="w-5 h-5 text-yellow-400" />
                 </div>
                 <p className="text-4xl md:text-5xl font-black text-yellow-400 font-mono-system tracking-tighter">
                   {formatHashrate(totalHashrate)}
                 </p>
                 <p className="text-xs text-zinc-500 uppercase tracking-widest mt-2">
-                  Live total from active pool miners
+                  Combined live performance from reward proxies
                 </p>
               </div>
               <div className="border border-zinc-800 bg-black p-6">
@@ -178,6 +239,18 @@ export default function DashboardClient() {
               </div>
               <div className="border border-zinc-800 bg-black p-6">
                 <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Verified Shares</span>
+                  <Award className="w-5 h-5 text-yellow-400" />
+                </div>
+                <p className="text-4xl md:text-5xl font-black text-white font-mono-system tracking-tighter">
+                  {verifiedShares.toLocaleString()}
+                </p>
+                <p className="text-xs text-zinc-500 uppercase tracking-widest mt-2">
+                  P2Pool shares found this window
+                </p>
+              </div>
+              <div className="border border-zinc-800 bg-black p-6">
+                <div className="flex items-center justify-between mb-3">
                   <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">XMR / BMT Exchange</span>
                   <Activity className="w-5 h-5 text-yellow-400" />
                 </div>
@@ -190,9 +263,9 @@ export default function DashboardClient() {
                   </div>
                   <div className="text-right">
                     <div className="text-[10px] text-zinc-500 uppercase font-mono mb-1">BMT Price:</div>
-                    <a 
-                      href="https://pump.fun/coin/67ipDsgK6D7bqTW89H8T1KTxUvVuaFy92GX7Q2XFVdev" 
-                      target="_blank" 
+                    <a
+                      href="https://pump.fun/coin/67ipDsgK6D7bqTW89H8T1KTxUvVuaFy92GX7Q2XFVdev"
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="text-2xl font-black text-yellow-400 font-mono-system tracking-tighter hover:text-white transition-colors cursor-pointer"
                     >
@@ -203,6 +276,94 @@ export default function DashboardClient() {
                 <p className="text-xs text-zinc-500 uppercase tracking-widest mt-3 pt-3 border-t border-zinc-900">
                   Last synced {lastUpdated ? new Date(lastUpdated).toLocaleTimeString() : 'just now'}
                 </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h2 className="text-sm font-black uppercase tracking-[0.3em] text-white">Pool Performance</h2>
+                  <p className="mt-1 text-xs uppercase tracking-widest text-zinc-500">Total above, each reward proxy below</p>
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-400">
+                  {visiblePoolCards.length} {visiblePoolCards.length === 1 ? 'proxy' : 'proxies'}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                {visiblePoolCards.map((card) => {
+                  const pool = findPoolNode(card);
+                  const s = pool?.stratum;
+                  const hashrate15m = Number(pool?.poolHashrate || s?.hashrate_15m || 0);
+                  const hashrate1h = Number(s?.hashrate_1h || 0);
+                  const hashrate24h = Number(s?.hashrate_24h || 0);
+                  const connections = Number(pool?.miners || s?.connections || 0);
+                  const workers = Number(s?.workers?.length || s?.incoming_connections || 0);
+                  const effort = s?.current_effort;
+                  const stratumShares = Number(s?.total_stratum_shares || 0);
+                  const failedShares = Number(s?.shares_failed || 0);
+                  const totalHashes = Number(s?.total_hashes || 0);
+                  const sharesFound = Number(s?.shares_found || 0);
+                  const isOnline = Boolean(pool);
+
+                  return (
+                    <div key={card.key} className="border border-zinc-800 bg-black p-6">
+                      <div className="mb-4 flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">{card.label}</span>
+                        <div className="flex items-center gap-2">
+                          {effort !== undefined && (
+                            <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">
+                              {Number(effort).toFixed(1)}% effort
+                            </span>
+                          )}
+                          <Activity className={`h-4 w-4 ${isOnline ? 'text-yellow-400' : 'text-zinc-700'}`} />
+                        </div>
+                      </div>
+
+                      <p className="font-mono-system text-3xl font-black tracking-tighter text-yellow-400 md:text-4xl">
+                        {formatHashrate(hashrate15m)}
+                      </p>
+                      <p className="text-[9px] text-zinc-600 uppercase tracking-widest mb-4">15m avg</p>
+
+                      <div className="grid grid-cols-2 gap-3 pt-3 border-t border-zinc-900 mb-4">
+                        <div>
+                          <div className="text-[9px] text-zinc-600 uppercase tracking-widest mb-0.5">1h avg</div>
+                          <div className="text-sm font-black text-white font-mono-system">{formatHashrate(hashrate1h)}</div>
+                        </div>
+                        <div>
+                          <div className="text-[9px] text-zinc-600 uppercase tracking-widest mb-0.5">24h avg</div>
+                          <div className="text-sm font-black text-white font-mono-system">{formatHashrate(hashrate24h)}</div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-3 pt-3 border-t border-zinc-900">
+                        <div>
+                          <div className="text-[9px] text-zinc-600 uppercase tracking-widest mb-0.5">Workers</div>
+                          <div className="text-sm font-black text-white font-mono-system">{workers.toLocaleString()}</div>
+                        </div>
+                        <div>
+                          <div className="text-[9px] text-zinc-600 uppercase tracking-widest mb-0.5">Connections</div>
+                          <div className="text-sm font-black text-white font-mono-system">{connections.toLocaleString()}</div>
+                        </div>
+                        <div>
+                          <div className="text-[9px] text-zinc-600 uppercase tracking-widest mb-0.5">Stratum Shares</div>
+                          <div className="text-sm font-black text-white font-mono-system">{stratumShares.toLocaleString()}</div>
+                        </div>
+                        <div>
+                          <div className="text-[9px] text-zinc-600 uppercase tracking-widest mb-0.5">Failed Shares</div>
+                          <div className="text-sm font-black text-white font-mono-system">{failedShares.toLocaleString()}</div>
+                        </div>
+                        <div>
+                          <div className="text-[9px] text-zinc-600 uppercase tracking-widest mb-0.5">Total Hashes</div>
+                          <div className="text-sm font-black text-white font-mono-system">{totalHashes.toLocaleString()}</div>
+                        </div>
+                        <div>
+                          <div className="text-[9px] text-zinc-600 uppercase tracking-widest mb-0.5">Verified Shares</div>
+                          <div className="text-sm font-black text-yellow-400 font-mono-system">{sharesFound.toLocaleString()}</div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -296,7 +457,6 @@ export default function DashboardClient() {
               </Link>
             </div>
           </section>
-
           <section className="border border-zinc-800 bg-zinc-950 p-8">
             <div className="max-w-4xl space-y-5">
               <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter">
