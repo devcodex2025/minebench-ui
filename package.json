@@ -1,6 +1,6 @@
 {
   "name": "minebench-ui",
-  "version": "v0.1.5.7",
+  "version": "v0.1.5.12",
   "description": "Minebench - Mining Benchmark Results Dashboard",
   "private": true,
   "scripts": {
