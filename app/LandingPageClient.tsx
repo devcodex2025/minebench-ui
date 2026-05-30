@@ -29,6 +29,7 @@ import NetworkStrip from '@/components/NetworkStrip';
 import { supabase } from '@/lib/supabaseClient';
 import { getLeaderboardDeviceCount } from '@/lib/leaderboard';
 import { BenchmarkResult } from '@/types/benchmark';
+import { formatHashrate } from '@/lib/utils';
 
 export type LandingStats = {
     benchmarks: number;
@@ -36,11 +37,33 @@ export type LandingStats = {
     downloads: number;
 };
 
+type TreasuryStatus = {
+    bmtBalance?: number | null;
+    solBalance?: number | null;
+    pendingPayouts?: number | null;
+    requiredBmt?: number | null;
+    circuitBreakerOpen?: boolean | null;
+    updatedAt?: string | null;
+};
+
+type PoolStatus = {
+    hashrate: number;
+    miners: number;
+};
+
 const formatCounterValue = (value: number) => {
     if (value >= 1000) {
         return (value / 1000).toFixed(1) + 'K';
     }
     return Math.round(value).toString();
+};
+
+const formatAssetAmount = (value: number | null | undefined, suffix: string, decimals = 2) => {
+    if (value === null || value === undefined || !Number.isFinite(value)) return 'Pending';
+    return `${value.toLocaleString(undefined, {
+        maximumFractionDigits: decimals,
+        minimumFractionDigits: value > 0 && value < 1 ? Math.min(decimals, 4) : 0,
+    })} ${suffix}`;
 };
 
 function Counter({ value, label }: { value: number; label: string }) {
@@ -77,6 +100,8 @@ export default function LandingPageClient({
     const tokenContract = '67ipDsgK6D7bqTW89H8T1KTxUvVuaFy92GX7Q2XFVdev';
     const [stats, setStats] = useState<LandingStats>(initialStats);
     const [latestClientVersion, setLatestClientVersion] = useState(clientVersion);
+    const [treasuryStatus, setTreasuryStatus] = useState<TreasuryStatus | null>(null);
+    const [poolStatus, setPoolStatus] = useState<PoolStatus>({ hashrate: 0, miners: 0 });
     const [discordStats, setDiscordStats] = useState({
         members: null as number | null,
         online: null as number | null,
@@ -186,6 +211,42 @@ export default function LandingPageClient({
         fetchLatestRelease();
     }, []);
 
+    useEffect(() => {
+        const fetchTreasuryStatus = async () => {
+            try {
+                const response = await fetch('/api/treasury', { cache: 'no-store' });
+                if (!response.ok) return;
+
+                setTreasuryStatus(await response.json());
+            } catch (err) {
+                console.error('Error fetching treasury status:', err);
+            }
+        };
+
+        fetchTreasuryStatus();
+    }, []);
+
+    useEffect(() => {
+        const fetchPoolStatus = async () => {
+            try {
+                const response = await fetch('/api/pool-stats', { cache: 'no-store' });
+                if (!response.ok) return;
+
+                const data = await response.json();
+                setPoolStatus({
+                    hashrate: Number(data.poolHashrate || data.stratum?.hashrate_15m || 0),
+                    miners: Number(data.miners || data.stratum?.connections || data.stratum?.workers?.length || 0),
+                });
+            } catch (err) {
+                console.error('Error fetching pool status:', err);
+            }
+        };
+
+        fetchPoolStatus();
+        const interval = setInterval(fetchPoolStatus, 30000);
+        return () => clearInterval(interval);
+    }, []);
+
     return (
         <div className="relative flex min-h-screen flex-col overflow-hidden bg-black">
             <Scene3D />
@@ -193,7 +254,19 @@ export default function LandingPageClient({
 
             <main className="relative z-10 flex-grow">
                 <NetworkStrip />
-                <section className="relative flex min-h-screen items-center justify-center px-4 pb-12 pt-32 sm:px-6 lg:px-8">
+                <div className="relative z-20 flex justify-end px-2 pt-16 sm:px-3 max-w-7xl mx-auto">
+                    <div className="inline-flex flex-wrap items-center justify-end gap-3 rounded-full bg-black/70 px-5 py-2.5 font-mono text-[10px] font-black uppercase tracking-[0.22em] text-zinc-300 shadow-[0_0_28px_rgba(250,204,21,0.08)] backdrop-blur-xl">
+                        <span className="flex items-center gap-2 text-yellow-400">
+                            <Activity className="h-3.5 w-3.5" />
+                            Pool Live
+                        </span>
+                        <span className="hidden h-4 w-px bg-zinc-800 sm:block" />
+                        <span>Total Hashrate: <span className="text-white">{formatHashrate(poolStatus.hashrate)}</span></span>
+                        <span className="hidden h-4 w-px bg-zinc-800 sm:block" />
+                        <span>Active Miners: <span className="text-white">{poolStatus.miners.toLocaleString()}</span></span>
+                    </div>
+                </div>
+                <section className="relative flex min-h-screen items-center justify-center px-4 pb-12 pt-10 sm:px-6 lg:px-8">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
