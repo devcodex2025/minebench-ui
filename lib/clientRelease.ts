@@ -2,14 +2,12 @@ import {
   CLIENT_RELEASE_FALLBACK_VERSION,
   CLIENT_RELEASE_REPO,
   CLIENT_RELEASES_URL,
-  buildDirectDownloadUrl,
 } from './clientReleaseConstants';
 
 export {
   CLIENT_RELEASE_FALLBACK_VERSION,
   CLIENT_RELEASE_REPO,
   CLIENT_RELEASES_URL,
-  buildDirectDownloadUrl,
 };
 
 export type GithubRelease = {

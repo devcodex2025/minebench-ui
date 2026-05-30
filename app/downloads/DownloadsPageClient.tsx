@@ -14,7 +14,7 @@ import { motion } from 'framer-motion';
 import ShaderScreenshotSlider, {
     ShaderSlide,
 } from '@/components/downloads/ShaderScreenshotSlider';
-import { CLIENT_RELEASE_FALLBACK_VERSION, buildDirectDownloadUrl } from '@/lib/clientReleaseConstants';
+import { CLIENT_RELEASES_URL } from '@/lib/clientReleaseConstants';
 
 type Release = {
     version?: string;
@@ -160,68 +160,77 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                 linux: [],
             };
 
-            const tag = release.tag_name || CLIENT_RELEASE_FALLBACK_VERSION;
             const assets = release.assets || [];
 
-            const findAssetUrl = (predicate: (name: string) => boolean): string | null => {
-                const item = assets.find((a: any) => typeof a?.name === 'string' && predicate(a.name));
-                return item?.browser_download_url || null;
-            };
+            if (assets.length > 0) {
+                const findAssetUrl = (predicate: (name: string) => boolean) => {
+                    const item = assets.find((a: any) => typeof a?.name === 'string' && predicate(a.name));
+                    return item?.browser_download_url || null;
+                };
 
-            // Match Windows installers (.exe) by arch markers in name
-            newBuilds.windows = [
-                {
-                    arch: 'x64',
-                    label: '64-bit Intel/AMD',
-                    description: 'For standard 64-bit Windows systems',
-                    url: findAssetUrl((n) => n.endsWith('.exe') && (n.includes('x64-') || n.includes('x64.')))
-                        || buildDirectDownloadUrl(tag, 'x64-setup.exe'),
-                },
-                {
-                    arch: 'msi',
-                    label: 'MSI Installer',
-                    description: 'For managed Windows installs and enterprise deployment',
-                    url: findAssetUrl((n) => n.endsWith('.msi'))
-                        || buildDirectDownloadUrl(tag, 'x64_en-US.msi'),
-                },
-            ];
+                // Match Windows installers (.exe) by arch markers in name
+                newBuilds.windows = [
+                    {
+                        arch: 'x64',
+                        label: '64-bit Intel/AMD',
+                        description: 'For standard 64-bit Windows systems',
+                        url: findAssetUrl((n) => n.endsWith('.exe') && (n.includes('x64-') || n.includes('x64.'))) || release.html_url || CLIENT_RELEASES_URL,
+                    },
+                    {
+                        arch: 'msi',
+                        label: 'MSI Installer',
+                        description: 'For managed Windows installs and enterprise deployment',
+                        url: findAssetUrl((n) => n.endsWith('.msi')) || release.html_url || CLIENT_RELEASES_URL,
+                    },
+                ];
 
-            // Match macOS universal DMG first, then any DMG.
-            newBuilds.macos = [
-                {
-                    arch: 'universal',
-                    label: 'Universal',
-                    description: 'For Intel and Apple Silicon Mac computers',
-                    url: findAssetUrl((n) => n.endsWith('.dmg') && n.includes('universal'))
-                        || findAssetUrl((n) => n.endsWith('.dmg'))
-                        || buildDirectDownloadUrl(tag, 'universal.dmg'),
-                },
-            ];
+                // Match macOS universal DMG first, then arch-specific names.
+                const universalMacDmg = findAssetUrl((n) => n.endsWith('.dmg') && n.includes('universal'));
+                newBuilds.macos = [
+                    {
+                        arch: 'universal',
+                        label: 'Universal',
+                        description: 'For Intel and Apple Silicon Mac computers',
+                        url: universalMacDmg || findAssetUrl((n) => n.endsWith('.dmg')) || release.html_url || CLIENT_RELEASES_URL,
+                    },
+                ];
 
-            // Match Linux packages.
-            newBuilds.linux = [
-                {
-                    arch: 'appimage',
-                    label: 'AppImage',
-                    description: 'Portable Linux package for x86-64 systems',
-                    url: findAssetUrl((n) => n.endsWith('.AppImage'))
-                        || buildDirectDownloadUrl(tag, 'amd64.AppImage'),
-                },
-                {
-                    arch: 'deb',
-                    label: 'Debian/Ubuntu',
-                    description: 'DEB package for Debian-based distributions',
-                    url: findAssetUrl((n) => n.endsWith('.deb'))
-                        || buildDirectDownloadUrl(tag, 'amd64.deb'),
-                },
-                {
-                    arch: 'rpm',
-                    label: 'Fedora/RHEL',
-                    description: 'RPM package for Fedora, RHEL, and compatible distributions',
-                    url: findAssetUrl((n) => n.endsWith('.rpm'))
-                        || buildDirectDownloadUrl(tag, 'amd64.rpm'),
-                },
-            ];
+                // Match Linux packages.
+                newBuilds.linux = [
+                    {
+                        arch: 'appimage',
+                        label: 'AppImage',
+                        description: 'Portable Linux package for x86-64 systems',
+                        url: findAssetUrl((n) => n.endsWith('.AppImage')) || release.html_url || CLIENT_RELEASES_URL,
+                    },
+                    {
+                        arch: 'deb',
+                        label: 'Debian/Ubuntu',
+                        description: 'DEB package for Debian-based distributions',
+                        url: findAssetUrl((n) => n.endsWith('.deb')) || release.html_url || CLIENT_RELEASES_URL,
+                    },
+                    {
+                        arch: 'rpm',
+                        label: 'Fedora/RHEL',
+                        description: 'RPM package for Fedora, RHEL, and compatible distributions',
+                        url: findAssetUrl((n) => n.endsWith('.rpm')) || release.html_url || CLIENT_RELEASES_URL,
+                    },
+                ];
+            } else {
+                // Fallback when GitHub API assets are unavailable.
+                newBuilds.windows = [
+                    { arch: 'x64', label: '64-bit Intel/AMD', description: 'For standard 64-bit Windows systems', url: release.html_url || CLIENT_RELEASES_URL },
+                    { arch: 'msi', label: 'MSI Installer', description: 'For managed Windows installs and enterprise deployment', url: release.html_url || CLIENT_RELEASES_URL },
+                ];
+                newBuilds.macos = [
+                    { arch: 'universal', label: 'Universal', description: 'For Intel and Apple Silicon Mac computers', url: release.html_url || CLIENT_RELEASES_URL },
+                ];
+                newBuilds.linux = [
+                    { arch: 'appimage', label: 'AppImage', description: 'Portable Linux package for x86-64 systems', url: release.html_url || CLIENT_RELEASES_URL },
+                    { arch: 'deb', label: 'Debian/Ubuntu', description: 'DEB package for Debian-based distributions', url: release.html_url || CLIENT_RELEASES_URL },
+                    { arch: 'rpm', label: 'Fedora/RHEL', description: 'RPM package for Fedora, RHEL, and compatible distributions', url: release.html_url || CLIENT_RELEASES_URL },
+                ];
+            }
 
             setBuilds(newBuilds);
         };
