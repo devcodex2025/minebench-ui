@@ -1,6 +1,7 @@
 'use client';
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { Download, Cpu, HardDrive, TrendingUp, Zap } from "lucide-react";
 import Image from "next/image";
@@ -9,12 +10,10 @@ import MacOSIcon from "@/public/img/macos-logo.svg";
 import LinuxIcon from "@/public/img/linux-logo.svg";
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import Scene3D from '@/components/Scene3D';
 import { motion } from 'framer-motion';
 import ShaderScreenshotSlider, {
     ShaderSlide,
 } from '@/components/downloads/ShaderScreenshotSlider';
-import { CLIENT_RELEASES_URL, CLIENT_RELEASE_FALLBACK_VERSION, getDirectDownloadUrls } from '@/lib/clientReleaseConstants';
 
 type Release = {
     version?: string;
@@ -30,6 +29,63 @@ type BuildVariant = {
     label: string;
     description: string;
     url: string | null;
+};
+
+const Scene3D = dynamic(() => import('@/components/Scene3D'), { ssr: false, loading: () => null });
+
+const createBuildVariants = (release: Release | null): Record<string, BuildVariant[]> => {
+    const assets = release?.assets || [];
+    const findAssetUrl = (predicate: (name: string) => boolean) => {
+        const item = assets.find((a: any) => typeof a?.name === 'string' && predicate(a.name));
+        return item?.browser_download_url || null;
+    };
+
+    const universalMacDmg = findAssetUrl((n) => n.endsWith('.dmg') && n.includes('universal'));
+
+    return {
+        windows: [
+            {
+                arch: 'x64',
+                label: '64-bit Intel/AMD',
+                description: 'For standard 64-bit Windows systems',
+                url: findAssetUrl((n) => n.endsWith('.exe') && (n.includes('x64-') || n.includes('x64.'))),
+            },
+            {
+                arch: 'msi',
+                label: 'MSI Installer',
+                description: 'For managed Windows installs and enterprise deployment',
+                url: findAssetUrl((n) => n.endsWith('.msi')),
+            },
+        ],
+        macos: [
+            {
+                arch: 'universal',
+                label: 'Universal',
+                description: 'For Intel and Apple Silicon Mac computers',
+                url: universalMacDmg || findAssetUrl((n) => n.endsWith('.dmg')),
+            },
+        ],
+        linux: [
+            {
+                arch: 'appimage',
+                label: 'AppImage',
+                description: 'Portable Linux package for x86-64 systems',
+                url: findAssetUrl((n) => n.endsWith('.AppImage')),
+            },
+            {
+                arch: 'deb',
+                label: 'Debian/Ubuntu',
+                description: 'DEB package for Debian-based distributions',
+                url: findAssetUrl((n) => n.endsWith('.deb')),
+            },
+            {
+                arch: 'rpm',
+                label: 'Fedora/RHEL',
+                description: 'RPM package for Fedora, RHEL, and compatible distributions',
+                url: findAssetUrl((n) => n.endsWith('.rpm')),
+            },
+        ],
+    };
 };
 
 const APP_SCREENSHOTS: ShaderSlide[] = [
@@ -77,13 +133,9 @@ const APP_SCREENSHOTS: ShaderSlide[] = [
     },
 ];
 
-export default function DownloadsPageClient({ initialClientRelease }: { initialClientRelease: Release }) {
+export default function DownloadsPageClient({ initialClientRelease }: { initialClientRelease: Release | null }) {
     const [clientRelease, setClientRelease] = useState<Release | null>(initialClientRelease);
-    const [builds, setBuilds] = useState<Record<string, BuildVariant[]>>({
-        windows: [],
-        macos: [],
-        linux: [],
-    });
+    const [builds, setBuilds] = useState<Record<string, BuildVariant[]>>(() => createBuildVariants(initialClientRelease));
     const [loading, setLoading] = useState(true);
     const showcaseVideoRef = useRef<HTMLVideoElement>(null);
     const showcaseProgressRef = useRef<HTMLDivElement>(null);
@@ -139,99 +191,18 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                         ...clientData,
                         version: clientData.tag_name,
                     });
-                    processBuildVariants(clientData);
+                    setBuilds(createBuildVariants(clientData));
                 } else {
                     setClientRelease(initialClientRelease);
-                    processBuildVariants(initialClientRelease);
+                    setBuilds(createBuildVariants(initialClientRelease));
                 }
             } catch (err) {
                 console.error(err);
                 setClientRelease(initialClientRelease);
-                processBuildVariants(initialClientRelease);
+                setBuilds(createBuildVariants(initialClientRelease));
             } finally {
                 setLoading(false);
             }
-        };
-
-        const processBuildVariants = (release: any) => {
-            const newBuilds: Record<string, BuildVariant[]> = {
-                windows: [],
-                macos: [],
-                linux: [],
-            };
-
-            const assets = release.assets || [];
-            const tagName = release.tag_name || release.version || CLIENT_RELEASE_FALLBACK_VERSION;
-            const direct = getDirectDownloadUrls(tagName);
-
-            if (assets.length > 0) {
-                const findAssetUrl = (predicate: (name: string) => boolean) => {
-                    const item = assets.find((a: any) => typeof a?.name === 'string' && predicate(a.name));
-                    return item?.browser_download_url || null;
-                };
-
-                newBuilds.windows = [
-                    {
-                        arch: 'x64',
-                        label: '64-bit Intel/AMD',
-                        description: 'For standard 64-bit Windows systems',
-                        url: findAssetUrl((n) => n.endsWith('.exe') && (n.includes('x64-') || n.includes('x64.'))) || direct.exe,
-                    },
-                    {
-                        arch: 'msi',
-                        label: 'MSI Installer',
-                        description: 'For managed Windows installs and enterprise deployment',
-                        url: findAssetUrl((n) => n.endsWith('.msi')) || direct.msi,
-                    },
-                ];
-
-                const universalMacDmg = findAssetUrl((n) => n.endsWith('.dmg') && n.includes('universal'));
-                newBuilds.macos = [
-                    {
-                        arch: 'universal',
-                        label: 'Universal',
-                        description: 'For Intel and Apple Silicon Mac computers',
-                        url: universalMacDmg || findAssetUrl((n) => n.endsWith('.dmg')) || direct.dmg,
-                    },
-                ];
-
-                newBuilds.linux = [
-                    {
-                        arch: 'appimage',
-                        label: 'AppImage',
-                        description: 'Portable Linux package for x86-64 systems',
-                        url: findAssetUrl((n) => n.endsWith('.AppImage')) || direct.appimage,
-                    },
-                    {
-                        arch: 'deb',
-                        label: 'Debian/Ubuntu',
-                        description: 'DEB package for Debian-based distributions',
-                        url: findAssetUrl((n) => n.endsWith('.deb')) || direct.deb,
-                    },
-                    {
-                        arch: 'rpm',
-                        label: 'Fedora/RHEL',
-                        description: 'RPM package for Fedora, RHEL, and compatible distributions',
-                        url: findAssetUrl((n) => n.endsWith('.rpm')) || direct.rpm,
-                    },
-                ];
-            } else {
-                // GitHub API unavailable — construct direct file URLs from version.
-                newBuilds.windows = [
-                    { arch: 'x64', label: '64-bit Intel/AMD', description: 'For standard 64-bit Windows systems', url: direct.exe },
-                    { arch: 'msi', label: 'MSI Installer', description: 'For managed Windows installs and enterprise deployment', url: direct.msi },
-                ];
-                newBuilds.macos = [
-                    { arch: 'universal', label: 'Universal', description: 'For Intel and Apple Silicon Mac computers', url: direct.dmg },
-                ];
-                newBuilds.linux = [
-                    { arch: 'appimage', label: 'AppImage', description: 'Portable Linux package for x86-64 systems', url: direct.appimage },
-                    { arch: 'deb', label: 'Debian/Ubuntu', description: 'DEB package for Debian-based distributions', url: direct.deb },
-                    { arch: 'rpm', label: 'Fedora/RHEL', description: 'RPM package for Fedora, RHEL, and compatible distributions', url: direct.rpm },
-                ];
-            }
-
-            setBuilds(newBuilds);
         };
 
         fetchReleases();
@@ -350,6 +321,11 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                                             {clientRelease.version}
                                         </p>
                                     )}
+                                    {loading && (
+                                        <p className="mt-2 text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500">
+                                            Refreshing release files...
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -443,16 +419,10 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                     {/* Platform Sections */}
                     <div
                         id="download-section"
-                        className={`grid gap-8 mb-16 ${
-                            builds.macos.some((variant) => Boolean(variant.url))
-                                ? 'grid-cols-1 md:grid-cols-3'
-                                : 'grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto'
-                        }`}
+                        className="grid grid-cols-1 gap-8 mb-16 md:grid-cols-3"
                     >
                         <PlatformSection platform="windows" variants={builds.windows} />
-                        {builds.macos.some((variant) => Boolean(variant.url)) && (
-                            <PlatformSection platform="macos" variants={builds.macos} />
-                        )}
+                        <PlatformSection platform="macos" variants={builds.macos} />
                         <PlatformSection platform="linux" variants={builds.linux} />
                     </div>
 

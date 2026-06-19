@@ -2,12 +2,14 @@ import {
   CLIENT_RELEASE_FALLBACK_VERSION,
   CLIENT_RELEASE_REPO,
   CLIENT_RELEASES_URL,
+  getClientReleaseDownloadUrls,
 } from './clientReleaseConstants';
 
 export {
   CLIENT_RELEASE_FALLBACK_VERSION,
   CLIENT_RELEASE_REPO,
   CLIENT_RELEASES_URL,
+  getClientReleaseDownloadUrls,
 };
 
 export type GithubRelease = {
@@ -24,6 +26,7 @@ const githubHeaders = (): Record<string, string> => {
   const headers: Record<string, string> = {
     Accept: 'application/vnd.github+json',
     'X-GitHub-Api-Version': '2022-11-28',
+    'User-Agent': 'MineBench-UI',
   };
 
   if (token) {
@@ -33,21 +36,36 @@ const githubHeaders = (): Record<string, string> => {
   return headers;
 };
 
-export const getClientReleaseFallback = (): GithubRelease => ({
-  url: CLIENT_RELEASES_URL,
-  html_url: CLIENT_RELEASES_URL,
-  name: CLIENT_RELEASE_FALLBACK_VERSION,
-  tag_name: CLIENT_RELEASE_FALLBACK_VERSION,
-  version: CLIENT_RELEASE_FALLBACK_VERSION,
-  assets: [],
-});
+const createFallbackClientRelease = (): GithubRelease => {
+  const tagName = CLIENT_RELEASE_FALLBACK_VERSION;
+  const urls = getClientReleaseDownloadUrls(tagName);
+
+  return {
+    html_url: `${CLIENT_RELEASES_URL}/tag/${tagName}`,
+    name: tagName,
+    tag_name: tagName,
+    version: tagName,
+    assets: [
+      { name: `MineBench.Client-${tagName.replace(/^v/i, '')}-1.x86_64.rpm`, browser_download_url: urls.rpm },
+      { name: `MineBench.Client_${tagName.replace(/^v/i, '')}_amd64.AppImage`, browser_download_url: urls.appimage },
+      { name: `MineBench.Client_${tagName.replace(/^v/i, '')}_amd64.deb`, browser_download_url: urls.deb },
+      { name: `MineBench.Client_${tagName.replace(/^v/i, '')}_universal.dmg`, browser_download_url: urls.dmg },
+      { name: `MineBench.Client_${tagName.replace(/^v/i, '')}_x64-setup.exe`, browser_download_url: urls.exe },
+      { name: `MineBench.Client_${tagName.replace(/^v/i, '')}_x64_en-US.msi`, browser_download_url: urls.msi },
+    ],
+  };
+};
 
 export async function getLatestClientRelease(): Promise<GithubRelease> {
   try {
-    const response = await fetch(`https://api.github.com/repos/${CLIENT_RELEASE_REPO}/releases/latest`, {
-      headers: githubHeaders(),
-      next: { revalidate: 300 },
-    });
+    const url = `https://api.github.com/repos/${CLIENT_RELEASE_REPO}/releases/latest`;
+    const headers = githubHeaders();
+    let response = await fetch(url, { headers, cache: 'no-store' });
+
+    if ((response.status === 401 || response.status === 403) && headers.Authorization) {
+      const { Authorization: _authorization, ...publicHeaders } = headers;
+      response = await fetch(url, { headers: publicHeaders, cache: 'no-store' });
+    }
 
     if (!response.ok) {
       throw new Error(`Client release fetch failed: ${response.status}`);
@@ -56,10 +74,10 @@ export async function getLatestClientRelease(): Promise<GithubRelease> {
     const release = await response.json();
     return {
       ...release,
-      version: release.tag_name || release.name || CLIENT_RELEASE_FALLBACK_VERSION,
+      version: release.tag_name || release.name,
     };
   } catch (err) {
-    console.error('[clientRelease] Falling back to static client release:', err);
-    return getClientReleaseFallback();
+    console.error('[clientRelease] Latest client release unavailable:', err);
+    return createFallbackClientRelease();
   }
 }

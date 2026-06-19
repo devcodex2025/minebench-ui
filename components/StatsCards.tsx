@@ -32,7 +32,7 @@ export default function StatsCards({ summary }: StatsCardsProps) {
       shadow: 'shadow-green-500/10'
     }] : []),
     {
-      title: 'Top Performer',
+      title: 'Best CPU',
       value: summary.bestPerformer.gpuModel,
       subtitle: summary.bestPerformer.algorithm,
       icon: Award,
@@ -168,7 +168,7 @@ export function RecentTests({ tests }: RecentTestsProps) {
               </div>
               <div className="text-right flex-shrink-0">
                 <p className="text-xs font-black text-yellow-400 font-mono-system tracking-tighter">
-                  {test.avg_hashrate != null ? formatHashrate(test.avg_hashrate) : '0.0 H/S'}
+                  {test.avg_hashrate != null ? formatHashrate(test.avg_hashrate) : formatHashrate(0)}
                 </p>
                 <p className="text-[8px] font-bold text-zinc-600 uppercase tracking-tighter">
                   {testDate

@@ -15,24 +15,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     githubHeaders.Authorization = `Bearer ${GITHUB_TOKEN}`;
   }
 
+  const fetchGithubRelease = async (url: string) => {
+    let response = await fetch(url, { headers: githubHeaders });
+
+    if ((response.status === 401 || response.status === 403) && githubHeaders.Authorization) {
+      const { Authorization: _authorization, ...publicHeaders } = githubHeaders;
+      response = await fetch(url, { headers: publicHeaders });
+    }
+
+    return response;
+  };
+
   try {
     const [cpuRes, gpuRes, clientData] = await Promise.all([
-      fetch('https://api.github.com/repos/karbivskyi/MineBench-CPU-ZEPH/releases/latest', {
-        headers: githubHeaders
-      }),
-      fetch('https://api.github.com/repos/karbivskyi/MineBench-GPU-RVN/releases/latest', {
-        headers: githubHeaders
-      }),
+      fetchGithubRelease('https://api.github.com/repos/karbivskyi/MineBench-CPU-ZEPH/releases/latest'),
+      fetchGithubRelease('https://api.github.com/repos/karbivskyi/MineBench-GPU-RVN/releases/latest'),
       getLatestClientRelease()
     ]);
 
-    // Check responses specifically
-    if (!cpuRes.ok) {
-       console.error(`CPU Release fetch failed: ${cpuRes.status} ${cpuRes.statusText}`);
-    }
-    if (!gpuRes.ok) {
-        console.error(`GPU Release fetch failed: ${gpuRes.status} ${gpuRes.statusText}`);
-    }
     const cpuData = cpuRes.ok ? await cpuRes.json() : null;
     const gpuData = gpuRes.ok ? await gpuRes.json() : null;
 

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useState, useEffect, useRef } from 'react';
 import { motion, useInView, useSpring, useMotionValue, useTransform } from 'framer-motion';
 import {
@@ -21,7 +22,6 @@ import {
     Users,
     Maximize,
 } from 'lucide-react';
-import Scene3D from '@/components/Scene3D';
 import Image from 'next/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -31,10 +31,17 @@ import { getLeaderboardDeviceCount } from '@/lib/leaderboard';
 import { BenchmarkResult } from '@/types/benchmark';
 import { formatHashrate } from '@/lib/utils';
 
+const Scene3D = dynamic(() => import('@/components/Scene3D'), { ssr: false, loading: () => null });
+
 export type LandingStats = {
     benchmarks: number;
     miners: number;
     downloads: number;
+};
+
+export type PoolStatus = {
+    hashrate: number;
+    miners: number;
 };
 
 type TreasuryStatus = {
@@ -44,11 +51,6 @@ type TreasuryStatus = {
     requiredBmt?: number | null;
     circuitBreakerOpen?: boolean | null;
     updatedAt?: string | null;
-};
-
-type PoolStatus = {
-    hashrate: number;
-    miners: number;
 };
 
 const formatCounterValue = (value: number) => {
@@ -93,15 +95,17 @@ function Counter({ value, label }: { value: number; label: string }) {
 export default function LandingPageClient({
     initialStats,
     clientVersion,
+    initialPoolStatus,
 }: {
     initialStats: LandingStats;
     clientVersion: string;
+    initialPoolStatus: PoolStatus;
 }) {
     const tokenContract = '67ipDsgK6D7bqTW89H8T1KTxUvVuaFy92GX7Q2XFVdev';
     const [stats, setStats] = useState<LandingStats>(initialStats);
     const [latestClientVersion, setLatestClientVersion] = useState(clientVersion);
     const [treasuryStatus, setTreasuryStatus] = useState<TreasuryStatus | null>(null);
-    const [poolStatus, setPoolStatus] = useState<PoolStatus>({ hashrate: 0, miners: 0 });
+    const [poolStatus, setPoolStatus] = useState<PoolStatus>(initialPoolStatus);
     const [discordStats, setDiscordStats] = useState({
         members: null as number | null,
         online: null as number | null,
@@ -254,16 +258,23 @@ export default function LandingPageClient({
 
             <main className="relative z-10 flex-grow">
                 <NetworkStrip />
-                <div className="relative z-20 flex justify-end px-2 pt-16 sm:px-3 max-w-7xl mx-auto">
-                    <div className="inline-flex flex-wrap items-center justify-end gap-3 rounded-full bg-black/70 px-5 py-2.5 font-mono text-[10px] font-black uppercase tracking-[0.22em] text-zinc-300 shadow-[0_0_28px_rgba(250,204,21,0.08)] backdrop-blur-xl">
-                        <span className="flex items-center gap-2 text-yellow-400">
-                            <Activity className="h-3.5 w-3.5" />
+                <div className="relative z-20 flex justify-end px-4 pt-8 lg:pt-8 sm:px-2 max-w-7xl mx-auto">
+                    <div
+                        aria-label={`Pool live data: total hashrate ${formatHashrate(poolStatus.hashrate)}, active miners ${poolStatus.miners}`}
+                        className="inline-flex flex-wrap items-center justify-end gap-4 bg-black/80 px-6 py-3.5 font-mono backdrop-blur-xl shadow-[0_0_28px_rgba(250,204,21,0.10)]"
+                    >
+                        <span className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-yellow-400">
+                            <Activity className="h-4 w-4 animate-pulse" aria-hidden="true" />
                             Pool Live
                         </span>
-                        <span className="hidden h-4 w-px bg-zinc-800 sm:block" />
-                        <span>Total Hashrate: <span className="text-white">{formatHashrate(poolStatus.hashrate)}</span></span>
-                        <span className="hidden h-4 w-px bg-zinc-800 sm:block" />
-                        <span>Active Miners: <span className="text-white">{poolStatus.miners.toLocaleString()}</span></span>
+                        <span className="hidden h-5 w-px bg-zinc-700 sm:block" aria-hidden="true" />
+                        <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-400">
+                            Hashrate: <span className="text-sm font-black text-white">{formatHashrate(poolStatus.hashrate)}</span>
+                        </span>
+                        <span className="hidden h-5 w-px bg-zinc-700 sm:block" aria-hidden="true" />
+                        <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-400">
+                            Miners: <span className="text-sm font-black text-white">{poolStatus.miners.toLocaleString()}</span>
+                        </span>
                     </div>
                 </div>
                 <section className="relative flex min-h-screen items-center justify-center px-4 pb-12 pt-10 sm:px-6 lg:px-8">
@@ -285,13 +296,21 @@ export default function LandingPageClient({
 
                         <h2 className="mb-6 flex flex-wrap items-center justify-center gap-4 text-2xl font-bold uppercase tracking-tight text-zinc-400 md:text-3xl">
                             <span className="block w-full">The Mining Benchmark Platform</span>
-                            <span className="block">And Monero Mining App on</span>
+                            <span className="block">And</span>
+                            <Image
+                                src="/logos/Monero-logo.svg"
+                                alt="Monero"
+                                width={300}
+                                height={78}
+                                className="inline-block h-[1em] w-auto align-[-0.08em] transition duration-300 hover:scale-105 hover:brightness-125 hover:drop-shadow-[0_0_14px_rgba(255,102,0,0.45)]"
+                            />
+                            <span className="block">Mining App on</span>
                             <Image
                                 src="/solanaLogo.svg"
                                 alt="Solana"
                                 width={160}
                                 height={24}
-                                className="inline-block"
+                                className="inline-block h-[1em] w-auto align-[-0.08em] transition duration-300 hover:scale-105 hover:brightness-125 hover:drop-shadow-[0_0_14px_rgba(250,204,21,0.35)]"
                             />
                         </h2>
 

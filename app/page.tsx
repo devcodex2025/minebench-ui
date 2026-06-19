@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { createClient } from '@supabase/supabase-js';
 import LandingPageClient from './LandingPageClient';
-import type { LandingStats } from './LandingPageClient';
+import type { LandingStats, PoolStatus } from './LandingPageClient';
 import { getLeaderboardDeviceCount } from '@/lib/leaderboard';
 import { getLatestClientRelease } from '@/lib/clientRelease';
 import type { BenchmarkResult } from '@/types/benchmark';
@@ -83,11 +83,35 @@ async function getLandingStats(): Promise<LandingStats> {
   };
 }
 
+async function getPoolStats(): Promise<PoolStatus> {
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://backend.minebench.cloud';
+  try {
+    const response = await fetch(`${backendUrl}/api/pool/stats`, {
+      headers: { Accept: 'application/json' },
+    });
+    if (!response.ok) return { hashrate: 0, miners: 0 };
+    const data = await response.json();
+    return {
+      hashrate: Number(data.poolHashrate || data.stratum?.hashrate_15m || 0),
+      miners: Number(data.miners || data.stratum?.connections || data.stratum?.workers?.length || 0),
+    };
+  } catch {
+    return { hashrate: 0, miners: 0 };
+  }
+}
+
 export default async function LandingPage() {
-  const [initialStats, clientRelease] = await Promise.all([
+  const [initialStats, clientRelease, initialPoolStatus] = await Promise.all([
     getLandingStats(),
     getLatestClientRelease(),
+    getPoolStats(),
   ]);
 
-  return <LandingPageClient initialStats={initialStats} clientVersion={clientRelease.version || clientRelease.tag_name} />;
+  return (
+    <LandingPageClient
+      initialStats={initialStats}
+      clientVersion={clientRelease?.version || clientRelease?.tag_name || 'Latest'}
+      initialPoolStatus={initialPoolStatus}
+    />
+  );
 }

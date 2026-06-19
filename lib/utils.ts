@@ -1,11 +1,10 @@
 import { BenchmarkResult, BenchmarkSummary } from '@/types/benchmark';
 
 export const formatHashrate = (hashrate: number): string => {
-  if (hashrate >= 1e12) return `${(hashrate / 1e12).toFixed(2)} TH/s`;
-  if (hashrate >= 1e9) return `${(hashrate / 1e9).toFixed(2)} GH/s`;
+  if (!Number.isFinite(hashrate) || hashrate <= 0) return '0.00 kH/s';
   if (hashrate >= 1e6) return `${(hashrate / 1e6).toFixed(2)} MH/s`;
-  if (hashrate >= 1e3) return `${(hashrate / 1e3).toFixed(2)} KH/s`;
-  return `${hashrate.toFixed(2)} H/s`;
+  if (hashrate < 1e3) return `${hashrate.toFixed(2)} kH/s`;
+  return `${(hashrate / 1e3).toFixed(2)} kH/s`;
 };
 
 export const formatPower = (power: number): string => {

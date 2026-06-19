@@ -88,10 +88,10 @@ export default function DashboardClient() {
         const benchmarkPayload: BenchmarkResult[] = await benchmarksResponse.value.json();
 
         setResults(benchmarkPayload);
-        setTests(benchmarkPayload);
+        const cpuRows = getLeaderboardRows(benchmarkPayload, 'cpu');
+        setTests(cpuRows);
 
-        const leaderboardRows = getLeaderboardRows(benchmarkPayload);
-        const summaryData = leaderboardRows.map((item) => ({
+        const summaryData = cpuRows.map((item) => ({
           id: item.id,
           algorithm: item.algorithm,
           device_name: item.device_name,
@@ -150,18 +150,7 @@ export default function DashboardClient() {
 
   const handleRefresh = () => loadData();
 
-  if (loading && results.length === 0) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <RefreshCw className="w-12 h-12 animate-spin text-yellow-400" />
-        <p className="ml-4 text-yellow-400">Loading benchmark data...</p>
-      </div>
-    );
-  }
-
-  const leaderboardRows = getLeaderboardRows(results);
   const cpuLeaderboardCount = getLeaderboardRows(results, 'cpu').length;
-  const gpuLeaderboardCount = getLeaderboardRows(results, 'gpu').length;
   const nonAggregatePools = poolNodes.filter((pool) => (pool.id || '').toLowerCase() !== 'aggregate');
   const visiblePoolCards = POOL_CARDS.filter((card) => (
     card.key === 'default' || nonAggregatePools.some((pool) => {
@@ -199,7 +188,7 @@ export default function DashboardClient() {
                   CPU Mining Benchmark <span className="text-yellow-400">Dashboard</span>
                 </h1>
                 <p className="text-zinc-400 text-lg leading-relaxed">
-                  Track live hashrate, active benchmark clients, and ranked hardware results across the MineBench network. Use this page to compare CPU mining benchmark data, review GPU mining performance, and see where your rig stands in the live results feed.
+                  Track live hashrate, active benchmark clients, and the strongest CPU result across the MineBench network. Use this page to compare RandomX CPU mining benchmark data and see where your rig stands in the live results feed.
                 </p>
               </div>
               <button
@@ -211,6 +200,13 @@ export default function DashboardClient() {
                 {loading ? 'Refreshing...' : 'Refresh Live Data'}
               </button>
             </div>
+
+            {loading && results.length === 0 && (
+              <div className="flex items-center gap-3 border border-yellow-400/20 bg-yellow-400/5 px-4 py-3 text-xs font-black uppercase tracking-[0.2em] text-yellow-400">
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                Loading live dashboard data...
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="border border-zinc-800 bg-black p-6">
@@ -254,7 +250,7 @@ export default function DashboardClient() {
                   <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">XMR / BMT Exchange</span>
                   <Activity className="w-5 h-5 text-yellow-400" />
                 </div>
-                <div className="flex justify-between items-end">
+                <div className="flex justify-between items-end gap-6">
                   <div>
                     <div className="text-[10px] text-zinc-500 uppercase font-mono mb-1">XMR Price:</div>
                     <p className="text-2xl font-black text-white font-mono-system tracking-tighter">
@@ -353,8 +349,8 @@ export default function DashboardClient() {
                           <div className="text-sm font-black text-white font-mono-system">{failedShares.toLocaleString()}</div>
                         </div>
                         <div>
-                          <div className="text-[9px] text-zinc-600 uppercase tracking-widest mb-0.5">Total Hashes</div>
-                          <div className="text-sm font-black text-white font-mono-system">{totalHashes.toLocaleString()}</div>
+                          <div className="text-[9px] text-zinc-600 uppercase tracking-widest mb-0.5">Total Hashrate</div>
+                          <div className="text-sm font-black text-white font-mono-system">{formatHashrate(totalHashes)}</div>
                         </div>
                         <div>
                           <div className="text-[9px] text-zinc-600 uppercase tracking-widest mb-0.5">Verified Shares</div>
@@ -404,10 +400,10 @@ export default function DashboardClient() {
           </div>
           <div className="border border-zinc-800 bg-zinc-950 p-7">
             <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-4">
-              Compare <span className="text-yellow-400">GPU And CPU Mining Performance</span>
+              Review <span className="text-yellow-400">The Best CPU Mining Result</span>
             </h2>
             <p className="text-sm leading-relaxed text-zinc-400">
-              Use the dashboard to compare hardware, review current hashrate, and validate your own rig. It is a practical reference for miners searching GPU mining benchmark data, CPU mining results, and ranked hardware visibility.
+              Use the dashboard to review current hashrate, validate your own rig, and focus on the strongest CPU benchmark submitted by real MineBench clients.
             </p>
           </div>
         </section>
@@ -424,21 +420,19 @@ export default function DashboardClient() {
                   Benchmark tables now live on the <span className="text-yellow-400">Leaderboard</span>
                 </h2>
                 <p className="max-w-3xl text-sm md:text-base leading-relaxed text-zinc-400">
-                  Dashboard stays focused on live pool health, rewards, and network totals. The leaderboard page now owns CPU and GPU ranking tables with search-friendly mining benchmark content.
+                  Dashboard stays focused on live pool health, rewards, network totals, and the best CPU result. The leaderboard page owns full hardware ranking tables.
                 </p>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="border border-zinc-800 bg-black p-4">
-                  <div className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Devices</div>
-                  <div className="mt-2 font-mono-system text-3xl font-black text-yellow-400">{leaderboardRows.length}</div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Best CPU Rows</div>
+                  <div className="mt-2 font-mono-system text-3xl font-black text-yellow-400">{cpuLeaderboardCount}</div>
                 </div>
                 <div className="border border-zinc-800 bg-black p-4">
-                  <div className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">CPU</div>
-                  <div className="mt-2 font-mono-system text-3xl font-black text-white">{cpuLeaderboardCount}</div>
-                </div>
-                <div className="border border-zinc-800 bg-black p-4">
-                  <div className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">GPU</div>
-                  <div className="mt-2 font-mono-system text-3xl font-black text-white">{gpuLeaderboardCount}</div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Best Result</div>
+                  <div className="mt-2 font-mono-system text-3xl font-black text-white">
+                    {summary ? formatHashrate(summary.bestPerformer.hashrate) : formatHashrate(0)}
+                  </div>
                 </div>
               </div>
             </div>
@@ -463,7 +457,7 @@ export default function DashboardClient() {
                 Run Your Own <span className="text-yellow-400">Hardware Performance Check</span>
               </h2>
               <p className="text-zinc-400 leading-relaxed">
-                Want to see where your processor or graphics card ranks? Download the MineBench client, run a benchmark, and publish your result to the live mining benchmark dashboard. This is the fastest way to test CPU mining performance, compare RandomX benchmark output, and measure your rig against real network data.
+                Want to see where your processor ranks? Download the MineBench client, run a benchmark, and publish your result to the live mining benchmark dashboard. This is the fastest way to test CPU mining performance, compare RandomX benchmark output, and measure your rig against real network data.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 pt-2">
                 <Link

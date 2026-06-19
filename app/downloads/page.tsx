@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
   const release = await getLatestClientRelease();
-  const version = release.version || release.tag_name;
+  const version = release?.version || release?.tag_name || 'latest';
 
   return {
     title: `Downloads - Minebench ${version} | CPU & GPU Mining Benchmark Clients`,
