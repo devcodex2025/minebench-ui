@@ -18,6 +18,11 @@
 # misc
 .DS_Store
 *.pem
+
+# AI tools
+.codex/
+.codex-home.html
+AGENTS.md
 *.ps1
 *.yml
 *.yaml
