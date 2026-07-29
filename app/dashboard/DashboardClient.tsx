@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { BenchmarkResult, BenchmarkSummary } from '@/types/benchmark';
-import { calculateSummary, formatHashrate } from '@/lib/utils';
+import { calculateSummary, formatHashCount, formatHashrate } from '@/lib/utils';
 import { getLeaderboardRows } from '@/lib/leaderboard';
 import StatsCards, { RecentTests } from '@/components/StatsCards';
 import { Activity, Award, Cpu, Download, RefreshCw, TrendingUp, Users } from 'lucide-react';
@@ -349,8 +349,8 @@ export default function DashboardClient() {
                           <div className="text-sm font-black text-white font-mono-system">{failedShares.toLocaleString()}</div>
                         </div>
                         <div>
-                          <div className="text-[9px] text-zinc-600 uppercase tracking-widest mb-0.5">Total Hashrate</div>
-                          <div className="text-sm font-black text-white font-mono-system">{formatHashrate(totalHashes)}</div>
+                          <div className="text-[9px] text-zinc-600 uppercase tracking-widest mb-0.5">Total Hashes</div>
+                          <div className="text-sm font-black text-white font-mono-system">{formatHashCount(totalHashes)}</div>
                         </div>
                         <div>
                           <div className="text-[9px] text-zinc-600 uppercase tracking-widest mb-0.5">Verified Shares</div>

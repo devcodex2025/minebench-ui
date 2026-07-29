@@ -1,11 +1,23 @@
-import { BenchmarkResult, BenchmarkSummary } from '@/types/benchmark';
+import type { BenchmarkResult, BenchmarkSummary } from '@/types/benchmark';
 
-export const formatHashrate = (hashrate: number): string => {
-  if (!Number.isFinite(hashrate) || hashrate <= 0) return '0.00 kH/s';
-  if (hashrate >= 1e6) return `${(hashrate / 1e6).toFixed(2)} MH/s`;
-  if (hashrate < 1e3) return `${hashrate.toFixed(2)} kH/s`;
-  return `${(hashrate / 1e3).toFixed(2)} kH/s`;
+const formatScaledValue = (rawValue: number, units: string[]): string => {
+  let value = Number(rawValue);
+  if (!Number.isFinite(value) || value <= 0) return `0.00 ${units[0]}`;
+
+  let unitIndex = 0;
+  while (value >= 1000 && unitIndex < units.length - 1) {
+    value /= 1000;
+    unitIndex++;
+  }
+
+  return `${value.toFixed(2)} ${units[unitIndex]}`;
 };
+
+export const formatHashrate = (hashrate: number): string =>
+  formatScaledValue(hashrate, ['H/s', 'kH/s', 'MH/s', 'GH/s', 'TH/s', 'PH/s']);
+
+export const formatHashCount = (hashes: number): string =>
+  formatScaledValue(hashes, ['H', 'kH', 'MH', 'GH', 'TH', 'PH']);
 
 export const formatPower = (power: number): string => {
   return `${power.toFixed(0)}W`;
