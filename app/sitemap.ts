@@ -27,6 +27,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
             priority: 0.75,
         },
         {
+            url: 'https://minebench.cloud/leaderboard',
+            lastModified: new Date(),
+            changeFrequency: 'daily',
+            priority: 0.85,
+        },
+        {
             url: 'https://minebench.cloud/whitepaper',
             lastModified: new Date(),
             changeFrequency: 'monthly',
