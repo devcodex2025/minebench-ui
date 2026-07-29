@@ -1,561 +1,556 @@
 {
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\.eslintrc.json": {
-    "mtime": 1769107664.1184168,
+    "mtime": 1785345921.5639205,
     "ast_hash": "934a81616adbd809dfc38314baaa3409",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\apply-migration.js": {
-    "mtime": 1773183225.071026,
-    "ast_hash": "86acf37d8b206469f1b4ce9a9a4eccb6",
+    "mtime": 1785345921.6009047,
+    "ast_hash": "866441e8f238bc49977709de46cfa641",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\next.config.js": {
-    "mtime": 1769540544.6635356,
+    "mtime": 1785345921.6574328,
     "ast_hash": "0cee94fe86aa707e2a2a62750041be73",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\package.json": {
-    "mtime": 1781011034.3580322,
-    "ast_hash": "36758f47204739e9dcfd87cd842aae27",
+    "mtime": 1785345921.6664305,
+    "ast_hash": "216de89042f0811154959f69557974aa",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\postcss.config.js": {
-    "mtime": 1769107664.1311643,
+    "mtime": 1785345921.6734402,
     "ast_hash": "762a94d1749c8e97eebf3f94102e8eb2",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\tailwind.config.js": {
-    "mtime": 1769108336.84675,
+    "mtime": 1785345921.8890257,
     "ast_hash": "e377ef3cf8459b749482b6814515987d",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\tsconfig.json": {
-    "mtime": 1769107664.132199,
+    "mtime": 1785345921.8900342,
     "ast_hash": "4cbbe033806bb584dc8241e6e3bc4702",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\app\\LandingPageClient.tsx": {
-    "mtime": 1781198466.1931343,
-    "ast_hash": "ba08c2d89357c8532aecf9245b9b33a9",
+    "mtime": 1785345921.576901,
+    "ast_hash": "72bd800d193e28962ad7ad0124deaae7",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\app\\layout.tsx": {
-    "mtime": 1779109085.3976743,
+    "mtime": 1785345921.5859,
     "ast_hash": "6c4f56a81ab8ed53b7921c6eee4bd2d0",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\app\\page.tsx": {
-    "mtime": 1781191036.2858427,
-    "ast_hash": "066282677269c72e418c160e74c534c9",
+    "mtime": 1785345921.5909028,
+    "ast_hash": "48cb89260bd62a7995792ef662e4baa5",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\app\\providers.tsx": {
-    "mtime": 1773201951.0492828,
+    "mtime": 1785345921.592902,
     "ast_hash": "83f0b17e18956e9013d6577c234e1e58",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\app\\robots.ts": {
-    "mtime": 1769108336.7956457,
+    "mtime": 1785345921.5939054,
     "ast_hash": "59e1a1d60c0236c9371d825984eb00d9",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\app\\sitemap.ts": {
-    "mtime": 1779109085.401485,
-    "ast_hash": "a0efa02f5e6d46313930cf22984f5dc7",
+    "mtime": 1785345921.5968978,
+    "ast_hash": "6cec6866eb7727e31c63a9aec8b5bb19",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\app\\dashboard\\DashboardClient.tsx": {
-    "mtime": 1781196629.9670355,
-    "ast_hash": "64bdd7c4da967850fecfd465fad335d0",
+    "mtime": 1785345921.5789003,
+    "ast_hash": "44089da7aa04bbce8bee6671a620814f",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\app\\dashboard\\page.tsx": {
-    "mtime": 1779109085.3942327,
+    "mtime": 1785345921.579902,
     "ast_hash": "b6698573283bb1b3b1ee92fb10547402",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\app\\downloads\\DownloadsPageClient.tsx": {
-    "mtime": 1781194916.1944194,
-    "ast_hash": "2a0830622c90a88e7960fee84d5d0cb3",
+    "mtime": 1785345921.5809014,
+    "ast_hash": "670ca30b0dbd0b44389a0bae0a690924",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\app\\downloads\\page.tsx": {
-    "mtime": 1781191036.2838457,
-    "ast_hash": "973205af1cac75ccb84aeefb004d13dd",
+    "mtime": 1785345921.582901,
+    "ast_hash": "d0c252ee976e596b75f4829d29870393",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\app\\leaderboard\\LeaderboardClient.tsx": {
-    "mtime": 1779109085.3984,
+    "mtime": 1785345921.586899,
     "ast_hash": "f851b3ac8852b68051410ad25672a024",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\app\\leaderboard\\page.tsx": {
-    "mtime": 1779109085.3994274,
-    "ast_hash": "3ec367a1e6c8a101ee551a335c783fd5",
+    "mtime": 1785345921.5889015,
+    "ast_hash": "04665d87579200da5878e4b2eb018414",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\app\\premium\\layout.tsx": {
-    "mtime": 1779109085.400466,
+    "mtime": 1785345921.5909028,
     "ast_hash": "33315844c2dd8b7bad862c616d859cc6",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\app\\premium\\page.tsx": {
-    "mtime": 1775594024.7640088,
-    "ast_hash": "c0d621d7202f48b422d4fb52fde4291a",
+    "mtime": 1785345921.592902,
+    "ast_hash": "5fcb0864c6fbc6ea524ffdbcb0eb7b22",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\app\\wallet-connect\\layout.tsx": {
-    "mtime": 1769543801.5358672,
+    "mtime": 1785345921.597898,
     "ast_hash": "47dcdc10165c61f07a504ae8d9ad5580",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\app\\wallet-connect\\page.tsx": {
-    "mtime": 1779109116.1653264,
-    "ast_hash": "8e3225f909c682cd0aec76c0a1bf82af",
+    "mtime": 1785345921.5988984,
+    "ast_hash": "5cdea269c9ba43d1414186e926560eaf",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\app\\whitepaper\\page.tsx": {
-    "mtime": 1775427204.7436452,
+    "mtime": 1785345921.5999024,
     "ast_hash": "0a3d742751cf9a3a48d7215462ca8e83",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\app\\whitepaper\\WhitepaperClient.tsx": {
-    "mtime": 1779109085.4025025,
+    "mtime": 1785345921.5999024,
     "ast_hash": "021c86aade60531a1561e8089d30374b",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\components\\BenchmarkTable.tsx": {
-    "mtime": 1779109085.4036365,
+    "mtime": 1785345921.6029017,
     "ast_hash": "e0ef53c0a3dde1b749f5abc8277936ba",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\components\\Footer.tsx": {
-    "mtime": 1779109085.4041574,
-    "ast_hash": "7b82b8dd10a7528a54f329a3c4bed057",
+    "mtime": 1785345921.6049016,
+    "ast_hash": "aeef4f0bf920afd1b37b88242118fe7f",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\components\\Header.tsx": {
-    "mtime": 1779109085.4046762,
-    "ast_hash": "3a40b10658bc1ff2abf22c455bc1cdcc",
+    "mtime": 1785345921.6068997,
+    "ast_hash": "d4e99990965e5e6e67f4bfb2fe88570b",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\components\\NetworkStrip.tsx": {
-    "mtime": 1776277536.8614533,
-    "ast_hash": "a03d3aadd320a0f4e46e448e1c7ad3ec",
+    "mtime": 1785345921.6089005,
+    "ast_hash": "1755fc1b9db17d40886ff03ca9736d5e",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\components\\Scene3D.tsx": {
-    "mtime": 1769108336.7996447,
+    "mtime": 1785345921.6099024,
     "ast_hash": "a3b4e8592881f8dc76d9ddd1bf1f9865",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\components\\StatsCards.tsx": {
-    "mtime": 1781194859.9396505,
-    "ast_hash": "0703b63a266aa5ae81962206426a3639",
+    "mtime": 1785345921.610899,
+    "ast_hash": "d32746116d28075781b04bcd451585d7",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\components\\TokenBalance.tsx": {
-    "mtime": 1779109085.4062066,
+    "mtime": 1785345921.6118991,
     "ast_hash": "33c50ebe19945478b99e746bdba19fca",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\components\\downloads\\ShaderScreenshotSlider.tsx": {
-    "mtime": 1779109085.4067154,
+    "mtime": 1785345921.612898,
     "ast_hash": "89cb61f5ec5f6d959d58628deae8aae2",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\components\\marketing\\AppShowcaseCarousel.tsx": {
-    "mtime": 1779109085.4077706,
+    "mtime": 1785345921.6149044,
     "ast_hash": "a14fb1862b7c7cbf13f6b2d1aa980798",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\components\\marketing\\LandingBackdrop.tsx": {
-    "mtime": 1779109085.4077706,
+    "mtime": 1785345921.6149044,
     "ast_hash": "3b8a9d2d738e384b24a074d717289041",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\components\\marketing\\LandingHero.tsx": {
-    "mtime": 1779288070.5791404,
-    "ast_hash": "b0ffce5695622e85816ce2ba68eabe8f",
+    "mtime": 1785345921.6159015,
+    "ast_hash": "efbd2c078e07eec2cdeb84b1c74cedcf",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\lib\\clientRelease.ts": {
-    "mtime": 1781196671.0058167,
-    "ast_hash": "4639675a5ef181f2f88eb0430ac5ded4",
+    "mtime": 1785345921.6499152,
+    "ast_hash": "c84d72412bd2e8fe770760481442e15e",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\lib\\clientReleaseConstants.ts": {
-    "mtime": 1781196646.0878377,
-    "ast_hash": "12ffe1b76b9c503eaea15a0ae83209ed",
+    "mtime": 1785345921.6499152,
+    "ast_hash": "bc43dab10acab8e3dd6c4701b27a77d7",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\lib\\leaderboard.ts": {
-    "mtime": 1779109085.4087763,
+    "mtime": 1785345921.6509116,
     "ast_hash": "48dfc31bf9ed505d152a62351d692259",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\lib\\supabaseClient.ts": {
-    "mtime": 1769107664.1254172,
+    "mtime": 1785345921.6524217,
     "ast_hash": "3ece93fccd8502a450d487c4ba1ec3ad",
     "semantic_hash": ""
   },
+  "D:\\Projects\\MineBench_dApp\\MineBench-UI\\lib\\utils.test.ts": {
+    "mtime": 1785345921.654444,
+    "ast_hash": "8cd3959c966ac8089afcfef01c25a930",
+    "semantic_hash": ""
+  },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\lib\\utils.ts": {
-    "mtime": 1781195800.6117847,
-    "ast_hash": "3a8fc6b5e0a8015351d145abef478452",
+    "mtime": 1785345921.6564326,
+    "ast_hash": "ba611dd5f5b69ea422793162cbd22ed4",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\pages\\api\\benchmarks.ts": {
-    "mtime": 1779109085.415272,
+    "mtime": 1785345921.6684399,
     "ast_hash": "6774cc95f57c0745f8defa8b1d611191",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\pages\\api\\discord.ts": {
-    "mtime": 1775592168.9287212,
-    "ast_hash": "e577f81bf3ca7ceb017defb6e4b1d7aa",
+    "mtime": 1785345921.66944,
+    "ast_hash": "e965b69f28dd36d7699066e2f768e3a7",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\pages\\api\\increment-download.ts": {
-    "mtime": 1769380405.48729,
+    "mtime": 1785345921.66944,
     "ast_hash": "70fa3432d881a411ca7a555b0f2fa21b",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\pages\\api\\pool-stats.ts": {
-    "mtime": 1776276951.7590084,
-    "ast_hash": "cb919e811b268ec11262c3c7f36564f9",
+    "mtime": 1785345921.67044,
+    "ast_hash": "ffb0793efbc0ea056a3de754a81266f6",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\pages\\api\\rates.ts": {
-    "mtime": 1776276953.777048,
-    "ast_hash": "a74f6cd6438b029d6e36ff3f4c8ec755",
+    "mtime": 1785345921.6714401,
+    "ast_hash": "372ee96fb2ea8adf493646e465bf4475",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\pages\\api\\releases.ts": {
-    "mtime": 1781194344.2958965,
-    "ast_hash": "297b5cab15d95a1a96d7cb081834e95d",
+    "mtime": 1785345921.672441,
+    "ast_hash": "08f90465cb0b6769ad7f4993a1bd06b8",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\pages\\api\\treasury.ts": {
-    "mtime": 1779703663.4279854,
-    "ast_hash": "c70275e415fb6d4364236b0ef4746010",
+    "mtime": 1785345921.672441,
+    "ast_hash": "785bbe0c9a442f0b01d1172720b9d6c8",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\types\\benchmark.ts": {
-    "mtime": 1779109085.4173584,
+    "mtime": 1785345921.8910348,
     "ast_hash": "5e79579e6c09431eae742efd6b89b83d",
     "semantic_hash": ""
   },
-  "D:\\Projects\\MineBench_dApp\\MineBench-UI\\.codex-home.html": {
-    "mtime": 1776995683.3432143,
-    "ast_hash": "320e271ca5e11f5f4f3b3a9cdaff0026",
-    "semantic_hash": ""
-  },
-  "D:\\Projects\\MineBench_dApp\\MineBench-UI\\AGENTS.md": {
-    "mtime": 1778835270.1780975,
-    "ast_hash": "fd6bb9f4b129258df22ff311a7249804",
-    "semantic_hash": ""
-  },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\build_error.txt": {
-    "mtime": 1779118340.9901812,
+    "mtime": 1785345921.6009047,
     "ast_hash": "1d62c3b1cf7d6297751e25cb938754d5",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\build_error_utf8.txt": {
-    "mtime": 1779118340.9901812,
+    "mtime": 1785345921.601904,
     "ast_hash": "2cf60c20f63138ea33ee779c05e98f5d",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\last_build_error.txt": {
-    "mtime": 1779118341.0004797,
+    "mtime": 1785345921.6479137,
     "ast_hash": "0e1aaa7f6e4defe71e6dc778f4ce53de",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\README.md": {
-    "mtime": 1779117853.9349864,
-    "ast_hash": "d5ddf0fc60564dabc9d2a62c0c204621",
+    "mtime": 1785345921.57389,
+    "ast_hash": "c4a6b65cee2ca34ad09aa4fc338dff97",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\ui_error_plain.txt": {
-    "mtime": 1773188821.8183663,
+    "mtime": 1785345921.8910348,
     "ast_hash": "0ac1e8b5c841ee349758295e4a837592",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\ui_module_error.txt": {
-    "mtime": 1779118341.0010226,
+    "mtime": 1785345921.8920338,
     "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\docs\\AKASH_DEPLOYMENT.md": {
-    "mtime": 1769107664.1204185,
+    "mtime": 1785345921.6169016,
     "ast_hash": "79a4246d7e0c3d544cc8aacbe66bca6c",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\docs\\CODE_OF_CONDUCT.md": {
-    "mtime": 1773845721.1670823,
-    "ast_hash": "fb8e5f598658171b06d64d412d269a94",
+    "mtime": 1785345921.6179004,
+    "ast_hash": "c1287a712869e763363f6ca13b998a02",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\docs\\CONTRIBUTING.md": {
-    "mtime": 1773845721.1670823,
-    "ast_hash": "7859fcb23619317a994281ed855e7958",
+    "mtime": 1785345921.6179004,
+    "ast_hash": "360bcd92da90968c2382b962348f9889",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\docs\\DEPLOYMENT_SUMMARY.md": {
-    "mtime": 1769107664.1204185,
+    "mtime": 1785345921.6199005,
     "ast_hash": "4cd175db37e18e4e496ae3d3bc0ce57b",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\docs\\README.md": {
-    "mtime": 1773864175.2320163,
-    "ast_hash": "63e62ce443873a6af7c2d1e080c5d627",
+    "mtime": 1785345921.6208978,
+    "ast_hash": "aa138247a9142d0f602c831ab7518845",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\docs\\SECURITY.md": {
-    "mtime": 1773845721.1670823,
-    "ast_hash": "b19a06936c69e4442a676b8dfdd99ff0",
+    "mtime": 1785345921.6208978,
+    "ast_hash": "c38235631a398c56d921b41bf2323e83",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\docs\\SETUP_GUIDE.md": {
-    "mtime": 1769107664.121418,
+    "mtime": 1785345921.6248984,
     "ast_hash": "16bf8d1f5a1998938f5fb6c3c373922d",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\docs\\STATS_SETUP.md": {
-    "mtime": 1769108336.7906446,
+    "mtime": 1785345921.6259003,
     "ast_hash": "3e813cd4bc96f429671a9b3e7bddfc08",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\android-chrome-192x192.png": {
-    "mtime": 1769108336.804644,
+    "mtime": 1785345921.6860418,
     "ast_hash": "8b46f3aae091597aff14d7b74730ab73",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\android-chrome-512x512.png": {
-    "mtime": 1769108336.804644,
+    "mtime": 1785345921.6890564,
     "ast_hash": "a2e8404ac69f441216b2aa7350f79cb6",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\apple-touch-icon.png": {
-    "mtime": 1769108336.805644,
+    "mtime": 1785345921.691054,
     "ast_hash": "fe2bbc6ca264379997e9ae416e76a410",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\favicon-16x16.png": {
-    "mtime": 1769108336.805644,
+    "mtime": 1785345921.6920557,
     "ast_hash": "c23638183efe94aa8ebdf3222b5597fa",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\favicon-32x32.png": {
-    "mtime": 1769108336.805644,
+    "mtime": 1785345921.6930544,
     "ast_hash": "c467fb2035b5f2648237e6c11d1dc420",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\minebench-logo-yellow.png": {
-    "mtime": 1768072414.4806216,
+    "mtime": 1785345921.7556422,
     "ast_hash": "9ac765de849e6ccabf6ba0d8abf4b30e",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\MineBench.png": {
-    "mtime": 1769107663.666288,
+    "mtime": 1785345921.6850402,
     "ast_hash": "b8ac6aed22bdd39735d6e0740ae2800e",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\og-dashboard.png": {
-    "mtime": 1769108336.8347528,
+    "mtime": 1785345921.762641,
     "ast_hash": "f71c83d728b0e0d7787f6a8cc379bb67",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\og-downloads.png": {
-    "mtime": 1769108336.8377497,
+    "mtime": 1785345921.767641,
     "ast_hash": "2abb450d152dd5e5274681467df61399",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\og-home.png": {
-    "mtime": 1769108336.842752,
+    "mtime": 1785345921.775642,
     "ast_hash": "51f32177b4bc3deddb5a6145b5e8c5cd",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\og-whitepaper.png": {
-    "mtime": 1769108336.84575,
+    "mtime": 1785345921.7826426,
     "ast_hash": "23effbfe36a037e73d4ce8cc8b92e15f",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\solanaLogo.svg": {
-    "mtime": 1775433564.3779683,
-    "ast_hash": "0ca2e4f85bd0d3ee4258ae35a60ba3c7",
+    "mtime": 1785345921.80065,
+    "ast_hash": "f0b0359be173764e46c32e1ba0df3e6a",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\vite.svg": {
-    "mtime": 1769107663.667289,
+    "mtime": 1785345921.8880248,
     "ast_hash": "8e3a10e157f75ada21ab742c022d5430",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\img\\Circle_USDC_Logo.svg": {
-    "mtime": 1775590589.3228195,
-    "ast_hash": "3b5972c16a9795dcf6e2e2d7e3125d21",
+    "mtime": 1785345921.695059,
+    "ast_hash": "e77df2b1cda0fc7333b5c13ee78b9dce",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\img\\cpu-icon.png": {
-    "mtime": 1769108336.811645,
+    "mtime": 1785345921.7085779,
     "ast_hash": "7d0f384a96519d1bfb2247bad9710b10",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\img\\cpu-icon.svg": {
-    "mtime": 1769108336.811645,
+    "mtime": 1785345921.709579,
     "ast_hash": "ad59034d0cd36aa08af7456766986c6e",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\img\\cta_background.png": {
-    "mtime": 1769108336.8156466,
+    "mtime": 1785345921.7143366,
     "ast_hash": "0e45ccc1e1e1474cb13f02d3ef99fb8e",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\img\\discord-icon.svg": {
-    "mtime": 1769108336.816645,
+    "mtime": 1785345921.7143366,
     "ast_hash": "147f41c95f6ad7574168c3d3a462c455",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\img\\gpu-icon.png": {
-    "mtime": 1769108336.8196464,
+    "mtime": 1785345921.7203348,
     "ast_hash": "1ae61f54d6594e865cb86842bc005b7f",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\img\\gpu-icon.svg": {
-    "mtime": 1769108336.8196464,
+    "mtime": 1785345921.7213342,
     "ast_hash": "bf64f7a3c234842f8adc18e3a1deaa07",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\img\\linux-icon.svg": {
-    "mtime": 1769379897.2842357,
+    "mtime": 1785345921.7213342,
     "ast_hash": "b32f78d70ee93fa14d612529a8c83d73",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\img\\linux-logo.svg": {
-    "mtime": 1769379407.1994882,
-    "ast_hash": "18f689600bd1b4b5f98e6d4edb3d2975",
+    "mtime": 1785345921.7223337,
+    "ast_hash": "04fa0d5b5c0baf36e43878bf1c47b4d6",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\img\\live-performance-tracking.jpg": {
-    "mtime": 1775428416.721642,
+    "mtime": 1785345921.7258499,
     "ast_hash": "a05df41609096e46d7c6009ad48791d0",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\img\\macos-icon.svg": {
-    "mtime": 1769379897.2842357,
+    "mtime": 1785345921.7258499,
     "ast_hash": "1556fa61f8fe1c3a25d8fe4dbdaf391f",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\img\\macos-logo.svg": {
-    "mtime": 1769379551.6880574,
+    "mtime": 1785345921.7268634,
     "ast_hash": "1d2d6107033d0850ffacd790987b56c4",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\img\\MineBench-logo-white.png": {
-    "mtime": 1769107663.666288,
+    "mtime": 1785345921.7000575,
     "ast_hash": "b8ac6aed22bdd39735d6e0740ae2800e",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\img\\minebench-logo-yellow.png": {
-    "mtime": 1768072414.4806216,
+    "mtime": 1785345921.7351112,
     "ast_hash": "9ac765de849e6ccabf6ba0d8abf4b30e",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\img\\minebench-logo.png": {
-    "mtime": 1769108336.8276434,
+    "mtime": 1785345921.740121,
     "ast_hash": "9ac765de849e6ccabf6ba0d8abf4b30e",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\img\\nvidia-icon.svg": {
-    "mtime": 1769108336.8276434,
+    "mtime": 1785345921.7411194,
     "ast_hash": "9e3d9ca62e735284d698319f3b26f748",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\img\\pumpfun_logo.png": {
-    "mtime": 1769108336.8286488,
+    "mtime": 1785345921.7421222,
     "ast_hash": "753932d40c57ba23e93ce21980c3105e",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\img\\radeon-icon.svg": {
-    "mtime": 1769108336.8286488,
+    "mtime": 1785345921.7431214,
     "ast_hash": "08daf4afa172d0151b7a830520eef885",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\img\\usdc-logo.svg": {
-    "mtime": 1775590454.3341143,
-    "ast_hash": "77e1d43b5169af5e0efa34064bef54a9",
+    "mtime": 1785345921.7461197,
+    "ast_hash": "fff6b23e940cd9ca23ff5999cfdd9d01",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\img\\windows.svg": {
-    "mtime": 1769108336.8296447,
+    "mtime": 1785345921.74712,
     "ast_hash": "0dbf0847ed4ab4af0ee7b84f3511b9b2",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\img\\x-icon.svg": {
-    "mtime": 1769108336.8296447,
+    "mtime": 1785345921.74712,
     "ast_hash": "dadc7cf89a41fbef2a69f699c17900da",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\logos\\Monero-logo.svg": {
-    "mtime": 1781196230.6899006,
-    "ast_hash": "230049b62e97a87dcf78ffdd619bef0f",
+    "mtime": 1785345921.7481208,
+    "ast_hash": "74d7e577c25099fd977c125cfd069bde",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\marketing\\minebench-leaderboard-v0.1.5.4-x-thumbnail.png": {
-    "mtime": 1779109085.416837,
+    "mtime": 1785345921.750119,
     "ast_hash": "313f641ad8b7ee93773566e52bcfaead",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\screenshots\\MineBench-Pool-stats-cards.jpg": {
-    "mtime": 1775422828.8062823,
+    "mtime": 1785345921.7846406,
     "ast_hash": "95fbc4edc7d1b48ce00e27f12c866ebc",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\screenshots\\app-overview-screenshots\\benchmarks.png": {
-    "mtime": 1775432198.9143186,
+    "mtime": 1785345921.787641,
     "ast_hash": "21e93317a41440401b2e50bc54d928e0",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\screenshots\\app-overview-screenshots\\dashboard.png": {
-    "mtime": 1775432166.654294,
+    "mtime": 1785345921.7896404,
     "ast_hash": "58d9e8793a035402c1732de94276eb28",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\screenshots\\app-overview-screenshots\\mining.png": {
-    "mtime": 1775432223.0585787,
+    "mtime": 1785345921.7906415,
     "ast_hash": "780921232789b6e59f550fe83c379533",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\screenshots\\app-overview-screenshots\\premium.png": {
-    "mtime": 1775432337.1264005,
+    "mtime": 1785345921.7926395,
     "ast_hash": "975ce75912d9ebef0e168eaebf7a8f83",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\screenshots\\app-overview-screenshots\\settings.png": {
-    "mtime": 1775432303.8180635,
+    "mtime": 1785345921.7946522,
     "ast_hash": "c9486c93e48537c25cd97581d0006fa6",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\screenshots\\app-overview-screenshots\\statistics.png": {
-    "mtime": 1775432255.3673275,
+    "mtime": 1785345921.7966557,
     "ast_hash": "cceae16152b6bd47f8d9df9c20312958",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\screenshots\\app-overview-screenshots\\system-logs.png": {
-    "mtime": 1775432280.7181375,
+    "mtime": 1785345921.7976506,
     "ast_hash": "f70820f7904382eac0f18ea1f596dc5e",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\video\\MineBench-0.6.1.-showcase.mp4": {
-    "mtime": 1772992900.5952256,
+    "mtime": 1785345921.8151748,
     "ast_hash": "fe067ed3aaeae57b9aba58868643dfae",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\video\\MineBench-0.6.1.mp4": {
-    "mtime": 1772992900.5952256,
+    "mtime": 1785345921.8261745,
     "ast_hash": "fe067ed3aaeae57b9aba58868643dfae",
     "semantic_hash": ""
   },
   "D:\\Projects\\MineBench_dApp\\MineBench-UI\\public\\video\\MineBench_Promo.mp4": {
-    "mtime": 1773214898.2614236,
+    "mtime": 1785345921.886024,
     "ast_hash": "0273912644120fd86533989ea247a1fa",
     "semantic_hash": ""
   }
