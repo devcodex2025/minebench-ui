@@ -2,7 +2,7 @@
 import { Search, Zap, Cpu, Monitor, ChevronUp, ChevronDown, Clock3 } from 'lucide-react';
 import Image from 'next/image';
 import { BenchmarkTableProps, BenchmarkResult } from '@/types/benchmark';
-import { formatHashrate } from '@/lib/utils';
+import { formatHashrate, formatDuration } from '@/lib/utils';
 import { getBenchmarkHashrate, getLeaderboardRows, normalizeDeviceName } from '@/lib/leaderboard';
 import { motion } from 'framer-motion';
 
@@ -252,7 +252,7 @@ export default function BenchmarkTable({ results }: BenchmarkTableProps) {
                 <td className="px-6 py-5">
                   <div className="flex items-center gap-2">
                     <Clock3 className="w-3.5 h-3.5 text-yellow-400" />
-                    <span className="text-zinc-400 text-xs font-bold font-mono">{(r.duration_seconds || 0).toFixed(0)}s</span>
+                    <span className="text-zinc-400 text-xs font-bold font-mono">{formatDuration(r.duration_seconds || 0)}</span>
                   </div>
                 </td>
               </motion.tr>

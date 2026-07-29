@@ -1,10 +1,15 @@
 import { BenchmarkResult, BenchmarkSummary } from '@/types/benchmark';
 
 export const formatHashrate = (hashrate: number): string => {
-  if (!Number.isFinite(hashrate) || hashrate <= 0) return '0.00 kH/s';
-  if (hashrate >= 1e6) return `${(hashrate / 1e6).toFixed(2)} MH/s`;
-  if (hashrate < 1e3) return `${hashrate.toFixed(2)} kH/s`;
-  return `${(hashrate / 1e3).toFixed(2)} kH/s`;
+  if (!Number.isFinite(hashrate) || hashrate <= 0) return '0.00 H/s';
+  const units = ['H/s', 'kH/s', 'MH/s', 'GH/s', 'TH/s'];
+  let value = hashrate;
+  let unitIndex = 0;
+  while (value >= 1000 && unitIndex < units.length - 1) {
+    value /= 1000;
+    unitIndex++;
+  }
+  return `${value.toFixed(2)} ${units[unitIndex]}`;
 };
 
 export const formatPower = (power: number): string => {
@@ -37,6 +42,17 @@ export const formatUptime = (uptime: number): string => {
   const hours = Math.floor(uptime / 3600);
   const minutes = Math.floor((uptime % 3600) / 60);
   return `${hours}h ${minutes}m`;
+};
+
+export const formatDuration = (seconds: number): string => {
+  const total = Math.max(0, Math.floor(Number(seconds) || 0));
+  if (total < 60) return `${total}s`;
+  const minutes = Math.floor(total / 60);
+  const secs = total % 60;
+  if (minutes < 60) return secs ? `${minutes}m ${secs}s` : `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return mins ? `${hours}h ${mins}m` : `${hours}h`;
 };
 
 export const formatProfitability = (profit: number): string => {
