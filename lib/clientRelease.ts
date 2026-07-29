@@ -4,6 +4,7 @@ import {
   CLIENT_RELEASES_URL,
   getClientReleaseDownloadUrls,
 } from './clientReleaseConstants';
+import { fetchGithub } from './github';
 
 export {
   CLIENT_RELEASE_FALLBACK_VERSION,
@@ -19,21 +20,6 @@ export type GithubRelease = {
   tag_name: string;
   version?: string;
   assets?: any[];
-};
-
-const githubHeaders = (): Record<string, string> => {
-  const token = process.env.GITHUB_SERVER_TOKEN || process.env.GITHUB_ACCESS_TOKEN;
-  const headers: Record<string, string> = {
-    Accept: 'application/vnd.github+json',
-    'X-GitHub-Api-Version': '2022-11-28',
-    'User-Agent': 'MineBench-UI',
-  };
-
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
-  return headers;
 };
 
 const createFallbackClientRelease = (): GithubRelease => {
@@ -59,13 +45,7 @@ const createFallbackClientRelease = (): GithubRelease => {
 export async function getLatestClientRelease(): Promise<GithubRelease> {
   try {
     const url = `https://api.github.com/repos/${CLIENT_RELEASE_REPO}/releases/latest`;
-    const headers = githubHeaders();
-    let response = await fetch(url, { headers, cache: 'no-store' });
-
-    if ((response.status === 401 || response.status === 403) && headers.Authorization) {
-      const { Authorization: _authorization, ...publicHeaders } = headers;
-      response = await fetch(url, { headers: publicHeaders, cache: 'no-store' });
-    }
+    const response = await fetchGithub(url);
 
     if (!response.ok) {
       throw new Error(`Client release fetch failed: ${response.status}`);
