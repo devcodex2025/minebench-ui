@@ -184,7 +184,7 @@ export default function DashboardClient() {
                   <Activity className="w-4 h-4 text-yellow-400" />
                   <span className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-400">Live Network Feed</span>
                 </div>
-                <h1 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter">
+              <h1 className="text-[2rem] sm:text-4xl md:text-6xl font-black text-white uppercase tracking-tighter">
                   CPU Mining Benchmark <span className="text-yellow-400">Dashboard</span>
                 </h1>
                 <p className="text-zinc-400 text-lg leading-relaxed">

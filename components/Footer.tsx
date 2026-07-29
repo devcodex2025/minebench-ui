@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Github } from 'lucide-react';
+import { Github, Server } from 'lucide-react';
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -69,8 +69,12 @@ export default function Footer() {
           <p className="text-xs text-zinc-600 font-mono-system uppercase tracking-widest">
             © {year} MINEBENCH. ALL RIGHTS RESERVED.
           </p>
-          <p className="text-xs text-zinc-600 font-mono-system uppercase tracking-widest mt-2">
+          <p className="mt-2 break-all px-2 text-xs text-zinc-600 font-mono-system uppercase sm:tracking-widest">
             Contract Address - 67ipDsgK6D7bqTW89H8T1KTxUvVuaFy92GX7Q2XFVdev (Solana Blockchain)
+          </p>
+          <p className="mt-2 flex flex-wrap items-center justify-center gap-1.5 px-2 text-xs text-zinc-600 font-mono-system uppercase sm:tracking-widest">
+            <Server className="w-3 h-3 text-yellow-400 shrink-0" />
+            Mining Pool — xmr.minebench.cloud:3333
           </p>
         </div>
       </div>
