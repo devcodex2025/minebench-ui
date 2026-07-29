@@ -28,7 +28,6 @@ import Footer from '@/components/Footer';
 import { supabase } from '@/lib/supabaseClient';
 import { getLeaderboardDeviceCount } from '@/lib/leaderboard';
 import { BenchmarkResult } from '@/types/benchmark';
-import { formatHashrate } from '@/lib/utils';
 
 const Scene3D = dynamic(() => import('@/components/Scene3D'), { ssr: false, loading: () => null });
 
@@ -36,11 +35,6 @@ export type LandingStats = {
     benchmarks: number;
     miners: number;
     downloads: number;
-};
-
-export type PoolStatus = {
-    hashrate: number;
-    miners: number;
 };
 
 type TreasuryStatus = {
@@ -94,17 +88,14 @@ function Counter({ value, label }: { value: number; label: string }) {
 export default function LandingPageClient({
     initialStats,
     clientVersion,
-    initialPoolStatus,
 }: {
     initialStats: LandingStats;
     clientVersion: string;
-    initialPoolStatus: PoolStatus;
 }) {
     const tokenContract = '67ipDsgK6D7bqTW89H8T1KTxUvVuaFy92GX7Q2XFVdev';
     const [stats, setStats] = useState<LandingStats>(initialStats);
     const [latestClientVersion, setLatestClientVersion] = useState(clientVersion);
     const [treasuryStatus, setTreasuryStatus] = useState<TreasuryStatus | null>(null);
-    const [poolStatus, setPoolStatus] = useState<PoolStatus>(initialPoolStatus);
     const [discordStats, setDiscordStats] = useState({
         members: null as number | null,
         online: null as number | null,
@@ -229,52 +220,12 @@ export default function LandingPageClient({
         fetchTreasuryStatus();
     }, []);
 
-    useEffect(() => {
-        const fetchPoolStatus = async () => {
-            try {
-                const response = await fetch('/api/pool-stats', { cache: 'no-store' });
-                if (!response.ok) return;
-
-                const data = await response.json();
-                setPoolStatus({
-                    hashrate: Number(data.poolHashrate || data.stratum?.hashrate_15m || 0),
-                    miners: Number(data.miners || data.stratum?.connections || data.stratum?.workers?.length || 0),
-                });
-            } catch (err) {
-                console.error('Error fetching pool status:', err);
-            }
-        };
-
-        fetchPoolStatus();
-        const interval = setInterval(fetchPoolStatus, 30000);
-        return () => clearInterval(interval);
-    }, []);
-
     return (
         <div className="relative flex min-h-screen flex-col overflow-hidden bg-black">
             <Scene3D />
             <Header />
 
             <main className="relative z-10 flex-grow pt-[88px]">
-                <div className="relative z-20 flex justify-end px-4 pt-8 lg:pt-8 sm:px-2 max-w-7xl mx-auto">
-                    <div
-                        aria-label={`Pool live data: total hashrate ${formatHashrate(poolStatus.hashrate)}, active miners ${poolStatus.miners}`}
-                        className="inline-flex flex-wrap items-center justify-end gap-4 bg-black/80 px-6 py-3.5 font-mono backdrop-blur-xl shadow-[0_0_28px_rgba(250,204,21,0.10)]"
-                    >
-                        <span className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-yellow-400">
-                            <Activity className="h-4 w-4 animate-pulse" aria-hidden="true" />
-                            Pool Live
-                        </span>
-                        <span className="hidden h-5 w-px bg-zinc-700 sm:block" aria-hidden="true" />
-                        <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-400">
-                            Hashrate: <span className="text-sm font-black text-white">{formatHashrate(poolStatus.hashrate)}</span>
-                        </span>
-                        <span className="hidden h-5 w-px bg-zinc-700 sm:block" aria-hidden="true" />
-                        <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-400">
-                            Miners: <span className="text-sm font-black text-white">{poolStatus.miners.toLocaleString()}</span>
-                        </span>
-                    </div>
-                </div>
                 <section className="relative flex min-h-screen items-center justify-center px-4 pb-12 pt-10 sm:px-6 lg:px-8">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
