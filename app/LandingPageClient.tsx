@@ -25,7 +25,6 @@ import {
 import Image from 'next/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import NetworkStrip from '@/components/NetworkStrip';
 import { supabase } from '@/lib/supabaseClient';
 import { getLeaderboardDeviceCount } from '@/lib/leaderboard';
 import { BenchmarkResult } from '@/types/benchmark';
@@ -256,8 +255,7 @@ export default function LandingPageClient({
             <Scene3D />
             <Header />
 
-            <main className="relative z-10 flex-grow">
-                <NetworkStrip />
+            <main className="relative z-10 flex-grow pt-[88px]">
                 <div className="relative z-20 flex justify-end px-4 pt-8 lg:pt-8 sm:px-2 max-w-7xl mx-auto">
                     <div
                         aria-label={`Pool live data: total hashrate ${formatHashrate(poolStatus.hashrate)}, active miners ${poolStatus.miners}`}

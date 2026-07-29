@@ -5,12 +5,12 @@ export const metadata: Metadata = {
   title: 'Mining Benchmark Leaderboard | CPU and GPU Mining Rankings | MineBench',
   description: 'Compare MineBench CPU and GPU mining benchmark rankings, RandomX hashrate, power draw, thermals, and unique hardware performance results.',
   alternates: {
-    canonical: '/leaderboard',
+    canonical: 'https://minebench.cloud/leaderboard',
   },
   openGraph: {
     title: 'MineBench Mining Benchmark Leaderboard',
     description: 'Ranked CPU and GPU mining benchmark results from real MineBench client submissions.',
-    url: '/leaderboard',
+    url: 'https://minebench.cloud/leaderboard',
     type: 'website',
   },
 };

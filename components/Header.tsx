@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { Menu, X, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import NetworkStrip from '@/components/NetworkStrip';
 
 interface HeaderProps {
   onRefresh?: () => void;
@@ -71,6 +72,8 @@ export default function Header({ onRefresh, loading }: HeaderProps = {}) {
           </button>
         </div>
       </div>
+
+      <NetworkStrip />
 
       {/* Mobile Menu */}
       <AnimatePresence>
