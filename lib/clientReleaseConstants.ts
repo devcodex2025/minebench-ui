@@ -1,5 +1,7 @@
-export const CLIENT_RELEASE_REPO = 'devcodex2025/minebench-mining-benchmark-client';
-export const CLIENT_RELEASES_URL = `https://github.com/${CLIENT_RELEASE_REPO}/releases`;
+export const BITBUCKET_WORKSPACE = 'minebenchapp';
+export const CLIENT_RELEASE_REPO = 'minebench-client';
+export const CLIENT_REPOSITORY_URL = `https://bitbucket.org/${BITBUCKET_WORKSPACE}/${CLIENT_RELEASE_REPO}`;
+export const CLIENT_RELEASES_URL = `${CLIENT_REPOSITORY_URL}/downloads/`;
 
 export const CLIENT_RELEASE_FALLBACK_VERSION =
   process.env.NEXT_PUBLIC_CLIENT_RELEASE_FALLBACK_VERSION ||
@@ -8,14 +10,15 @@ export const CLIENT_RELEASE_FALLBACK_VERSION =
 
 export const getClientReleaseDownloadUrls = (tagName = CLIENT_RELEASE_FALLBACK_VERSION) => {
   const version = tagName.replace(/^v/i, '');
-  const baseUrl = `${CLIENT_RELEASES_URL}/download/${tagName}`;
+  const downloadUrl = (filename: string) =>
+    `https://api.bitbucket.org/2.0/repositories/${BITBUCKET_WORKSPACE}/${CLIENT_RELEASE_REPO}/downloads/${encodeURIComponent(filename)}`;
 
   return {
-    appimage: `${baseUrl}/MineBench.Client_${version}_amd64.AppImage`,
-    deb: `${baseUrl}/MineBench.Client_${version}_amd64.deb`,
-    dmg: `${baseUrl}/MineBench.Client_${version}_universal.dmg`,
-    exe: `${baseUrl}/MineBench.Client_${version}_x64-setup.exe`,
-    msi: `${baseUrl}/MineBench.Client_${version}_x64_en-US.msi`,
-    rpm: `${baseUrl}/MineBench.Client-${version}-1.x86_64.rpm`,
+    appimage: downloadUrl(`MineBench.Client_${version}_amd64.AppImage`),
+    deb: downloadUrl(`MineBench.Client_${version}_amd64.deb`),
+    dmg: downloadUrl(`MineBench.Client_${version}_universal.dmg`),
+    exe: downloadUrl(`MineBench.Client_${version}_x64-setup.exe`),
+    msi: downloadUrl(`MineBench.Client_${version}_x64_en-US.msi`),
+    rpm: downloadUrl(`MineBench.Client-${version}-1.x86_64.rpm`),
   };
 };

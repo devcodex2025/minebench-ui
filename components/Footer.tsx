@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Github, Server } from 'lucide-react';
+import { Code2, Server } from 'lucide-react';
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -59,8 +59,8 @@ export default function Footer() {
                   <Image src="/img/pumpfun_logo.png" alt="pump.fun" fill className="object-contain opacity-50 group-hover:opacity-100 transition-opacity" />
                 </div>
               </a>
-              <a href="https://github.com/devcodex2025/minebench-mining-benchmark-client" target="_blank" rel="noopener noreferrer" className="w-10 h-10 border border-zinc-800 hover:border-yellow-400 flex items-center justify-center transition-all group">
-                <Github className="w-5 h-5 text-zinc-500 group-hover:text-white transition-colors" />
+              <a href="https://bitbucket.org/minebenchapp/minebench-client" target="_blank" rel="noopener noreferrer" aria-label="MineBench source code on Bitbucket" className="w-10 h-10 border border-zinc-800 hover:border-yellow-400 flex items-center justify-center transition-all group">
+                <Code2 className="w-5 h-5 text-zinc-500 group-hover:text-white transition-colors" />
               </a>
             </div>
           </div>

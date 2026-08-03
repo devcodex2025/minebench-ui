@@ -604,14 +604,14 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                                 MineBench adds its own desktop UI, benchmark workflow, dashboard integration, telemetry views, and release packaging on top of that mining stack.
                             </p>
                             <p>
-                                You can study the MineBench application source code on GitHub here:{' '}
+                                You can study the MineBench application source code on Bitbucket here:{' '}
                                 <a
-                                    href="https://github.com/devcodex2025/minebench-mining-benchmark-client"
+                                    href="https://bitbucket.org/minebenchapp/minebench-client"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="font-bold text-yellow-400 underline decoration-yellow-400/40 underline-offset-4 transition-colors hover:text-white"
                                 >
-                                    MineBench Client GitHub Repository
+                                    MineBench Client Bitbucket Repository
                                 </a>
                                 .
                             </p>
@@ -625,4 +625,3 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
         </div>
     );
 }
-

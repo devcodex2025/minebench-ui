@@ -14,7 +14,7 @@ import {
     VolumeX,
     Shield,
     Cpu,
-    Github,
+    Code2,
     ExternalLink,
     MessageSquare,
     Plus,
@@ -487,14 +487,14 @@ export default function LandingPageClient({
                             >
                                 <div className="mb-4 text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Open Development</div>
                                 <div className="mb-10 flex h-24 w-24 items-center justify-center border border-zinc-800 bg-zinc-900 transition-all group-hover:bg-white group-hover:text-black">
-                                    <Github className="h-12 w-12" />
+                                    <Code2 className="h-12 w-12" />
                                 </div>
                                 <h3 className="mb-6 text-3xl font-black uppercase italic text-white">Open Source</h3>
                                 <p className="mb-10 text-sm font-medium leading-relaxed text-zinc-500">
                                     Review the code, inspect the benchmark logic, and build with us in the open around decentralized mining infrastructure.
                                 </p>
-                                <Link href="https://github.com/devcodex2025/minebench-mining-benchmark-client" target="_blank" className="mt-auto inline-flex items-center justify-center rounded-full border border-yellow-400/40 bg-yellow-400/10 px-5 py-3 text-xs font-black uppercase tracking-[0.28em] text-yellow-400 transition-all duration-300 hover:-translate-y-0.5 hover:border-yellow-400 hover:bg-yellow-400 hover:text-black hover:shadow-[0_0_22px_rgba(250,204,21,0.28)]">
-                                    Go To GitHub &rarr;
+                                <Link href="https://bitbucket.org/minebenchapp/minebench-client" target="_blank" className="mt-auto inline-flex items-center justify-center rounded-full border border-yellow-400/40 bg-yellow-400/10 px-5 py-3 text-xs font-black uppercase tracking-[0.28em] text-yellow-400 transition-all duration-300 hover:-translate-y-0.5 hover:border-yellow-400 hover:bg-yellow-400 hover:text-black hover:shadow-[0_0_22px_rgba(250,204,21,0.28)]">
+                                    Go To Bitbucket &rarr;
                                 </Link>
                             </motion.div>
                         </div>
