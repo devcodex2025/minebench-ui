@@ -113,9 +113,7 @@ const createFallbackClientRelease = (): Release => {
       { name: `MineBench.Client-${tagName.replace(/^v/i, '')}-1.x86_64.rpm`, browser_download_url: urls.rpm },
       { name: `MineBench.Client_${tagName.replace(/^v/i, '')}_amd64.AppImage`, browser_download_url: urls.appimage },
       { name: `MineBench.Client_${tagName.replace(/^v/i, '')}_amd64.deb`, browser_download_url: urls.deb },
-      { name: `MineBench.Client_${tagName.replace(/^v/i, '')}_universal.dmg`, browser_download_url: urls.dmg },
       { name: `MineBench.Client_${tagName.replace(/^v/i, '')}_x64-setup.exe`, browser_download_url: urls.exe },
-      { name: `MineBench.Client_${tagName.replace(/^v/i, '')}_x64_en-US.msi`, browser_download_url: urls.msi },
     ],
   };
 };
