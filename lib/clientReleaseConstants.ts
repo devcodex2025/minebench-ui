@@ -6,7 +6,7 @@ export const CLIENT_RELEASES_URL = `${CLIENT_REPOSITORY_URL}/downloads/`;
 export const CLIENT_RELEASE_FALLBACK_VERSION =
   process.env.NEXT_PUBLIC_CLIENT_RELEASE_FALLBACK_VERSION ||
   process.env.CLIENT_RELEASE_FALLBACK_VERSION ||
-  'v0.8.18';
+  'v0.8.28';
 
 export const getClientReleaseDownloadUrls = (tagName = CLIENT_RELEASE_FALLBACK_VERSION) => {
   const version = tagName.replace(/^v/i, '');
