@@ -6,6 +6,7 @@ import { BenchmarkResult, BenchmarkSummary } from '@/types/benchmark';
 import { calculateSummary, formatHashCount, formatHashrate } from '@/lib/utils';
 import { getLeaderboardRows } from '@/lib/leaderboard';
 import StatsCards, { RecentTests } from '@/components/StatsCards';
+import PoolHashrateChart from '@/components/PoolHashrateChart';
 import { Activity, Award, Cpu, Download, RefreshCw, TrendingUp, Users } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -214,8 +215,16 @@ export default function DashboardClient() {
                   <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Total Pool Hashrate</span>
                   <TrendingUp className="w-5 h-5 text-yellow-400" />
                 </div>
-                <p className="text-4xl md:text-5xl font-black text-yellow-400 font-mono-system tracking-tighter">
-                  {formatHashrate(totalHashrate)}
+                <p className="font-black text-yellow-400 font-mono-system tracking-tighter leading-none whitespace-nowrap">
+                  {(() => {
+                    const [value, unit] = formatHashrate(totalHashrate).split(' ');
+                    return (
+                      <>
+                        <span className="text-4xl md:text-5xl">{value}</span>
+                        <span className="ml-1.5 text-xl md:text-2xl text-yellow-400/80">{unit}</span>
+                      </>
+                    );
+                  })()}
                 </p>
                 <p className="text-xs text-zinc-500 uppercase tracking-widest mt-2">
                   Combined live performance from reward proxies
@@ -250,20 +259,20 @@ export default function DashboardClient() {
                   <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">XMR / BMT Exchange</span>
                   <Activity className="w-5 h-5 text-yellow-400" />
                 </div>
-                <div className="flex justify-between items-end gap-6">
-                  <div>
-                    <div className="text-[10px] text-zinc-500 uppercase font-mono mb-1">XMR Price:</div>
-                    <p className="text-2xl font-black text-white font-mono-system tracking-tighter">
+                <div className="space-y-3">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-[10px] text-zinc-500 uppercase font-mono">XMR Price</span>
+                    <span className="text-xl font-black text-white font-mono-system tracking-tighter tabular-nums">
                       ${rates.xmr_usd ? rates.xmr_usd.toFixed(2) : '0.00'}
-                    </p>
+                    </span>
                   </div>
-                  <div className="text-right">
-                    <div className="text-[10px] text-zinc-500 uppercase font-mono mb-1">BMT Price:</div>
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-[10px] text-zinc-500 uppercase font-mono">BMT Price</span>
                     <a
                       href="https://pump.fun/coin/67ipDsgK6D7bqTW89H8T1KTxUvVuaFy92GX7Q2XFVdev"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-2xl font-black text-yellow-400 font-mono-system tracking-tighter hover:text-white transition-colors cursor-pointer"
+                      className="text-xl font-black text-yellow-400 font-mono-system tracking-tighter tabular-nums hover:text-white transition-colors"
                     >
                       ${rates.bmt_usd ? rates.bmt_usd.toFixed(8) : '0.00'}
                     </a>
@@ -385,6 +394,10 @@ export default function DashboardClient() {
               </Link>
             </div>
           </div>
+        </section>
+
+        <section className="mb-14">
+          <PoolHashrateChart />
         </section>
 
         {summary && <StatsCards summary={summary} />}
