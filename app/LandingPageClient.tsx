@@ -14,7 +14,6 @@ import {
     VolumeX,
     Shield,
     Cpu,
-    Github,
     ExternalLink,
     MessageSquare,
     Plus,
@@ -25,11 +24,10 @@ import {
 import Image from 'next/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import NetworkStrip from '@/components/NetworkStrip';
+import BitbucketIcon from '@/components/icons/BitbucketIcon';
 import { supabase } from '@/lib/supabaseClient';
 import { getLeaderboardDeviceCount } from '@/lib/leaderboard';
 import { BenchmarkResult } from '@/types/benchmark';
-import { formatHashrate } from '@/lib/utils';
 
 const Scene3D = dynamic(() => import('@/components/Scene3D'), { ssr: false, loading: () => null });
 
@@ -37,11 +35,6 @@ export type LandingStats = {
     benchmarks: number;
     miners: number;
     downloads: number;
-};
-
-export type PoolStatus = {
-    hashrate: number;
-    miners: number;
 };
 
 type TreasuryStatus = {
@@ -95,17 +88,14 @@ function Counter({ value, label }: { value: number; label: string }) {
 export default function LandingPageClient({
     initialStats,
     clientVersion,
-    initialPoolStatus,
 }: {
     initialStats: LandingStats;
     clientVersion: string;
-    initialPoolStatus: PoolStatus;
 }) {
     const tokenContract = '67ipDsgK6D7bqTW89H8T1KTxUvVuaFy92GX7Q2XFVdev';
     const [stats, setStats] = useState<LandingStats>(initialStats);
     const [latestClientVersion, setLatestClientVersion] = useState(clientVersion);
     const [treasuryStatus, setTreasuryStatus] = useState<TreasuryStatus | null>(null);
-    const [poolStatus, setPoolStatus] = useState<PoolStatus>(initialPoolStatus);
     const [discordStats, setDiscordStats] = useState({
         members: null as number | null,
         online: null as number | null,
@@ -230,53 +220,12 @@ export default function LandingPageClient({
         fetchTreasuryStatus();
     }, []);
 
-    useEffect(() => {
-        const fetchPoolStatus = async () => {
-            try {
-                const response = await fetch('/api/pool-stats', { cache: 'no-store' });
-                if (!response.ok) return;
-
-                const data = await response.json();
-                setPoolStatus({
-                    hashrate: Number(data.poolHashrate || data.stratum?.hashrate_15m || 0),
-                    miners: Number(data.miners || data.stratum?.connections || data.stratum?.workers?.length || 0),
-                });
-            } catch (err) {
-                console.error('Error fetching pool status:', err);
-            }
-        };
-
-        fetchPoolStatus();
-        const interval = setInterval(fetchPoolStatus, 30000);
-        return () => clearInterval(interval);
-    }, []);
-
     return (
         <div className="relative flex min-h-screen flex-col overflow-hidden bg-black">
             <Scene3D />
             <Header />
 
             <main className="relative z-10 flex-grow">
-                <NetworkStrip />
-                <div className="relative z-20 flex justify-end px-4 pt-8 lg:pt-8 sm:px-2 max-w-7xl mx-auto">
-                    <div
-                        aria-label={`Pool live data: total hashrate ${formatHashrate(poolStatus.hashrate)}, active miners ${poolStatus.miners}`}
-                        className="inline-flex flex-wrap items-center justify-end gap-4 bg-black/80 px-6 py-3.5 font-mono backdrop-blur-xl shadow-[0_0_28px_rgba(250,204,21,0.10)]"
-                    >
-                        <span className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-yellow-400">
-                            <Activity className="h-4 w-4 animate-pulse" aria-hidden="true" />
-                            Pool Live
-                        </span>
-                        <span className="hidden h-5 w-px bg-zinc-700 sm:block" aria-hidden="true" />
-                        <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-400">
-                            Hashrate: <span className="text-sm font-black text-white">{formatHashrate(poolStatus.hashrate)}</span>
-                        </span>
-                        <span className="hidden h-5 w-px bg-zinc-700 sm:block" aria-hidden="true" />
-                        <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-400">
-                            Miners: <span className="text-sm font-black text-white">{poolStatus.miners.toLocaleString()}</span>
-                        </span>
-                    </div>
-                </div>
                 <section className="relative flex min-h-screen items-center justify-center px-4 pb-12 pt-10 sm:px-6 lg:px-8">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -538,14 +487,14 @@ export default function LandingPageClient({
                             >
                                 <div className="mb-4 text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Open Development</div>
                                 <div className="mb-10 flex h-24 w-24 items-center justify-center border border-zinc-800 bg-zinc-900 transition-all group-hover:bg-white group-hover:text-black">
-                                    <Github className="h-12 w-12" />
+                                    <BitbucketIcon className="h-12 w-12" />
                                 </div>
                                 <h3 className="mb-6 text-3xl font-black uppercase italic text-white">Open Source</h3>
                                 <p className="mb-10 text-sm font-medium leading-relaxed text-zinc-500">
                                     Review the code, inspect the benchmark logic, and build with us in the open around decentralized mining infrastructure.
                                 </p>
-                                <Link href="https://github.com/devcodex2025/minebench-mining-benchmark-client" target="_blank" className="mt-auto inline-flex items-center justify-center rounded-full border border-yellow-400/40 bg-yellow-400/10 px-5 py-3 text-xs font-black uppercase tracking-[0.28em] text-yellow-400 transition-all duration-300 hover:-translate-y-0.5 hover:border-yellow-400 hover:bg-yellow-400 hover:text-black hover:shadow-[0_0_22px_rgba(250,204,21,0.28)]">
-                                    Go To GitHub &rarr;
+                                <Link href="https://bitbucket.org/minebenchapp/minebench-client" target="_blank" className="mt-auto inline-flex items-center justify-center rounded-full border border-yellow-400/40 bg-yellow-400/10 px-5 py-3 text-xs font-black uppercase tracking-[0.28em] text-yellow-400 transition-all duration-300 hover:-translate-y-0.5 hover:border-yellow-400 hover:bg-yellow-400 hover:text-black hover:shadow-[0_0_22px_rgba(250,204,21,0.28)]">
+                                    Go To Bitbucket &rarr;
                                 </Link>
                             </motion.div>
                         </div>
@@ -689,7 +638,7 @@ export default function LandingPageClient({
                             </div>
                             <h3 className="mb-6 text-3xl font-black uppercase text-yellow-400 italic">Open & Transparent</h3>
                             <p className="text-lg font-medium leading-relaxed text-zinc-400">
-                                Repository is public on GitHub and the benchmark workflow is visible end to end. Transparency is the foundation of verified benchmark results and a public mining dataset.
+                                Repository is public on Bitbucket and the benchmark workflow is visible end to end. Transparency is the foundation of verified benchmark results and a public mining dataset.
                             </p>
                         </div>
                     </div>

@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Github } from 'lucide-react';
+import { Server } from 'lucide-react';
+import BitbucketIcon from '@/components/icons/BitbucketIcon';
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -59,8 +60,8 @@ export default function Footer() {
                   <Image src="/img/pumpfun_logo.png" alt="pump.fun" fill className="object-contain opacity-50 group-hover:opacity-100 transition-opacity" />
                 </div>
               </a>
-              <a href="https://github.com/devcodex2025/minebench-mining-benchmark-client" target="_blank" rel="noopener noreferrer" className="w-10 h-10 border border-zinc-800 hover:border-yellow-400 flex items-center justify-center transition-all group">
-                <Github className="w-5 h-5 text-zinc-500 group-hover:text-white transition-colors" />
+              <a href="https://bitbucket.org/minebenchapp/minebench-client" target="_blank" rel="noopener noreferrer" aria-label="MineBench Client on Bitbucket" className="w-10 h-10 border border-zinc-800 hover:border-yellow-400 flex items-center justify-center transition-all group">
+                <BitbucketIcon className="w-5 h-5 text-[#1868DB] group-hover:text-[#579DFF] transition-colors" />
               </a>
             </div>
           </div>
@@ -71,6 +72,10 @@ export default function Footer() {
           </p>
           <p className="text-xs text-zinc-600 font-mono-system uppercase tracking-widest mt-2">
             Contract Address - 67ipDsgK6D7bqTW89H8T1KTxUvVuaFy92GX7Q2XFVdev (Solana Blockchain)
+          </p>
+          <p className="text-xs text-zinc-600 font-mono-system uppercase tracking-widest mt-2 flex items-center justify-center gap-1.5">
+            <Server className="w-3 h-3 text-yellow-400 shrink-0" />
+            Mining Pool — xmr.minebench.cloud:3333
           </p>
         </div>
       </div>

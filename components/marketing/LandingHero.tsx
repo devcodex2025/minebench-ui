@@ -3,10 +3,11 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useMemo, useRef } from 'react';
-import { DownloadSimple, Gauge, GithubLogo, ShieldCheck, TrendUp } from '@phosphor-icons/react';
+import { DownloadSimple, Gauge, ShieldCheck, TrendUp } from '@phosphor-icons/react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import BitbucketIcon from '@/components/icons/BitbucketIcon';
 
 type LandingHeroProps = {
   stats: {
@@ -235,7 +236,7 @@ export default function LandingHero({
                         Open stack
                       </p>
                       <div className="mt-3 flex items-center gap-3 text-white">
-                        <GithubLogo size={22} weight="fill" />
+                        <BitbucketIcon className="h-[22px] w-[22px]" />
                         <span className="text-sm font-medium">Public client repo and benchmark pipeline</span>
                       </div>
                     </div>

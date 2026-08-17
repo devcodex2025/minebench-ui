@@ -31,6 +31,8 @@ type BuildVariant = {
     url: string | null;
 };
 
+const availableOnly = (variants: BuildVariant[]) => variants.filter((variant) => Boolean(variant.url));
+
 const Scene3D = dynamic(() => import('@/components/Scene3D'), { ssr: false, loading: () => null });
 
 const createBuildVariants = (release: Release | null): Record<string, BuildVariant[]> => {
@@ -43,7 +45,7 @@ const createBuildVariants = (release: Release | null): Record<string, BuildVaria
     const universalMacDmg = findAssetUrl((n) => n.endsWith('.dmg') && n.includes('universal'));
 
     return {
-        windows: [
+        windows: availableOnly([
             {
                 arch: 'x64',
                 label: '64-bit Intel/AMD',
@@ -56,16 +58,16 @@ const createBuildVariants = (release: Release | null): Record<string, BuildVaria
                 description: 'For managed Windows installs and enterprise deployment',
                 url: findAssetUrl((n) => n.endsWith('.msi')),
             },
-        ],
-        macos: [
+        ]),
+        macos: availableOnly([
             {
                 arch: 'universal',
                 label: 'Universal',
                 description: 'For Intel and Apple Silicon Mac computers',
                 url: universalMacDmg || findAssetUrl((n) => n.endsWith('.dmg')),
             },
-        ],
-        linux: [
+        ]),
+        linux: availableOnly([
             {
                 arch: 'appimage',
                 label: 'AppImage',
@@ -84,7 +86,7 @@ const createBuildVariants = (release: Release | null): Record<string, BuildVaria
                 description: 'RPM package for Fedora, RHEL, and compatible distributions',
                 url: findAssetUrl((n) => n.endsWith('.rpm')),
             },
-        ],
+        ]),
     };
 };
 
@@ -251,7 +253,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                 </div>
 
                 <div className="space-y-2">
-                    {variants.map((variant) => (
+                    {variants.map((variant) => variant.url && (
                         <div
                             key={variant.arch}
                             className="border border-zinc-700 hover:border-yellow-400/50 p-3 transition-all"
@@ -265,23 +267,16 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                                     STABLE RELEASE
                                 </div>
                             </div>
-                            {variant.url ? (
-                                <a
-                                    href={variant.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={() => handleDownloadClick(platform, variant.arch)}
-                                    className="mt-4 inline-flex items-center gap-2 bg-yellow-400 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-black transition-all hover:bg-white"
-                                >
-                                    <Download className="w-4 h-4" />
-                                    Download
-                                </a>
-                            ) : (
-                                <div className="mt-4 inline-flex items-center gap-2 border border-zinc-700 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-zinc-500">
-                                    <Download className="w-4 h-4" />
-                                    Coming Soon
-                                </div>
-                            )}
+                            <a
+                                href={variant.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={() => handleDownloadClick(platform, variant.arch)}
+                                className="mt-4 inline-flex items-center gap-2 bg-yellow-400 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-black transition-all hover:bg-white"
+                            >
+                                <Download className="w-4 h-4" />
+                                Download
+                            </a>
                         </div>
                     ))}
                 </div>
@@ -419,11 +414,17 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                     {/* Platform Sections */}
                     <div
                         id="download-section"
-                        className="grid grid-cols-1 gap-8 mb-16 md:grid-cols-3"
+                        className="grid grid-cols-1 gap-8 mb-16 md:grid-cols-2 xl:grid-cols-3"
                     >
-                        <PlatformSection platform="windows" variants={builds.windows} />
-                        <PlatformSection platform="macos" variants={builds.macos} />
-                        <PlatformSection platform="linux" variants={builds.linux} />
+                        {([
+                            ['windows', builds.windows],
+                            ['macos', builds.macos],
+                            ['linux', builds.linux],
+                        ] as const)
+                            .filter(([, variants]) => variants.length > 0)
+                            .map(([platform, variants]) => (
+                                <PlatformSection key={platform} platform={platform} variants={variants} />
+                            ))}
                     </div>
 
                     {/* Important Notice Section */}
@@ -493,7 +494,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                         <div className="space-y-3 text-zinc-200 text-sm">
                             <div className="flex gap-3">
                                 <span className="text-yellow-400 font-bold font-mono-system">1.</span>
-                                <p>Verify you downloaded from the official GitHub release on this page.</p>
+                                <p>Verify you downloaded from the official Bitbucket download on this page.</p>
                             </div>
                             <div className="flex gap-3">
                                 <span className="text-yellow-400 font-bold font-mono-system">2.</span>
@@ -604,14 +605,14 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                                 MineBench adds its own desktop UI, benchmark workflow, dashboard integration, telemetry views, and release packaging on top of that mining stack.
                             </p>
                             <p>
-                                You can study the MineBench application source code on GitHub here:{' '}
+                                You can study the MineBench application source code on Bitbucket here:{' '}
                                 <a
-                                    href="https://github.com/devcodex2025/minebench-mining-benchmark-client"
+                                    href="https://bitbucket.org/minebenchapp/minebench-client"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="font-bold text-yellow-400 underline decoration-yellow-400/40 underline-offset-4 transition-colors hover:text-white"
                                 >
-                                    MineBench Client GitHub Repository
+                                    MineBench Client Bitbucket Repository
                                 </a>
                                 .
                             </p>

@@ -315,7 +315,7 @@ export default function WhitepaperClient() {
                                         <li>→ Release of new application version on minebench.cloud</li>
                                         <li>→ Engagement of first official testers</li>
                                         <li>→ Return to the opensource model</li>
-                                        <li>→ Source codes published at: <Link href="https://github.com/devcodex2025/minebench-mining-benchmark-client" target="_blank" className="text-yellow-400 underline break-all">github.com/devcodex2025/minebench-mining-benchmark-client</Link></li>
+                                        <li>→ Source codes published at: <Link href="https://bitbucket.org/minebenchapp/minebench-client" target="_blank" className="text-yellow-400 underline break-all">bitbucket.org/minebenchapp/minebench-client</Link></li>
                                     </ul>
                                 </div>
                             </div>
