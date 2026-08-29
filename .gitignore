@@ -31,13 +31,14 @@ AGENTS.md
 
 # debug
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+yan-debug.log*
+yan-error.log*
 
 # local env files
 .env*.local
 .env
 .env.*
+!.env.local.example
 
 # database migrations belong to the backend, not the public UI repo
 /supabase/migrations/

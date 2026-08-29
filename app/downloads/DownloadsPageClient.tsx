@@ -427,30 +427,41 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                             ))}
                     </div>
 
-                    {/* Important Notice Section */}
-                    <div className="border border-orange-500/60 bg-orange-500/10 p-8 mb-12 text-center relative overflow-hidden group">
+                    {/* Reward System Section */}
+                    <div className="border border-emerald-400/50 bg-emerald-400/10 p-8 mb-12 text-center relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Zap className="w-32 h-32 text-orange-500" />
+                            <Zap className="w-32 h-32 text-emerald-400" />
                         </div>
-                        <h3 className="text-2xl font-bold text-orange-500 mb-4 uppercase tracking-tighter flex items-center justify-center gap-3">
+                        <h3 className="text-2xl font-bold text-emerald-400 mb-4 uppercase tracking-tighter flex items-center justify-center gap-3">
                             <TrendingUp className="w-6 h-6" />
-                            REWARD SYSTEM STATUS: TESTING
+                            REWARD SYSTEM: LIVE
                         </h3>
                         <div className="max-w-3xl mx-auto space-y-4 text-zinc-300 text-sm leading-relaxed">
                             <p>
-                                The automated reward system is currently in <strong className="text-white">Beta Testing</strong>.
-                                Benchmark submissions still appear on the live dashboard, but <span className="text-orange-400 font-bold">direct rewards are temporarily disabled</span> while the payout flow is being verified.
+                                MineBench rewards are active. Connect your Solana wallet in the desktop app and mine through the MineBench pool. Authenticated mining sessions contribute accepted shares to the current reward window.
                             </p>
                             <p>
-                                Reward eligibility for the public launch is planned around valid benchmark submissions, stable miner participation, a configured wallet, and compliance with the anti-spam / anti-duplicate device rules that will be announced before payouts go live.
+                                When P2Pool confirms eaned XMR, MineBench divides the reward proportionally to each miner&apos;s accepted shares, converts the XMR value to <strong className="text-white">BMT at the current XMR/BMT rate</strong>, and credits the confirmed BMT balance in the app.
                             </p>
                             <p>
-                                Join our Discord for testing updates, reward rules, and launch announcements:{' '}
+                                The client shows your current reward-window share, confirmed balance, and reward history. Use <strong className="text-white">Claim</strong> to review the estimated Solana payout cost and request a BMT transfer to your connected wallet; the payout cost is deducted from the claimed amount.
+                            </p>
+                            <p>
+                                <strong className="text-white">MineBench Premium</strong> is an optional upgrade for direct XMR wallet routing, P2Pool and custom pool support, RandomX tuning, huge pages, and advanced mining controls.
+                            </p>
+                            <p>
+                                <strong className="text-white">Benchmark rewards</strong> depend on how many accepted shares your miner finds while the benchmark is running. Only shares linked to your authenticated Solana wallet and accepted by the server count toward the reward calculation; more accepted shares mean a larger benchmark reward.
+                            </p>
+                            <p>
+                                <strong className="text-white">Stress tests</strong> run a sustained RandomX CPU load while tracking hashrate, temperature, and power in real time. Connect your Solana wallet before starting: pool-verified shares found during the test count toward your BMT reward, while unverified client-reported shares are ignored. The test stops automatically if temperature or power telemetry becomes unavailable.
+                            </p>
+                            <p>
+                                Join our Discord for reward updates and support:{' '}
                                 <a
                                     href="https://discord.gg/vsDyYh4rma"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="font-bold text-orange-300 underline decoration-orange-400/50 underline-offset-4 transition-colors hover:text-white"
+                                    className="font-bold text-emerald-300 underline decoration-emerald-400/50 underline-offset-4 transition-colors hover:text-white"
                                 >
                                     Join MineBench Discord
                                 </a>
@@ -563,7 +574,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                                     <li>4 GB RAM</li>
                                     <li>2 GB free disk space</li>
                                     <li>Quad-core processor</li>
-                                    <li>Internet connection</li>
+                                    <li>Intenet connection</li>
                                 </ul>
                             </div>
                             <div>
@@ -572,7 +583,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                                     <li>8+ GB RAM</li>
                                     <li>4 GB free disk space</li>
                                     <li>8+ core processor</li>
-                                    <li>Gigabit internet</li>
+                                    <li>Gigabit intenet</li>
                                     <li>Dedicated GPU (NVIDIA/AMD)</li>
                                 </ul>
                             </div>
@@ -626,4 +637,3 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
         </div>
     );
 }
-

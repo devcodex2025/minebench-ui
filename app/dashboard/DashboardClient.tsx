@@ -7,6 +7,7 @@ import { calculateSummary, formatHashCount, formatHashrate } from '@/lib/utils';
 import { getLeaderboardRows } from '@/lib/leaderboard';
 import StatsCards, { RecentTests } from '@/components/StatsCards';
 import PoolHashrateChart from '@/components/PoolHashrateChart';
+import LiveMinerLeaderboard, { LiveMiner } from '@/components/LiveMinerLeaderboard';
 import { Activity, Award, Cpu, Download, RefreshCw, TrendingUp, Users } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -16,6 +17,7 @@ type PoolStatsResponse = {
   miners?: number;
   pools?: PoolNodeStats[];
   verifiedShares?: number;
+  minerLeaderboard?: LiveMiner[];
   stratum?: {
     connections?: number;
     current_effort?: number;
@@ -73,6 +75,7 @@ export default function DashboardClient() {
   const [poolEffort, setPoolEffort] = useState<number | null>(null);
   const [verifiedShares, setVerifiedShares] = useState(0);
   const [poolNodes, setPoolNodes] = useState<PoolNodeStats[]>([]);
+  const [liveMiners, setLiveMiners] = useState<LiveMiner[]>([]);
   const [rates, setRates] = useState<RatesResponse>({});
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
@@ -118,6 +121,7 @@ export default function DashboardClient() {
         setPoolEffort(poolStatsPayload.stratum?.current_effort !== undefined ? poolStatsPayload.stratum.current_effort : null);
         setVerifiedShares(Number(poolStatsPayload.verifiedShares || 0));
         setPoolNodes(Array.isArray(poolStatsPayload.pools) ? poolStatsPayload.pools : []);
+        setLiveMiners(Array.isArray(poolStatsPayload.minerLeaderboard) ? poolStatsPayload.minerLeaderboard : []);
         setLastUpdated(new Date().toISOString());
       } else {
         setTotalHashrate(0);
@@ -125,6 +129,7 @@ export default function DashboardClient() {
         setPoolEffort(null);
         setVerifiedShares(0);
         setPoolNodes([]);
+        setLiveMiners([]);
         setLastUpdated(null);
       }
 
@@ -388,8 +393,9 @@ export default function DashboardClient() {
           </div>
         </section>
 
-        <section className="mb-14">
+        <section className="mb-14 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.55fr)_minmax(340px,0.65fr)]">
           <PoolHashrateChart />
+          <LiveMinerLeaderboard miners={liveMiners} onlineConnections={onlineClients} />
         </section>
 
         {summary && <StatsCards summary={summary} />}

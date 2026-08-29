@@ -1,57 +1,66 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
+import {
+  BenchmarkSecurityError,
+  validateBenchmarkPayload,
+  verifyBenchmarkToken,
+} from '../../lib/benchmarkSecurity';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!; // секрет, не публікувати на фронтенді
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const DEFAULT_LIMIT = 500;
 const MAX_LIMIT = 2000;
-const MAX_STRING_LENGTH = 256;
-
-const toFiniteNumber = (value: unknown): number | null => {
-  const next = typeof value === 'number' ? value : Number(value);
-  return Number.isFinite(next) ? next : null;
-};
-
-const toStringOrNull = (value: unknown): string | null => {
-  if (value === null || value === undefined) return null;
-  const next = String(value).trim();
-  return next ? next.slice(0, MAX_STRING_LENGTH) : null;
-};
+const SUBMISSION_COOLDOWN_SECONDS = 60;
+const PUBLIC_FIELDS = [
+  'id',
+  'device_type',
+  'device_name',
+  'avg_temp',
+  'avg_hashrate',
+  'max_hashrate',
+  'duration_seconds',
+  'algorithm',
+  'coin_name',
+  'created_at',
+  'avg_power',
+].join(',');
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     if (req.method === 'POST') {
-      const body = req.body && typeof req.body === 'object' ? req.body : {};
-      const avgHashrate = toFiniteNumber(body.avg_hashrate);
-      const maxHashrate = toFiniteNumber(body.max_hashrate);
+      const auth = verifyBenchmarkToken(req.headers.authorization, process.env.JWT_SECRET);
+      const record = validateBenchmarkPayload(req.body, auth.walletAddress);
+      const createdAt = new Date().toISOString();
+      const cooldownStart = new Date(Date.now() - SUBMISSION_COOLDOWN_SECONDS * 1000).toISOString();
 
-      if (avgHashrate === null || avgHashrate < 0) {
-        return res.status(400).json({ error: 'avg_hashrate must be a non-negative number' });
+      const { data: recent, error: cooldownError } = await supabase
+        .from('benchmarks')
+        .select('id')
+        .eq('solana_wallet_address', auth.walletAddress)
+        .eq('device_uid', record.device_uid)
+        .gte('created_at', cooldownStart)
+        .limit(1);
+
+      if (cooldownError) {
+        console.error('Benchmark cooldown check failed:', cooldownError.message);
+        return res.status(500).json({ error: 'Unable to submit benchmark' });
       }
-
-      const record = {
-        avg_hashrate: avgHashrate,
-        max_hashrate: maxHashrate,
-        duration_seconds: toFiniteNumber(body.duration_seconds),
-        device_type: toStringOrNull(body.device_type),
-        device_name: toStringOrNull(body.device_name),
-        avg_temp: toFiniteNumber(body.avg_temp),
-        avg_power: toFiniteNumber(body.avg_power),
-        algorithm: toStringOrNull(body.algorithm),
-        coin_name: toStringOrNull(body.coin_name),
-        solana_wallet_address: toStringOrNull(body.solana_wallet_address),
-        device_uid: toStringOrNull(body.device_uid),
-        created_at: toStringOrNull(body.created_at) || new Date().toISOString(),
-      };
+      if (recent && recent.length > 0) {
+        res.setHeader('Retry-After', String(SUBMISSION_COOLDOWN_SECONDS));
+        return res.status(429).json({ error: 'Benchmark submission rate limit exceeded' });
+      }
 
       const { data, error } = await supabase
         .from('benchmarks')
-        .insert([record])
+        .insert([{ ...record, created_at: createdAt }])
         .select('id, created_at')
         .single();
 
-      if (error) return res.status(500).json({ error: error.message });
+      if (error) {
+        console.error('Benchmark insert failed:', error.message);
+        return res.status(500).json({ error: 'Unable to submit benchmark' });
+      }
       return res.status(201).json({ success: true, benchmark: data });
     }
 
@@ -69,13 +78,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const { data, error } = await supabase
       .from('benchmarks')
-      .select('*')
+      .select(PUBLIC_FIELDS)
       .order('created_at', { ascending: false })
       .range(0, limit - 1);
 
-    if (error) return res.status(500).json({ error: error.message });
+    if (error) {
+      console.error('Benchmark read failed:', error.message);
+      return res.status(500).json({ error: 'Unable to load benchmarks' });
+    }
     res.status(200).json(data);
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  } catch (err: unknown) {
+    if (err instanceof BenchmarkSecurityError) {
+      return res.status(err.status).json({ error: err.message });
+    }
+    console.error('Benchmark API failed:', err instanceof Error ? err.message : 'Unknown error');
+    res.status(500).json({ error: 'Benchmark API request failed' });
   }
 }

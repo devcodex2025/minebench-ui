@@ -1,11 +1,22 @@
 'use client';
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Activity, RefreshCw, TrendingDown, TrendingUp } from 'lucide-react';
+import { Activity, Blocks, ExternalLink, RefreshCw, TrendingDown, TrendingUp } from 'lucide-react';
 import { formatHashrate } from '@/lib/utils';
 
 type Point = { t: string; hashrate: number; miners: number };
+type PoolReward = {
+  id: string;
+  timestamp: string;
+  blockHeight: number | null;
+  xmrReward: number;
+  grossBmt: number;
+  userBmt: number;
+  treasuryBmt: number;
+  distributions: number;
+};
 type Range = '1h' | '24h' | '7d' | '30d';
 
 const RANGES: { key: Range; label: string }[] = [
@@ -62,25 +73,37 @@ function formatTick(iso: string, range: Range): string {
 export default function PoolHashrateChart() {
   const [range, setRange] = useState<Range>('24h');
   const [points, setPoints] = useState<Point[]>([]);
+  const [rewards, setRewards] = useState<PoolReward[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [hover, setHover] = useState<number | null>(null);
+  const [hoverRewardId, setHoverRewardId] = useState<string | null>(null);
+  const [pinnedRewardId, setPinnedRewardId] = useState<string | null>(null);
   const refreshRef = useRef<() => void>(() => undefined);
   const gradientId = `hashrate-fill-${useId().replace(/:/g, '')}`;
   const { ref, width } = useMeasuredWidth();
 
   const load = useCallback(async (selectedRange: Range, signal: AbortSignal) => {
     try {
-      const response = await fetch(`/api/pool-stats-history?range=${selectedRange}`, { signal });
-      if (!response.ok) throw new Error('bad status');
-      const data = await response.json();
+      const [historyResult, rewardsResult] = await Promise.allSettled([
+        fetch(`/api/pool-stats-history?range=${selectedRange}`, { signal }),
+        fetch(`/api/pool-rewards?range=${selectedRange}&limit=400`, { signal })
+      ]);
+      if (historyResult.status !== 'fulfilled' || !historyResult.value.ok) throw new Error('bad status');
+      const data = await historyResult.value.json();
       if (signal.aborted) return;
       setPoints(Array.isArray(data.points) ? data.points : []);
       setLastUpdated(data.generatedAt || new Date().toISOString());
+      if (rewardsResult.status === 'fulfilled' && rewardsResult.value.ok) {
+        const rewardsData = await rewardsResult.value.json();
+        if (!signal.aborted) setRewards(Array.isArray(rewardsData.rewards) ? rewardsData.rewards : []);
+      } else {
+        setRewards([]);
+      }
       setError(false);
     } catch (loadError) {
-      if (loadError instanceof Error && loadError.name === 'AbortError') return;
+      if (signal.aborted || (loadError instanceof Error && loadError.name === 'AbortError')) return;
       setError(true);
     } finally {
       if (!signal.aborted) setLoading(false);
@@ -91,7 +114,10 @@ export default function PoolHashrateChart() {
     setLoading(true);
     setError(false);
     setHover(null);
+    setHoverRewardId(null);
+    setPinnedRewardId(null);
     setPoints([]);
+    setRewards([]);
     let controller: AbortController | null = null;
     let timer: number | null = null;
 
@@ -126,16 +152,18 @@ export default function PoolHashrateChart() {
   }, [range, load]);
 
   const view = useMemo(() => {
-    const count = points.length;
     const innerWidth = Math.max(0, width - PAD.left - PAD.right);
     const innerHeight = HEIGHT - PAD.top - PAD.bottom;
     const maxRate = Math.max(...points.map((point) => point.hashrate), 1);
     const yMax = maxRate * 1.15;
-    const x = (index: number) => count <= 1
+    const times = points.map((point) => new Date(point.t).getTime());
+    const fromTime = times[0] || 0;
+    const toTime = times[times.length - 1] || fromTime;
+    const xAt = (timestamp: number) => toTime <= fromTime
       ? PAD.left + innerWidth / 2
-      : PAD.left + (index / (count - 1)) * innerWidth;
+      : PAD.left + ((timestamp - fromTime) / (toTime - fromTime)) * innerWidth;
     const y = (value: number) => PAD.top + innerHeight - (value / yMax) * innerHeight;
-    const coordinates = points.map((point, index) => ({ x: x(index), y: y(point.hashrate) }));
+    const coordinates = points.map((point, index) => ({ x: xAt(times[index]), y: y(point.hashrate) }));
     const baseY = PAD.top + innerHeight;
     const line = smoothLine(coordinates);
     const area = coordinates.length >= 2
@@ -145,8 +173,16 @@ export default function PoolHashrateChart() {
       const value = (yMax / 4) * (index + 1);
       return { value, y: y(value) };
     });
-    return { coordinates, line, area, gridY, baseY, innerWidth };
-  }, [points, width]);
+    const rewardMarkers = rewards.flatMap((reward) => {
+      const timestamp = new Date(reward.timestamp).getTime();
+      if (!Number.isFinite(timestamp) || timestamp < fromTime || timestamp > toTime) return [];
+      const nearestIndex = times.reduce((best, pointTime, index) => (
+        Math.abs(pointTime - timestamp) < Math.abs(times[best] - timestamp) ? index : best
+      ), 0);
+      return [{ reward, x: xAt(timestamp), y: coordinates[nearestIndex]?.y ?? PAD.top }];
+    });
+    return { coordinates, line, area, gridY, baseY, innerWidth, fromTime, toTime, times, rewardMarkers };
+  }, [points, rewards, width]);
 
   const latest = points.length ? points[points.length - 1].hashrate : 0;
   const first = points.length ? points[0].hashrate : 0;
@@ -157,9 +193,15 @@ export default function PoolHashrateChart() {
     if (points.length < 2 || view.innerWidth <= 0) return;
     const mouseX = event.clientX - event.currentTarget.getBoundingClientRect().left;
     const ratio = (mouseX - PAD.left) / view.innerWidth;
-    const index = Math.round(ratio * (points.length - 1));
-    setHover(Math.max(0, Math.min(points.length - 1, index)));
+    const timestamp = view.fromTime + Math.max(0, Math.min(1, ratio)) * (view.toTime - view.fromTime);
+    const index = view.times.reduce((best, pointTime, pointIndex) => (
+      Math.abs(pointTime - timestamp) < Math.abs(view.times[best] - timestamp) ? pointIndex : best
+    ), 0);
+    setHover(index);
   };
+
+  const activeRewardId = pinnedRewardId || hoverRewardId;
+  const activeMarker = view.rewardMarkers.find((marker) => marker.reward.id === activeRewardId);
 
   const retry = () => {
     setLoading(true);
@@ -186,6 +228,15 @@ export default function PoolHashrateChart() {
                 </span>
               )}
               {lastUpdated && <span className="text-[9px] uppercase text-zinc-600">Updated {new Date(lastUpdated).toLocaleTimeString()}</span>}
+            </div>
+            <div className="mt-2 flex items-center gap-3 text-[9px] font-black uppercase tracking-[0.16em] text-zinc-500">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-2 w-2 rotate-45 border border-emerald-300 bg-emerald-400" />
+                {rewards.length} block {rewards.length === 1 ? 'reward' : 'rewards'}
+              </span>
+              <Link href="/pool-rewards" className="inline-flex items-center gap-1 text-yellow-400 hover:text-white">
+                History <ExternalLink className="h-3 w-3" />
+              </Link>
             </div>
           </div>
         </div>
@@ -224,7 +275,18 @@ export default function PoolHashrateChart() {
             <span className="text-[10px] text-zinc-600">History appears as the pool reports over time</span>
           </div>
         ) : width > 0 ? (
-          <svg width={width} height={HEIGHT} onMouseMove={onMove} onMouseLeave={() => setHover(null)} className="block" role="img" aria-label={`Pool hashrate history for ${range}, latest ${formatHashrate(latest)}`}>
+          <svg
+            width={width}
+            height={HEIGHT}
+            onMouseMove={onMove}
+            onMouseLeave={() => {
+              setHover(null);
+              setHoverRewardId(null);
+            }}
+            className="block"
+            role="img"
+            aria-label={`Pool hashrate history for ${range}, latest ${formatHashrate(latest)}, ${view.rewardMarkers.length} block rewards`}
+          >
             <defs>
               <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="rgb(250 204 21)" stopOpacity="0.35" />
@@ -241,6 +303,51 @@ export default function PoolHashrateChart() {
             {view.line && (
               <motion.path d={view.line} fill="none" stroke="rgb(250 204 21)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" initial={{ pathLength: 0, opacity: 0.4 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.9, ease: 'easeOut' }} />
             )}
+            {view.rewardMarkers.map((marker) => {
+              const isActive = marker.reward.id === activeRewardId;
+              return (
+                <g
+                  key={marker.reward.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Block reward ${marker.reward.xmrReward.toFixed(6)} XMR at ${new Date(marker.reward.timestamp).toLocaleString()}`}
+                  className="cursor-pointer outline-none"
+                  onMouseMove={(event) => event.stopPropagation()}
+                  onMouseEnter={() => setHoverRewardId(marker.reward.id)}
+                  onMouseLeave={() => setHoverRewardId(null)}
+                  onFocus={() => setHoverRewardId(marker.reward.id)}
+                  onBlur={() => setHoverRewardId(null)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setPinnedRewardId((current) => current === marker.reward.id ? null : marker.reward.id);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      setPinnedRewardId((current) => current === marker.reward.id ? null : marker.reward.id);
+                    }
+                  }}
+                >
+                  <line
+                    x1={marker.x}
+                    y1={marker.y + 7}
+                    x2={marker.x}
+                    y2={view.baseY}
+                    stroke="rgb(52 211 153)"
+                    strokeOpacity={isActive ? 0.65 : 0.25}
+                    strokeWidth="1"
+                    strokeDasharray="2 4"
+                  />
+                  <circle cx={marker.x} cy={marker.y} r="12" fill="transparent" />
+                  <path
+                    d={`M ${marker.x} ${marker.y - 6} L ${marker.x + 6} ${marker.y} L ${marker.x} ${marker.y + 6} L ${marker.x - 6} ${marker.y} Z`}
+                    fill={isActive ? 'rgb(250 204 21)' : 'rgb(52 211 153)'}
+                    stroke="rgb(0 0 0)"
+                    strokeWidth="2"
+                  />
+                </g>
+              );
+            })}
             {points.map((point, index) => {
               if (points.length > 12 && index % Math.ceil(points.length / 6) !== 0 && index !== points.length - 1) return null;
               return <text key={point.t} x={view.coordinates[index].x} y={HEIGHT - 8} textAnchor="middle" className="fill-zinc-600 font-mono" fontSize="10">{formatTick(point.t, range)}</text>;
@@ -254,7 +361,34 @@ export default function PoolHashrateChart() {
           </svg>
         ) : <div className="h-[300px]" />}
 
-        {hover !== null && points[hover] && width > 0 && (
+        {activeMarker && width > 0 && (
+          <div
+            className="pointer-events-none absolute z-20 w-56 -translate-x-1/2 rounded-lg border border-emerald-400/40 bg-black/95 px-4 py-3 shadow-2xl shadow-emerald-500/10"
+            style={{
+              left: Math.min(Math.max(activeMarker.x, 120), width - 120),
+              top: Math.max(activeMarker.y - 128, 8)
+            }}
+          >
+            <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400">
+              <Blocks className="h-3.5 w-3.5" /> Pool block reward
+            </div>
+            <div className="mt-2 font-mono text-lg font-black text-white">{activeMarker.reward.xmrReward.toFixed(6)} XMR</div>
+            {activeMarker.reward.blockHeight && (
+              <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                Block #{activeMarker.reward.blockHeight.toLocaleString()}
+              </div>
+            )}
+            {activeMarker.reward.grossBmt > 0 && (
+              <div className="mt-1 font-mono text-xs text-yellow-400">{activeMarker.reward.grossBmt.toFixed(2)} BMT gross</div>
+            )}
+            <div className="mt-1 text-[10px] text-zinc-500">{new Date(activeMarker.reward.timestamp).toLocaleString()}</div>
+            <div className="mt-2 text-[9px] uppercase tracking-widest text-zinc-600">
+              {pinnedRewardId === activeMarker.reward.id ? 'Click marker to close' : 'Click marker to pin'}
+            </div>
+          </div>
+        )}
+
+        {!activeMarker && hover !== null && points[hover] && width > 0 && (
           <div className="pointer-events-none absolute z-10 -translate-x-1/2 rounded-lg border border-zinc-700 bg-black/90 px-3 py-2 shadow-xl" style={{ left: Math.min(Math.max(view.coordinates[hover].x, 70), width - 70), top: Math.max(view.coordinates[hover].y - 64, 8) }}>
             <div className="font-mono text-sm font-black text-yellow-400">{formatHashrate(points[hover].hashrate)}</div>
             <div className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-zinc-500">{points[hover].miners} miners</div>

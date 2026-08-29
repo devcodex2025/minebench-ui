@@ -11,6 +11,9 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'MineBench | Mining Benchmark Software And RandomX Hardware Comparison',
   description: 'Compare CPU and GPU mining hardware, track RandomX benchmark results, inspect the live dashboard, and download the MineBench client for a cleaner mining workflow.',
+  alternates: {
+    canonical: 'https://minebench.cloud/',
+  },
   keywords: [
     'mining benchmark software',
     'cpu mining benchmark',
@@ -27,7 +30,7 @@ export const metadata: Metadata = {
     title: 'MineBench | Mining Benchmark Software And RandomX Comparison',
     description: 'Compare mining hardware, inspect the live dashboard, and download the MineBench client.',
     url: 'https://minebench.cloud',
-    siteName: 'Minebench',
+    siteName: 'MineBench',
     images: [
       {
         url: 'https://minebench.cloud/og-home.png',
@@ -46,6 +49,72 @@ export const metadata: Metadata = {
     images: ['https://minebench.cloud/og-home.png'],
     creator: '@MineBenchdapp',
   },
+};
+
+const homepageJsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': 'https://minebench.cloud/#organization',
+      name: 'MineBench',
+      alternateName: ['MineBench Mining', 'minebench.cloud'],
+      url: 'https://minebench.cloud/',
+      description: 'MineBench develops mining benchmark software, a public hardware results database, and live mining pool telemetry.',
+      logo: {
+        '@type': 'ImageObject',
+        '@id': 'https://minebench.cloud/#logo',
+        url: 'https://minebench.cloud/android-chrome-512x512.png',
+        contentUrl: 'https://minebench.cloud/android-chrome-512x512.png',
+        width: 512,
+        height: 512,
+        caption: 'MineBench',
+      },
+      image: { '@id': 'https://minebench.cloud/#logo' },
+      sameAs: [
+        'https://x.com/MineBenchdapp',
+        'https://bitbucket.org/minebenchapp/',
+      ],
+    },
+    {
+      '@type': 'WebSite',
+      '@id': 'https://minebench.cloud/#website',
+      url: 'https://minebench.cloud/',
+      name: 'MineBench',
+      alternateName: ['MineBench Mining', 'minebench.cloud'],
+      description: 'Mining benchmark software, RandomX hardware comparisons, live hashrate, and pool reward data.',
+      publisher: { '@id': 'https://minebench.cloud/#organization' },
+      inLanguage: 'en-US',
+    },
+    {
+      '@type': 'SoftwareApplication',
+      '@id': 'https://minebench.cloud/#software',
+      name: 'MineBench',
+      applicationCategory: 'UtilitiesApplication',
+      applicationSubCategory: 'Cryptocurrency Mining and Hardware Benchmarking',
+      operatingSystem: 'Windows, Linux, macOS',
+      description: 'Mining benchmark software for CPU and GPU miners with RandomX hardware comparisons, live hashrate, pool statistics, and miner telemetry.',
+      url: 'https://minebench.cloud/',
+      downloadUrl: 'https://minebench.cloud/downloads',
+      mainEntityOfPage: { '@id': 'https://minebench.cloud/#website' },
+      provider: { '@id': 'https://minebench.cloud/#organization' },
+      image: { '@id': 'https://minebench.cloud/#logo' },
+      screenshot: 'https://minebench.cloud/og-home.png',
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'USD',
+        availability: 'https://schema.org/InStock',
+      },
+      featureList: [
+        'CPU and GPU mining benchmark runs',
+        'RandomX hardware comparison',
+        'Live hashrate and pool statistics',
+        'Mining hardware leaderboard',
+        'Windows, Linux, and macOS client downloads',
+      ],
+    },
+  ],
 };
 
 async function getLandingStats(): Promise<LandingStats> {
@@ -90,9 +159,17 @@ export default async function LandingPage() {
   ]);
 
   return (
-    <LandingPageClient
-      initialStats={initialStats}
-      clientVersion={clientRelease?.version || clientRelease?.tag_name || 'Latest'}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(homepageJsonLd).replace(/</g, '\\u003c'),
+        }}
+      />
+      <LandingPageClient
+        initialStats={initialStats}
+        clientVersion={clientRelease?.version || clientRelease?.tag_name || 'Latest'}
+      />
+    </>
   );
 }

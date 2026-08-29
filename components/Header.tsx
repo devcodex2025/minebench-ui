@@ -18,6 +18,7 @@ export default function Header({ onRefresh, loading }: HeaderProps = {}) {
   const navLinks = [
     { name: 'Home', href: '/' },
     { name: 'Dashboard', href: '/dashboard' },
+    { name: 'Rewards', href: '/pool-rewards' },
     { name: 'Leaderboard', href: '/leaderboard' },
     { name: 'Downloads', href: '/downloads' },
     { name: 'Premium', href: '/premium' },

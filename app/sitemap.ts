@@ -33,6 +33,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
             priority: 0.85,
         },
         {
+            url: 'https://minebench.cloud/pool-rewards',
+            lastModified: new Date(),
+            changeFrequency: 'hourly',
+            priority: 0.85,
+        },
+        {
             url: 'https://minebench.cloud/whitepaper',
             lastModified: new Date(),
             changeFrequency: 'monthly',
