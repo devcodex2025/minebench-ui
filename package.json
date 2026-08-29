@@ -1,13 +1,14 @@
 {
   "name": "minebench-ui",
-  "version": "v0.1.5.29",
+  "version": "v0.1.5.32",
   "description": "Minebench - Mining Benchmark Results Dashboard",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:security": "node --test tests/benchmark-security.test.cjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
