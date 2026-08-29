@@ -1,16 +1,16 @@
-# Graph Report - MineBench-UI  (2026-06-11)
+# Graph Report - MineBench-UI  (2026-08-30)
 
 ## Corpus Check
-- 59 files · ~427,930 words
+- 67 files · ~699,683 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 347 nodes · 404 edges · 36 communities (25 shown, 11 thin omitted)
+- 408 nodes · 496 edges · 39 communities (28 shown, 11 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `9148fdc3`
+- Built from commit: `5db7e3bd`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -42,18 +42,21 @@
 - [[_COMMUNITY_Community 27|Community 27]]
 - [[_COMMUNITY_Community 29|Community 29]]
 - [[_COMMUNITY_Community 30|Community 30]]
+- [[_COMMUNITY_Community 36|Community 36]]
+- [[_COMMUNITY_Community 37|Community 37]]
+- [[_COMMUNITY_Community 38|Community 38]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `compilerOptions` - 16 edges
-2. `getLatestClientRelease()` - 11 edges
-3. `MineBench UI` - 11 edges
-4. `🎯 Minebench UI - Complete Deployment Guide` - 11 edges
-5. `formatHashrate()` - 10 edges
+2. `formatHashrate()` - 16 edges
+3. `getLatestClientRelease()` - 11 edges
+4. `MineBench UI` - 11 edges
+5. `🎯 Minebench UI - Complete Deployment Guide` - 11 edges
 6. `BenchmarkResult` - 9 edges
 7. `🚀 Akash Deployment Guide for Minebench UI` - 9 edges
 8. `getLeaderboardRows()` - 8 edges
-9. `Step-by-Step Guide to Deploy Minebench UI on Akash` - 7 edges
-10. `🌐 Deploy to Akash` - 6 edges
+9. `validateBenchmarkPayload()` - 7 edges
+10. `Step-by-Step Guide to Deploy Minebench UI on Akash` - 7 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `LandingPageClient()` --calls--> `formatHashrate()`  [EXTRACTED]
@@ -67,15 +70,15 @@
 - `LeaderboardClient()` --calls--> `getLeaderboardRows()`  [EXTRACTED]
   app/leaderboard/LeaderboardClient.tsx → lib/leaderboard.ts
 
-## Communities (36 total, 11 thin omitted)
+## Communities (39 total, 11 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.08
-Nodes (29): LandingPageClient(), BenchmarkTable(), NetworkStrip(), RecentTests(), RecentTestsProps, StatsCards(), StatsCardsProps, DashboardClient() (+21 more)
+Cohesion: 0.07
+Nodes (33): BenchmarkTable(), LiveMiner, LiveMinerLeaderboard(), Props, NetworkStrip(), RecentTests(), RecentTestsProps, StatsCards() (+25 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.06
-Nodes (16): HeaderProps, APP_SCREENSHOTS, BuildVariant, Release, Scene3D, DRAG_SPRING, ShaderScreenshotSliderProps, ShaderSlide (+8 more)
+Cohesion: 0.08
+Nodes (6): HeaderProps, metadata, PAYOUT_STATUS, PoolReward, PhantomProvider, metadata
 
 ### Community 2 - "Community 2"
 Cohesion: 0.06
@@ -98,16 +101,16 @@ Cohesion: 0.10
 Nodes (19): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib, module (+11 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.28
-Nodes (9): handler(), DownloadsPage(), generateMetadata(), createFallbackClientRelease(), getClientReleaseFallback(), getLatestClientRelease(), githubHeaders(), GithubRelease (+1 more)
+Cohesion: 0.09
+Nodes (21): handler(), APP_SCREENSHOTS, availableOnly(), BuildVariant, createBuildVariants(), Release, Scene3D, DownloadsPage() (+13 more)
 
 ### Community 8 - "Community 8"
-Cohesion: 0.15
-Nodes (14): Counter(), formatCounterValue(), LandingStats, PoolStatus, Scene3D, TreasuryStatus, getLandingStats(), getPoolStats() (+6 more)
+Cohesion: 0.11
+Nodes (14): Counter(), formatCounterValue(), LandingPageClient(), LandingStats, PoolStatus, Scene3D, TreasuryStatus, getLandingStats() (+6 more)
 
 ### Community 9 - "Community 9"
-Cohesion: 0.14
-Nodes (13): description, devDependencies, eslint, eslint-config-next, pino-pretty, name, private, scripts (+5 more)
+Cohesion: 0.13
+Nodes (14): description, devDependencies, eslint, eslint-config-next, pino-pretty, name, private, scripts (+6 more)
 
 ### Community 10 - "Community 10"
 Cohesion: 0.17
@@ -126,32 +129,44 @@ Cohesion: 0.33
 Nodes (4): { createClient }, fs, path, supabase
 
 ### Community 14 - "Community 14"
-Cohesion: 0.60
-Nodes (4): handler(), supabase, toFiniteNumber(), toStringOrNull()
+Cohesion: 0.20
+Nodes (16): handler(), PUBLIC_FIELDS, supabase, toFiniteNumber(), toStringOrNull(), ALGORITHM_RULES, ALLOWED_FIELDS, BenchmarkSecurityError (+8 more)
 
 ### Community 15 - "Community 15"
 Cohesion: 0.40
 Nodes (4): Governance, Historical notes, MineBench UI Docs, Start here
 
+### Community 16 - "Community 16"
+Cohesion: 0.22
+Nodes (7): PAD, Point, PoolHashrateChart(), PoolReward, Range, RANGES, useMeasuredWidth()
+
+### Community 36 - "Community 36"
+Cohesion: 0.16
+Nodes (9): RewardsData, TokenBalance, supabase, PREMIUM_FAQS, PREMIUM_FEATURES, PREMIUM_USE_CASES, SEARCH_INTENTS, TREASURY_WALLET (+1 more)
+
+### Community 38 - "Community 38"
+Cohesion: 0.33
+Nodes (3): ALLOWED_RANGES, PAYOUT_STATUSES, PoolReward
+
 ## Knowledge Gaps
-- **178 isolated node(s):** `extends`, `{ createClient }`, `fs`, `path`, `supabase` (+173 more)
+- **201 isolated node(s):** `extends`, `{ createClient }`, `fs`, `path`, `supabase` (+196 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **11 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
+- **Why does `formatHashrate()` connect `Community 0` to `Community 8`, `Community 16`?**
+  _High betweenness centrality (0.011) - this node is a cross-community bridge._
 - **Why does `dependencies` connect `Community 2` to `Community 9`?**
-  _High betweenness centrality (0.014) - this node is a cross-community bridge._
+  _High betweenness centrality (0.011) - this node is a cross-community bridge._
 - **Why does `getLatestClientRelease()` connect `Community 7` to `Community 8`?**
   _High betweenness centrality (0.008) - this node is a cross-community bridge._
 - **What connects `extends`, `{ createClient }`, `fs` to the rest of the system?**
-  _178 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _201 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.07624113475177305 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07058001397624039 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.058029689608636977 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08307692307692308 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
   _Cohesion score 0.06451612903225806 - nodes in this community are weakly interconnected._
-- **Should `Community 3` be split into smaller, more focused modules?**
-  _Cohesion score 0.06666666666666667 - nodes in this community are weakly interconnected._
