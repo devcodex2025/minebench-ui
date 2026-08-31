@@ -6,23 +6,28 @@ import { ArrowLeft, Blocks, CircleDollarSign, Coins, RefreshCw } from 'lucide-re
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
-type PoolReward = {
+type PoolBlock = {
   id: string;
-  timestamp: string;
-  blockHeight: number | null;
-  xmrReward: number;
+  foundAt: string;
+  blockHeight: number;
+  blockHash: string | null;
+  finderScope: 'local' | 'p2pool_peer' | 'unknown';
+  moneroPayoutStatus: 'pending' | 'received' | 'none';
+  walletPayoutXmr: number | null;
+  payoutDetectedAt: string | null;
   grossBmt: number;
   userBmt: number;
   treasuryBmt: number;
   distributions: number;
   paidDistributions: number;
   creditedDistributions: number;
-  payoutStatus: 'processing' | 'credited' | 'partially_paid' | 'paid';
+  bmtSettlementStatus: 'not_created' | 'processing' | 'credited' | 'partially_paid' | 'paid';
 };
 
 const PAGE_SIZE = 30;
 
 const PAYOUT_STATUS = {
+  not_created: { label: 'Not credited', className: 'border-zinc-700 bg-zinc-900/60 text-zinc-500' },
   processing: { label: 'Processing', className: 'border-zinc-600 bg-zinc-800/60 text-zinc-300' },
   credited: { label: 'BMT credited', className: 'border-yellow-400/40 bg-yellow-400/10 text-yellow-300' },
   partially_paid: { label: 'Partially paid', className: 'border-orange-400/40 bg-orange-400/10 text-orange-300' },
@@ -54,28 +59,28 @@ function RewardCoin({ asset, className }: { asset: 'XMR' | 'BMT'; className: str
 }
 
 export default function PoolRewardsClient() {
-  const [rewards, setRewards] = useState<PoolReward[]>([]);
+  const [blocks, setBlocks] = useState<PoolBlock[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
-  const loadRewards = useCallback(async (offset = 0, append = false) => {
+  const loadBlocks = useCallback(async (offset = 0, append = false) => {
     append ? setLoadingMore(true) : setLoading(true);
     try {
-      const response = await fetch(`/api/pool-rewards?limit=${PAGE_SIZE}&offset=${offset}&t=${Date.now()}`, {
+      const response = await fetch(`/api/pool-blocks?limit=${PAGE_SIZE}&offset=${offset}&t=${Date.now()}`, {
         cache: 'no-store'
       });
       if (!response.ok) throw new Error('Pool reward history is unavailable');
       const payload = await response.json();
-      const nextRewards: PoolReward[] = Array.isArray(payload.rewards) ? payload.rewards : [];
-      setRewards((current) => append ? [...current, ...nextRewards] : nextRewards);
-      setTotal(Number(payload.total || nextRewards.length));
+      const nextBlocks: PoolBlock[] = Array.isArray(payload.blocks) ? payload.blocks : [];
+      setBlocks((current) => append ? [...current, ...nextBlocks] : nextBlocks);
+      setTotal(Number(payload.total || nextBlocks.length));
       setLastUpdated(payload.generatedAt || new Date().toISOString());
       setError(false);
     } catch (loadError) {
-      console.error('[PoolRewards] Failed to load reward history:', loadError);
+      console.error('[PoolRewards] Failed to load block history:', loadError);
       setError(true);
     } finally {
       setLoading(false);
@@ -84,21 +89,19 @@ export default function PoolRewardsClient() {
   }, []);
 
   useEffect(() => {
-    void loadRewards();
-    const intervalId = window.setInterval(() => void loadRewards(), 30_000);
+    void loadBlocks();
+    const intervalId = window.setInterval(() => void loadBlocks(), 30_000);
     return () => window.clearInterval(intervalId);
-  }, [loadRewards]);
+  }, [loadBlocks]);
 
-  const summary = useMemo(() => rewards.reduce((totals, reward) => ({
-    xmr: totals.xmr + reward.xmrReward,
-    minerBmt: totals.minerBmt + reward.userBmt,
-    distributions: totals.distributions + reward.distributions,
-    paidBlocks: totals.paidBlocks + (reward.payoutStatus === 'paid' ? 1 : 0)
-  }), { xmr: 0, minerBmt: 0, distributions: 0, paidBlocks: 0 }), [rewards]);
+  const summary = useMemo(() => blocks.reduce((totals, block) => ({
+    xmr: totals.xmr + (block.walletPayoutXmr || 0),
+    pendingBlocks: totals.pendingBlocks + (block.moneroPayoutStatus === 'pending' ? 1 : 0)
+  }), { xmr: 0, pendingBlocks: 0 }), [blocks]);
 
   return (
     <div className="min-h-screen bg-black text-zinc-400">
-      <Header onRefresh={() => void loadRewards()} loading={loading} />
+      <Header onRefresh={() => void loadBlocks()} loading={loading} />
       <main className="mx-auto max-w-7xl px-4 pb-20 pt-24 sm:px-6 lg:px-8">
         <section className="relative mb-8 overflow-hidden border border-zinc-800 bg-zinc-950/70 p-8 md:p-10">
           <div className="pointer-events-none absolute right-0 top-0 h-full w-1/3 bg-[radial-gradient(circle_at_top_right,rgba(52,211,153,0.12),transparent_65%)]" />
@@ -116,7 +119,7 @@ export default function PoolRewardsClient() {
                 Pool Block <span className="text-yellow-400">Rewards</span>
               </h1>
               <p className="mt-5 max-w-3xl text-base leading-relaxed text-zinc-400 md:text-lg">
-                Monero payouts received by the MineBench pool, with block heights, XMR amounts, and resulting BMT allocations. The status column separately confirms whether BMT was only credited or already paid on Solana.
+                P2Pool blocks appear as soon as they are found. Each row then updates when the MineBench wallet receives XMR—or confirms that it had no shares in that block&apos;s PPLNS window. BMT settlement is tracked separately.
               </p>
               <Link href="/dashboard" className="mt-6 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-yellow-400 hover:text-white">
                 <ArrowLeft className="h-4 w-4" /> Back to live dashboard
@@ -125,7 +128,7 @@ export default function PoolRewardsClient() {
 
             <div className="grid grid-cols-3 gap-3">
               <div className="border border-zinc-800 bg-black p-4">
-                <div className="text-[9px] font-black uppercase tracking-[0.18em] text-zinc-600">Pool payouts</div>
+                <div className="text-[9px] font-black uppercase tracking-[0.18em] text-zinc-600">Blocks found</div>
                 <div className="mt-2 font-mono-system text-3xl font-black text-white">{total}</div>
               </div>
               <div className="border border-zinc-800 bg-black p-4">
@@ -133,8 +136,8 @@ export default function PoolRewardsClient() {
                 <div className="mt-2 font-mono-system text-xl font-black text-yellow-400">{summary.xmr.toFixed(4)}</div>
               </div>
               <div className="border border-zinc-800 bg-black p-4">
-                <div className="text-[9px] font-black uppercase tracking-[0.18em] text-zinc-600">Miner BMT</div>
-                <div className="mt-2 font-mono-system text-xl font-black text-emerald-400">{summary.minerBmt.toFixed(1)}</div>
+                <div className="text-[9px] font-black uppercase tracking-[0.18em] text-zinc-600">Awaiting payout</div>
+                <div className="mt-2 font-mono-system text-xl font-black text-yellow-400">{summary.pendingBlocks}</div>
               </div>
             </div>
           </div>
@@ -144,7 +147,7 @@ export default function PoolRewardsClient() {
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-900 px-6 py-4">
             <div>
               <h2 className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.2em] text-white">
-                <CircleDollarSign className="h-4 w-4 text-yellow-400" /> Reward history
+                <CircleDollarSign className="h-4 w-4 text-yellow-400" /> Block lifecycle history
               </h2>
               <p className="mt-1 text-[9px] uppercase tracking-widest text-zinc-600">
                 {lastUpdated ? `Synced ${new Date(lastUpdated).toLocaleString()}` : 'Waiting for pool data'}
@@ -152,7 +155,7 @@ export default function PoolRewardsClient() {
             </div>
             <button
               type="button"
-              onClick={() => void loadRewards()}
+              onClick={() => void loadBlocks()}
               disabled={loading}
               className="inline-flex items-center gap-2 border border-zinc-700 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:border-yellow-400 hover:text-yellow-400 disabled:opacity-50"
             >
@@ -160,21 +163,21 @@ export default function PoolRewardsClient() {
             </button>
           </div>
 
-          {loading && rewards.length === 0 ? (
+          {loading && blocks.length === 0 ? (
             <div className="flex h-72 items-center justify-center" role="status">
               <div className="h-7 w-7 animate-spin rounded-full border-2 border-zinc-800 border-t-yellow-400" />
             </div>
-          ) : error && rewards.length === 0 ? (
+          ) : error && blocks.length === 0 ? (
             <div className="flex h-72 flex-col items-center justify-center gap-4 text-center">
-              <span className="text-xs font-black uppercase tracking-widest text-zinc-500">Reward history unavailable</span>
-              <button type="button" onClick={() => void loadRewards()} className="border border-zinc-700 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-yellow-400 hover:border-yellow-400">
+              <span className="text-xs font-black uppercase tracking-widest text-zinc-500">Block history unavailable</span>
+              <button type="button" onClick={() => void loadBlocks()} className="border border-zinc-700 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-yellow-400 hover:border-yellow-400">
                 Try again
               </button>
             </div>
-          ) : rewards.length === 0 ? (
+          ) : blocks.length === 0 ? (
             <div className="flex h-72 flex-col items-center justify-center gap-3 text-center">
               <Coins className="h-8 w-8 text-zinc-700" />
-              <span className="text-xs font-black uppercase tracking-widest text-zinc-500">No confirmed pool rewards yet</span>
+              <span className="text-xs font-black uppercase tracking-widest text-zinc-500">No P2Pool blocks recorded yet</span>
             </div>
           ) : (
             <>
@@ -184,34 +187,56 @@ export default function PoolRewardsClient() {
                     <tr>
                       <th className="px-6 py-3">Found at</th>
                       <th className="px-4 py-3">Monero block</th>
-                      <th className="px-4 py-3 text-right">Reward</th>
+                      <th className="px-4 py-3 text-right">Monero payout</th>
                       <th className="px-4 py-3 text-right">BMT allocated</th>
                       <th className="px-6 py-3 text-right">BMT payout</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-900">
-                    {rewards.map((reward, index) => (
-                      <tr key={reward.id} className="group transition-colors hover:bg-yellow-400/[0.03]">
+                    {blocks.map((block) => (
+                      <tr key={block.id} className="group transition-colors hover:bg-yellow-400/[0.03]">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <span className={`h-2.5 w-2.5 rotate-45 border ${index === 0 ? 'border-yellow-200 bg-yellow-400' : 'border-emerald-300 bg-emerald-400'}`} />
+                            <span className={`h-2.5 w-2.5 rotate-45 border-2 ${
+                              block.moneroPayoutStatus === 'received'
+                                ? 'border-emerald-300 bg-emerald-400'
+                                : block.moneroPayoutStatus === 'none'
+                                  ? 'border-zinc-400 bg-zinc-500'
+                                  : 'border-yellow-400 bg-zinc-950'
+                            }`} />
                             <div>
-                              <div className="font-mono text-xs font-bold text-white">{new Date(reward.timestamp).toLocaleDateString()}</div>
-                              <div className="mt-0.5 font-mono text-[10px] text-zinc-600">{new Date(reward.timestamp).toLocaleTimeString()}</div>
+                              <div className="font-mono text-xs font-bold text-white">{new Date(block.foundAt).toLocaleDateString()}</div>
+                              <div className="mt-0.5 font-mono text-[10px] text-zinc-600">{new Date(block.foundAt).toLocaleTimeString()}</div>
                             </div>
                           </div>
                         </td>
                         <td className="px-4 py-4 font-mono text-xs font-bold text-zinc-400">
-                          {reward.blockHeight ? `#${reward.blockHeight.toLocaleString()}` : 'Pending metadata'}
+                          <div>#{block.blockHeight.toLocaleString()}</div>
+                          {block.blockHash ? <div className="mt-1 max-w-36 truncate text-[9px] text-zinc-700">{block.blockHash}</div> : null}
                         </td>
-                        <td className="px-4 py-4 text-right font-mono text-sm font-black text-yellow-400">{reward.xmrReward.toFixed(6)} XMR</td>
-                        <td className="px-4 py-4 text-right font-mono text-xs font-bold text-emerald-400">{reward.userBmt > 0 ? reward.userBmt.toFixed(2) : '—'}</td>
+                        <td className={`px-4 py-4 text-right font-mono text-xs font-black ${
+                          block.moneroPayoutStatus === 'received'
+                            ? 'text-emerald-400'
+                            : block.moneroPayoutStatus === 'none'
+                              ? 'text-zinc-600'
+                              : 'text-yellow-400'
+                        }`}>
+                          {block.moneroPayoutStatus === 'received'
+                            ? `${block.walletPayoutXmr?.toFixed(6) || '—'} XMR`
+                            : block.moneroPayoutStatus === 'none'
+                              ? 'No PPLNS payout'
+                              : 'Awaiting payout'}
+                          {block.payoutDetectedAt ? (
+                            <div className="mt-1 text-[9px] font-normal text-zinc-700">{new Date(block.payoutDetectedAt).toLocaleString()}</div>
+                          ) : null}
+                        </td>
+                        <td className="px-4 py-4 text-right font-mono text-xs font-bold text-emerald-400">{block.userBmt > 0 ? block.userBmt.toFixed(2) : '—'}</td>
                         <td className="px-6 py-4 text-right">
-                          <span className={`inline-flex border px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] ${PAYOUT_STATUS[reward.payoutStatus].className}`}>
-                            {PAYOUT_STATUS[reward.payoutStatus].label}
+                          <span className={`inline-flex border px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] ${PAYOUT_STATUS[block.bmtSettlementStatus].className}`}>
+                            {block.moneroPayoutStatus === 'none' ? 'Not applicable' : PAYOUT_STATUS[block.bmtSettlementStatus].label}
                           </span>
                           <div className="mt-1 font-mono text-[9px] text-zinc-600">
-                            {reward.paidDistributions}/{reward.distributions} allocations paid
+                            {block.paidDistributions}/{block.distributions} allocations paid
                           </div>
                         </td>
                       </tr>
@@ -222,28 +247,29 @@ export default function PoolRewardsClient() {
 
               <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-zinc-900 bg-black/40 px-6 py-4 text-[10px] uppercase tracking-[0.14em] text-zinc-500">
                 <span className="inline-flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rotate-45 border border-yellow-200 bg-yellow-400" />
-                  Latest pool XMR payout
+                  <span className="h-2.5 w-2.5 rotate-45 border-2 border-yellow-400 bg-zinc-950" />
+                  Block found · payout pending
                 </span>
                 <span className="inline-flex items-center gap-2">
                   <span className="h-2.5 w-2.5 rotate-45 border border-emerald-300 bg-emerald-400" />
-                  Earlier pool payouts
+                  MineBench wallet received XMR
                 </span>
-                <span className="normal-case tracking-normal text-zinc-600">
-                  Diamond color shows chronology, not BMT payout status.
+                <span className="inline-flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rotate-45 border border-zinc-400 bg-zinc-500" />
+                  No wallet shares in PPLNS window
                 </span>
               </div>
 
-              {rewards.length < total && (
+              {blocks.length < total && (
                 <div className="border-t border-zinc-900 p-5 text-center">
                   <button
                     type="button"
-                    onClick={() => void loadRewards(rewards.length, true)}
+                    onClick={() => void loadBlocks(blocks.length, true)}
                     disabled={loadingMore}
                     className="inline-flex items-center gap-2 border border-zinc-700 px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white hover:border-yellow-400 hover:text-yellow-400 disabled:opacity-50"
                   >
                     {loadingMore && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
-                    Load older rewards
+                    Load older blocks
                   </button>
                 </div>
               )}
@@ -252,7 +278,7 @@ export default function PoolRewardsClient() {
         </section>
 
         <p className="mt-5 text-[10px] leading-relaxed text-zinc-600">
-          This ledger separates XMR received by the pool, BMT credited to miner balances, and completed Solana payouts. Individual miner identities and wallet addresses are never exposed.
+          A found P2Pool block and a wallet payout are two stages of the same block lifecycle. This ledger keeps XMR receipt, BMT credit, and completed Solana payouts separate. Miner identities and wallet addresses are never exposed.
         </p>
       </main>
       <Footer />
