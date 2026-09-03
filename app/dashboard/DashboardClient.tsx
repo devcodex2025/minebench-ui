@@ -215,68 +215,68 @@ export default function DashboardClient() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="border border-zinc-800 bg-black p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Total Pool Hashrate</span>
-                  <TrendingUp className="w-5 h-5 text-yellow-400" />
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.85fr)_minmax(0,1fr)_minmax(0,1.35fr)] xl:gap-6">
+              <div className="flex min-h-52 min-w-0 flex-col overflow-hidden border border-zinc-800 bg-zinc-950/70 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] sm:p-6">
+                <div className="mb-3 flex min-w-0 items-start justify-between gap-3">
+                  <span className="min-w-0 text-[10px] font-black uppercase leading-relaxed tracking-[0.3em] text-zinc-500">Total Pool Hashrate</span>
+                  <TrendingUp className="h-5 w-5 shrink-0 text-yellow-400" />
                 </div>
-                <p className="text-4xl md:text-5xl font-black text-yellow-400 font-mono-system tracking-tighter">
+                <p className="whitespace-nowrap font-mono-system text-3xl font-black leading-none tracking-tighter text-yellow-400 sm:text-4xl">
                   {formatHashrate(totalHashrate)}
                 </p>
-                <p className="text-xs text-zinc-500 uppercase tracking-widest mt-2">
+                <p className="mt-auto pt-4 text-xs uppercase leading-relaxed tracking-widest text-zinc-500">
                   Combined live performance from reward proxies
                 </p>
               </div>
-              <div className="border border-zinc-800 bg-black p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Miners Online</span>
-                  <Users className="w-5 h-5 text-yellow-400" />
+              <div className="flex min-h-52 min-w-0 flex-col overflow-hidden border border-zinc-800 bg-zinc-950/70 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] sm:p-6">
+                <div className="mb-3 flex min-w-0 items-start justify-between gap-3">
+                  <span className="min-w-0 text-[10px] font-black uppercase leading-relaxed tracking-[0.3em] text-zinc-500">Miners Online</span>
+                  <Users className="h-5 w-5 shrink-0 text-yellow-400" />
                 </div>
-                <p className="text-4xl md:text-5xl font-black text-white font-mono-system tracking-tighter">
+                <p className="font-mono-system text-3xl font-black leading-none tracking-tighter text-white sm:text-4xl">
                   {onlineClients.toLocaleString()}
                 </p>
-                <p className="text-xs text-zinc-500 uppercase tracking-widest mt-2">
+                <p className="mt-auto pt-4 text-xs uppercase leading-relaxed tracking-widest text-zinc-500">
                   Network participants
                 </p>
               </div>
-              <div className="border border-zinc-800 bg-black p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">P2Pool Shares Found</span>
-                  <Award className="w-5 h-5 text-yellow-400" />
+              <div className="flex min-h-52 min-w-0 flex-col overflow-hidden border border-zinc-800 bg-zinc-950/70 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] sm:p-6">
+                <div className="mb-3 flex min-w-0 items-start justify-between gap-3">
+                  <span className="min-w-0 text-[10px] font-black uppercase leading-relaxed tracking-[0.3em] text-zinc-500">P2Pool Shares Found</span>
+                  <Award className="h-5 w-5 shrink-0 text-yellow-400" />
                 </div>
-                <p className="text-4xl md:text-5xl font-black text-white font-mono-system tracking-tighter">
+                <p className="font-mono-system text-3xl font-black leading-none tracking-tighter text-white sm:text-4xl">
                   {p2poolSharesFound.toLocaleString()}
                 </p>
-                <p className="text-xs text-zinc-500 uppercase tracking-widest mt-2">
+                <p className="mt-auto pt-4 text-xs uppercase leading-relaxed tracking-widest text-zinc-500">
                   Native P2Pool shares found by the pool
                 </p>
               </div>
-              <div className="border border-zinc-800 bg-black p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">XMR / BMT Exchange</span>
-                  <Activity className="w-5 h-5 text-yellow-400" />
+              <div className="flex min-h-52 min-w-0 flex-col overflow-hidden border border-zinc-800 bg-zinc-950/70 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] sm:p-6">
+                <div className="mb-3 flex min-w-0 items-start justify-between gap-3">
+                  <span className="min-w-0 text-[10px] font-black uppercase leading-relaxed tracking-[0.3em] text-zinc-500">XMR / BMT Exchange</span>
+                  <Activity className="h-5 w-5 shrink-0 text-yellow-400" />
                 </div>
-                <div className="flex justify-between items-end gap-6">
-                  <div>
+                <div className="grid min-w-0 grid-cols-2 items-end gap-3">
+                  <div className="min-w-0">
                     <div className="text-[10px] text-zinc-500 uppercase font-mono mb-1">XMR Price:</div>
-                    <p className="text-2xl font-black text-white font-mono-system tracking-tighter">
+                    <p className="whitespace-nowrap font-mono-system text-lg font-black tracking-tighter text-white sm:text-xl">
                       ${rates.xmr_usd ? rates.xmr_usd.toFixed(2) : '0.00'}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="min-w-0 text-right">
                     <div className="text-[10px] text-zinc-500 uppercase font-mono mb-1">BMT Price:</div>
                     <a
                       href="https://pump.fun/coin/67ipDsgK6D7bqTW89H8T1KTxUvVuaFy92GX7Q2XFVdev"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-2xl font-black text-yellow-400 font-mono-system tracking-tighter hover:text-white transition-colors cursor-pointer"
+                      className="inline-block max-w-full whitespace-nowrap font-mono-system text-lg font-black tracking-tighter text-yellow-400 transition-colors hover:text-white sm:text-xl"
                     >
                       ${rates.bmt_usd ? rates.bmt_usd.toFixed(8) : '0.00'}
                     </a>
                   </div>
                 </div>
-                <p className="text-xs text-zinc-500 uppercase tracking-widest mt-3 pt-3 border-t border-zinc-900">
+                <p className="mt-auto border-t border-zinc-900 pt-4 text-xs uppercase tracking-widest text-zinc-500">
                   Last synced {lastUpdated ? new Date(lastUpdated).toLocaleTimeString() : 'just now'}
                 </p>
               </div>
@@ -308,10 +308,10 @@ export default function DashboardClient() {
                   const isOnline = Boolean(pool);
 
                   return (
-                    <div key={card.key} className="border border-zinc-800 bg-black p-6">
-                      <div className="mb-4 flex items-center justify-between">
-                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">{card.label}</span>
-                        <div className="flex items-center gap-2">
+                    <div key={card.key} className="min-w-0 overflow-hidden border border-zinc-800 bg-zinc-950/70 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] sm:p-6">
+                      <div className="mb-4 flex min-w-0 items-center justify-between gap-3">
+                        <span className="min-w-0 truncate text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">{card.label}</span>
+                        <div className="flex shrink-0 items-center gap-2">
                           {effort !== undefined && (
                             <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">
                               {Number(effort).toFixed(1)}% effort
