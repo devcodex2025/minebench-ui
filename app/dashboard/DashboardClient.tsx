@@ -16,6 +16,7 @@ type PoolStatsResponse = {
   poolHashrate?: number;
   miners?: number;
   pools?: PoolNodeStats[];
+  p2poolSharesFound?: number;
   verifiedShares?: number;
   minerLeaderboard?: LiveMiner[];
   stratum?: {
@@ -73,7 +74,7 @@ export default function DashboardClient() {
   const [totalHashrate, setTotalHashrate] = useState(0);
   const [onlineClients, setOnlineClients] = useState(0);
   const [poolEffort, setPoolEffort] = useState<number | null>(null);
-  const [verifiedShares, setVerifiedShares] = useState(0);
+  const [p2poolSharesFound, setP2PoolSharesFound] = useState(0);
   const [poolNodes, setPoolNodes] = useState<PoolNodeStats[]>([]);
   const [liveMiners, setLiveMiners] = useState<LiveMiner[]>([]);
   const [rates, setRates] = useState<RatesResponse>({});
@@ -119,7 +120,7 @@ export default function DashboardClient() {
         setTotalHashrate(Number(poolStatsPayload.poolHashrate || 0));
         setOnlineClients(Number(poolStatsPayload.stratum?.connections || poolStatsPayload.miners || 0));
         setPoolEffort(poolStatsPayload.stratum?.current_effort !== undefined ? poolStatsPayload.stratum.current_effort : null);
-        setVerifiedShares(Number(poolStatsPayload.verifiedShares || 0));
+        setP2PoolSharesFound(Number(poolStatsPayload.p2poolSharesFound ?? poolStatsPayload.verifiedShares ?? 0));
         setPoolNodes(Array.isArray(poolStatsPayload.pools) ? poolStatsPayload.pools : []);
         setLiveMiners(Array.isArray(poolStatsPayload.minerLeaderboard) ? poolStatsPayload.minerLeaderboard : []);
         setLastUpdated(new Date().toISOString());
@@ -127,7 +128,7 @@ export default function DashboardClient() {
         setTotalHashrate(0);
         setOnlineClients(0);
         setPoolEffort(null);
-        setVerifiedShares(0);
+        setP2PoolSharesFound(0);
         setPoolNodes([]);
         setLiveMiners([]);
         setLastUpdated(null);
@@ -241,14 +242,14 @@ export default function DashboardClient() {
               </div>
               <div className="border border-zinc-800 bg-black p-6">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Verified Shares</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">P2Pool Shares Found</span>
                   <Award className="w-5 h-5 text-yellow-400" />
                 </div>
                 <p className="text-4xl md:text-5xl font-black text-white font-mono-system tracking-tighter">
-                  {verifiedShares.toLocaleString()}
+                  {p2poolSharesFound.toLocaleString()}
                 </p>
                 <p className="text-xs text-zinc-500 uppercase tracking-widest mt-2">
-                  P2Pool shares found this window
+                  Native P2Pool shares found by the pool
                 </p>
               </div>
               <div className="border border-zinc-800 bg-black p-6">
@@ -304,7 +305,6 @@ export default function DashboardClient() {
                   const stratumShares = Number(s?.total_stratum_shares || 0);
                   const failedShares = Number(s?.shares_failed || 0);
                   const totalHashes = Number(s?.total_hashes || 0);
-                  const sharesFound = Number(s?.shares_found || 0);
                   const isOnline = Boolean(pool);
 
                   return (
@@ -357,10 +357,6 @@ export default function DashboardClient() {
                         <div>
                           <div className="text-[9px] text-zinc-600 uppercase tracking-widest mb-0.5">Total Hashes</div>
                           <div className="text-sm font-black text-white font-mono-system">{formatHashCount(totalHashes)}</div>
-                        </div>
-                        <div>
-                          <div className="text-[9px] text-zinc-600 uppercase tracking-widest mb-0.5">Verified Shares</div>
-                          <div className="text-sm font-black text-yellow-400 font-mono-system">{sharesFound.toLocaleString()}</div>
                         </div>
                       </div>
                     </div>
