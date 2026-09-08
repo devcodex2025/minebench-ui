@@ -5,12 +5,13 @@ import type { LandingStats } from './LandingPageClient';
 import { getLeaderboardDeviceCount } from '@/lib/leaderboard';
 import { getLatestClientRelease } from '@/lib/clientRelease';
 import type { BenchmarkResult } from '@/types/benchmark';
+import { HOME_FAQS } from '@/lib/marketing';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'MineBench | Mining Benchmark Software And RandomX Hardware Comparison',
-  description: 'Compare CPU and GPU mining hardware, track RandomX benchmark results, inspect the live dashboard, and download the MineBench client for a cleaner mining workflow.',
+  title: 'Mining Benchmarks & Hardware Comparison | MineBench',
+  description: 'Run CPU and GPU mining benchmarks, compare public hardware results, and follow live pool activity. Download the free MineBench client for Windows and Linux.',
   alternates: {
     canonical: 'https://minebench.cloud/',
   },
@@ -92,7 +93,7 @@ const homepageJsonLd = {
       name: 'MineBench',
       applicationCategory: 'UtilitiesApplication',
       applicationSubCategory: 'Cryptocurrency Mining and Hardware Benchmarking',
-      operatingSystem: 'Windows, Linux, macOS',
+      operatingSystem: 'Windows, Linux',
       description: 'Mining benchmark software for CPU and GPU miners with RandomX hardware comparisons, live hashrate, pool statistics, and miner telemetry.',
       url: 'https://minebench.cloud/',
       downloadUrl: 'https://minebench.cloud/downloads',
@@ -111,8 +112,17 @@ const homepageJsonLd = {
         'RandomX hardware comparison',
         'Live hashrate and pool statistics',
         'Mining hardware leaderboard',
-        'Windows, Linux, and macOS client downloads',
+        'Windows and Linux client downloads',
       ],
+    },
+    {
+      '@type': 'FAQPage',
+      '@id': 'https://minebench.cloud/#faq',
+      mainEntity: HOME_FAQS.map(faq => ({
+        '@type': 'Question',
+        name: faq.question,
+        acceptedAnswer: { '@type': 'Answer', text: faq.answer },
+      })),
     },
   ],
 };

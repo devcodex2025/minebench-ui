@@ -1,10 +1,13 @@
 'use client';
 
+import FadeContent from '@/components/reactbits/FadeContent';
+
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Blocks, CircleDollarSign, Coins, RefreshCw } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { ThinkingOrb } from 'thinking-orbs';
 
 type PoolBlock = {
   id: string;
@@ -100,10 +103,10 @@ export default function PoolRewardsClient() {
   }), { xmr: 0, pendingBlocks: 0 }), [blocks]);
 
   return (
-    <div className="min-h-screen bg-black text-zinc-400">
+    <div className="board-page min-h-screen bg-black text-zinc-400">
       <Header onRefresh={() => void loadBlocks()} loading={loading} />
       <main className="mx-auto max-w-7xl px-4 pb-20 pt-24 sm:px-6 lg:px-8">
-        <section className="relative mb-8 overflow-hidden border border-zinc-800 bg-zinc-950/70 p-8 md:p-10">
+        <FadeContent as="section" className="relative mb-8 overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950/70 p-8 md:p-10">
           <div className="pointer-events-none absolute right-0 top-0 h-full w-1/3 bg-[radial-gradient(circle_at_top_right,rgba(52,211,153,0.12),transparent_65%)]" />
           <div className="pointer-events-none absolute -right-7 -top-10 hidden h-52 w-56 sm:block">
             <RewardCoin asset="XMR" className="absolute left-0 top-1 h-28 w-28 -rotate-12 opacity-90" />
@@ -127,23 +130,23 @@ export default function PoolRewardsClient() {
             </div>
 
             <div className="grid grid-cols-3 gap-3">
-              <div className="border border-zinc-800 bg-black p-4">
+              <div className="rounded-xl border border-zinc-800 bg-black p-4">
                 <div className="text-[9px] font-black uppercase tracking-[0.18em] text-zinc-600">Blocks found</div>
                 <div className="mt-2 font-mono-system text-3xl font-black text-white">{total}</div>
               </div>
-              <div className="border border-zinc-800 bg-black p-4">
+              <div className="rounded-xl border border-zinc-800 bg-black p-4">
                 <div className="text-[9px] font-black uppercase tracking-[0.18em] text-zinc-600">Loaded XMR</div>
                 <div className="mt-2 font-mono-system text-xl font-black text-yellow-400">{summary.xmr.toFixed(4)}</div>
               </div>
-              <div className="border border-zinc-800 bg-black p-4">
+              <div className="rounded-xl border border-zinc-800 bg-black p-4">
                 <div className="text-[9px] font-black uppercase tracking-[0.18em] text-zinc-600">Awaiting payout</div>
                 <div className="mt-2 font-mono-system text-xl font-black text-yellow-400">{summary.pendingBlocks}</div>
               </div>
             </div>
           </div>
-        </section>
+        </FadeContent>
 
-        <section className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/60">
+        <FadeContent as="section" className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950/60">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-900 px-6 py-4">
             <div>
               <h2 className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.2em] text-white">
@@ -157,7 +160,7 @@ export default function PoolRewardsClient() {
               type="button"
               onClick={() => void loadBlocks()}
               disabled={loading}
-              className="inline-flex items-center gap-2 border border-zinc-700 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:border-yellow-400 hover:text-yellow-400 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg border border-zinc-700 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:border-yellow-400 hover:text-yellow-400 disabled:opacity-50"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh
             </button>
@@ -165,12 +168,12 @@ export default function PoolRewardsClient() {
 
           {loading && blocks.length === 0 ? (
             <div className="flex h-72 items-center justify-center" role="status">
-              <div className="h-7 w-7 animate-spin rounded-full border-2 border-zinc-800 border-t-yellow-400" />
+              <ThinkingOrb state="connecting" size={64} theme="dark" aria-label="Loading block history" />
             </div>
           ) : error && blocks.length === 0 ? (
             <div className="flex h-72 flex-col items-center justify-center gap-4 text-center">
               <span className="text-xs font-black uppercase tracking-widest text-zinc-500">Block history unavailable</span>
-              <button type="button" onClick={() => void loadBlocks()} className="border border-zinc-700 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-yellow-400 hover:border-yellow-400">
+              <button type="button" onClick={() => void loadBlocks()} className="rounded-lg border border-zinc-700 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-yellow-400 hover:border-yellow-400">
                 Try again
               </button>
             </div>
@@ -232,7 +235,7 @@ export default function PoolRewardsClient() {
                         </td>
                         <td className="px-4 py-4 text-right font-mono text-xs font-bold text-emerald-400">{block.userBmt > 0 ? block.userBmt.toFixed(2) : '—'}</td>
                         <td className="px-6 py-4 text-right">
-                          <span className={`inline-flex border px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] ${PAYOUT_STATUS[block.bmtSettlementStatus].className}`}>
+                          <span className={`inline-flex rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] ${PAYOUT_STATUS[block.bmtSettlementStatus].className}`}>
                             {block.moneroPayoutStatus === 'none' ? 'Not applicable' : PAYOUT_STATUS[block.bmtSettlementStatus].label}
                           </span>
                           <div className="mt-1 font-mono text-[9px] text-zinc-600">
@@ -266,7 +269,7 @@ export default function PoolRewardsClient() {
                     type="button"
                     onClick={() => void loadBlocks(blocks.length, true)}
                     disabled={loadingMore}
-                    className="inline-flex items-center gap-2 border border-zinc-700 px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white hover:border-yellow-400 hover:text-yellow-400 disabled:opacity-50"
+                    className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white hover:border-yellow-400 hover:text-yellow-400 disabled:opacity-50"
                   >
                     {loadingMore && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
                     Load older blocks
@@ -275,7 +278,7 @@ export default function PoolRewardsClient() {
               )}
             </>
           )}
-        </section>
+        </FadeContent>
 
         <p className="mt-5 text-[10px] leading-relaxed text-zinc-600">
           A found P2Pool block and a wallet payout are two stages of the same block lifecycle. This ledger keeps XMR receipt, BMT credit, and completed Solana payouts separate. Miner identities and wallet addresses are never exposed.

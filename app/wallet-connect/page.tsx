@@ -130,13 +130,13 @@ const WalletConnectContent = () => {
   }, [countdown]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-black">
+    <div className="board-page min-h-screen flex flex-col bg-black">
       <Header />
       
       {/* Main content */}
       <main className="flex-1 flex items-center justify-center px-4 py-24">
         <div className="w-full max-w-md">
-          <div className="bg-zinc-950 border border-zinc-800 p-8 space-y-6">
+          <div className="rounded-2xl bg-zinc-950 border border-zinc-800 p-8 space-y-6">
             <div className="text-center space-y-2">
               <h2 className="text-3xl font-bold text-white uppercase tracking-tight">Connect Phantom</h2>
               <p className="text-zinc-500 font-mono">Authenticate your mining wallet</p>
@@ -144,7 +144,7 @@ const WalletConnectContent = () => {
 
             {!publicKey ? (
               <>
-                <div className="bg-zinc-900 border border-zinc-800 p-4">
+                <div className="rounded-xl bg-zinc-900 border border-zinc-800 p-4">
                   <p className="text-sm text-zinc-400 font-mono leading-relaxed">
                     Click the button below to connect your Phantom wallet and authenticate with MineBench.
                   </p>
@@ -155,7 +155,7 @@ const WalletConnectContent = () => {
                     type="button"
                     onClick={connectPhantomDirectly}
                     disabled={isProcessing}
-                    className="bg-yellow-400 hover:bg-yellow-500 disabled:opacity-60 disabled:cursor-not-allowed text-black font-bold uppercase tracking-wide px-5 py-3"
+                    className="rounded-xl bg-yellow-400 hover:bg-yellow-500 disabled:opacity-60 disabled:cursor-not-allowed text-black font-bold uppercase tracking-wide px-5 py-3"
                   >
                     {phantomDetected ? 'Connect Phantom' : 'Detecting Phantom...'}
                   </button>
@@ -167,7 +167,7 @@ const WalletConnectContent = () => {
                 </div>
 
                 {error && (
-                  <div className="bg-red-500/10 border border-red-500/20 p-4">
+                  <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4">
                     <p className="text-sm text-red-400 font-mono">{error}</p>
                   </div>
                 )}
@@ -175,7 +175,7 @@ const WalletConnectContent = () => {
             ) : success ? (
               // Success state - show within the same styled container
               <div className={`transition-opacity duration-500 ${fadeOut ? 'opacity-0' : 'opacity-100'}`}>
-                <div className="bg-zinc-900 border-2 border-yellow-400 p-6">
+                <div className="rounded-2xl bg-zinc-900 border border-yellow-400 p-6">
                   <div className="flex items-center justify-center mb-4">
                     <div className="bg-yellow-400 rounded-full p-2">
                       <svg className="w-8 h-8 text-black" fill="currentColor" viewBox="0 0 20 20">
@@ -191,7 +191,7 @@ const WalletConnectContent = () => {
                       ? `Closing in ${countdown}s...` 
                       : 'You can close this window now.'}
                   </p>
-                  <p className="text-xs text-zinc-400 text-center font-mono break-all bg-black border border-zinc-800 p-3 rounded">
+                  <p className="text-xs text-zinc-400 text-center font-mono break-all bg-black border border-zinc-800 p-3 rounded-lg">
                     {publicKey}
                   </p>
                 </div>
@@ -199,7 +199,7 @@ const WalletConnectContent = () => {
             ) : (
               // Processing state - waiting for signature
               <>
-                <div className="bg-zinc-900 border border-zinc-800 p-6">
+                <div className="rounded-2xl bg-zinc-900 border border-zinc-800 p-6">
                   <div className="flex items-center justify-center mb-4">
                     <div className="bg-yellow-400/20 rounded-full p-2">
                       <svg className="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -210,13 +210,13 @@ const WalletConnectContent = () => {
                   <p className="text-xl text-yellow-400 text-center font-bold uppercase tracking-wider mb-2">
                     Wallet Connection
                   </p>
-                  <p className="text-xs text-zinc-400 text-center mt-4 font-mono break-all bg-black border border-zinc-800 p-3 rounded">
+                  <p className="text-xs text-zinc-400 text-center mt-4 font-mono break-all bg-black border border-zinc-800 p-3 rounded-lg">
                     {publicKey}
                   </p>
                 </div>
 
                 {isProcessing && (
-                  <div className="bg-zinc-900 border border-zinc-800 p-4">
+                  <div className="rounded-xl bg-zinc-900 border border-zinc-800 p-4">
                     <div className="flex items-center justify-center space-x-2">
                       <svg className="animate-spin h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -228,7 +228,7 @@ const WalletConnectContent = () => {
                 )}
 
                 {!callbackUrl && !isProcessing && (
-                  <div className="bg-red-500/10 border border-red-500/20 p-4">
+                  <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4">
                     <p className="text-sm text-red-400 text-center font-mono">
                       Error: No callback URL provided. Please restart from MineBench app.
                     </p>
@@ -254,7 +254,7 @@ const WalletConnectContent = () => {
 export default function WalletConnectPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-black">
+      <div className="board-page min-h-screen flex items-center justify-center bg-black">
         <div className="text-yellow-400 font-mono">Loading...</div>
       </div>
     }>

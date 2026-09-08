@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
+import '@fontsource-variable/inter';
 import './globals.css';
 import { SolanaWalletProvider } from './providers';
+import MarketingAnalytics from '@/components/marketing/MarketingAnalytics';
 
 export const viewport = {
   width: 'device-width',
@@ -62,9 +64,6 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  alternates: {
-    canonical: 'https://minebench.cloud',
-  },
   applicationName: 'MineBench',
   generator: 'Next.js',
   referrer: 'origin-when-cross-origin',
@@ -86,8 +85,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body className="antialiased">
+        <MarketingAnalytics />
         <SolanaWalletProvider>
           {children}
         </SolanaWalletProvider>

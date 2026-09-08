@@ -69,8 +69,7 @@ export default function StatsCards({ summary }: StatsCardsProps) {
           <motion.div
             key={index}
             variants={item}
-            whileHover={{ y: -5, scale: 1.02 }}
-            className="glass-panel group relative overflow-hidden rounded-xl border border-zinc-900 bg-zinc-950/30 p-6 transition-all hover:bg-zinc-950/50 hover:border-zinc-800"
+            className="surface-panel group relative min-w-0 overflow-hidden p-6 transition-colors hover:border-zinc-600"
           >
             {/* Background Glow */}
             <div className={`absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br ${stat.color} opacity-20 blur-2xl transition-opacity group-hover:opacity-40`}></div>
@@ -84,9 +83,9 @@ export default function StatsCards({ summary }: StatsCardsProps) {
               </div>
               
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-1">{stat.title}</p>
+                <p className="text-xs font-medium text-zinc-400 mb-2">{stat.title}</p>
                 <div className="flex items-baseline gap-2">
-                  <h4 className="text-3xl font-black text-white tracking-tighter uppercase font-mono-system">{stat.value}</h4>
+                  <h4 className="text-2xl font-semibold text-white tracking-tight break-words tabular-nums">{stat.value}</h4>
                 </div>
                 {stat.subtitle && (
                   <div className="mt-2 flex items-center gap-2">

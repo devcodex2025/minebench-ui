@@ -4,9 +4,10 @@ import Image from 'next/image';
 import { BenchmarkTableProps, BenchmarkResult } from '@/types/benchmark';
 import { formatHashrate } from '@/lib/utils';
 import { getBenchmarkHashrate, getLeaderboardRows, normalizeDeviceName } from '@/lib/leaderboard';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
-export default function BenchmarkTable({ results }: BenchmarkTableProps) {
+export default function BenchmarkTable({ results, showRank = false }: BenchmarkTableProps & { showRank?: boolean }) {
+  const reducedMotion = useReducedMotion();
   const [sortField, setSortField] = useState<keyof BenchmarkResult>('avg_hashrate');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [searchTerm, setSearchTerm] = useState('');
@@ -67,6 +68,7 @@ export default function BenchmarkTable({ results }: BenchmarkTableProps) {
   };
 
   const deduplicatedResults = getLeaderboardRows(results);
+  const ranks = new Map(deduplicatedResults.map((result, index) => [result.id, index + 1]));
 
   const filteredResults = deduplicatedResults
     .filter(r => {
@@ -101,7 +103,7 @@ export default function BenchmarkTable({ results }: BenchmarkTableProps) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={reducedMotion ? false : { opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="glass-panel rounded-xl overflow-hidden"
     >
@@ -117,7 +119,8 @@ export default function BenchmarkTable({ results }: BenchmarkTableProps) {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-500 w-4 h-4" />
           <input
             type="text"
-            placeholder="Search..."
+            aria-label="Search benchmark hardware or algorithm"
+            placeholder="Search hardware or algorithm..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className="input-field pl-10"
@@ -126,9 +129,11 @@ export default function BenchmarkTable({ results }: BenchmarkTableProps) {
       </div>
 
       <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
-        <table className="w-full min-w-[1000px]">
+        <table className="board-table w-full min-w-[1000px]">
+          <caption className="sr-only">Mining hardware benchmark results</caption>
           <thead className="bg-zinc-950">
             <tr>
+              {showRank && <th scope="col" className="px-4 py-3 text-center">Rank</th>}
               {[
                 { key: 'device_name', label: 'Hardware' },
                 { key: 'avg_hashrate', label: 'Average Rate' },
@@ -140,23 +145,37 @@ export default function BenchmarkTable({ results }: BenchmarkTableProps) {
               ].map(({ key, label }) => (
                 <th
                   key={key}
-                  className="px-6 py-5 text-left text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] cursor-pointer hover:text-yellow-400 transition-colors bg-black/40 backdrop-blur-sm"
-                  onClick={() => key !== '_power_bar' && handleSort(key as keyof BenchmarkResult)}
+                  scope="col"
+                  aria-sort={sortField === key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : undefined}
+                  className="px-6 py-3 text-left"
                 >
-                  <div className="flex items-center space-x-2">
+                  {key === '_power_bar' ? label : <button
+                    type="button"
+                    onClick={() => handleSort(key as keyof BenchmarkResult)}
+                    className="flex items-center gap-2 rounded-lg py-1 hover:text-yellow-400"
+                  >
                     {key === 'duration_seconds' && <Clock3 className="w-3 h-3 text-zinc-500" />}
                     <span>{label}</span>
                     {sortField === key && (
                       sortDirection === 'asc' ? <ChevronUp className="w-3 h-3 text-yellow-400" /> : <ChevronDown className="w-3 h-3 text-yellow-400" />
                     )}
-                  </div>
+                  </button>}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-900 bg-zinc-950/20">
+            {filteredResults.length === 0 && (
+              <tr>
+                <td colSpan={showRank ? 8 : 7} className="px-6 py-12 text-center">
+                  <p className="text-sm font-medium text-zinc-200">{searchTerm ? 'No matching hardware' : 'No benchmark results yet'}</p>
+                  <p className="mt-2 text-xs text-zinc-500">{searchTerm ? 'Try a different hardware name or algorithm.' : 'Results will appear when benchmark data is available.'}</p>
+                </td>
+              </tr>
+            )}
             {filteredResults.map((r, index) => {
               const deviceName = normalizeDeviceName(r);
+              const rank = ranks.get(r.id)!;
               const vendor = getVendorIcon(deviceName);
               const rates = getBenchmarkHashrate(r);
               const relativePower = (rates / maxHashrate) * 100;
@@ -166,11 +185,16 @@ export default function BenchmarkTable({ results }: BenchmarkTableProps) {
               return (
               <motion.tr
                 key={r.id}
-                initial={{ opacity: 0, x: -10 }}
+                initial={reducedMotion ? false : { opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.03 }}
+                transition={{ delay: reducedMotion ? 0 : Math.min(index * 0.03, 0.3), duration: reducedMotion ? 0 : 0.3 }}
                 className="hover:bg-yellow-400/[0.02] border-l-2 border-l-transparent hover:border-l-yellow-400 transition-all group"
               >
+                {showRank && <td className="px-4 py-5 text-center">
+                  <span aria-label={`Rank ${rank}`} className={`inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-2 font-mono text-sm font-semibold tabular-nums ${rank <= 3 ? 'border border-yellow-400/30 bg-yellow-400/10 text-yellow-400' : 'text-zinc-400'}`}>
+                    {rank}
+                  </span>
+                </td>}
                 <td className="px-6 py-5">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center group-hover:border-yellow-400/50 transition-colors p-2 text-zinc-500">
@@ -183,7 +207,7 @@ export default function BenchmarkTable({ results }: BenchmarkTableProps) {
                       )}
                     </div>
                     <div>
-                      <div className="font-black text-sm text-white uppercase tracking-tight leading-none mb-1">{deviceName}</div>
+                      <div className="font-medium text-sm text-white leading-snug mb-1">{deviceName}</div>
                       <div className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">{r.device_type}</div>
                     </div>
                   </div>
@@ -202,9 +226,9 @@ export default function BenchmarkTable({ results }: BenchmarkTableProps) {
                     </div>
                     <div className="w-full bg-zinc-900 h-1.5 rounded-full overflow-hidden border border-white/5">
                       <motion.div 
-                        initial={{ width: 0 }}
+                        initial={reducedMotion ? false : { width: 0 }}
                         animate={{ width: `${relativePower}%` }}
-                        transition={{ duration: 1, delay: 0.5 }}
+                        transition={{ duration: reducedMotion ? 0 : 1, delay: reducedMotion ? 0 : 0.5 }}
                         className="bg-gradient-to-r from-yellow-600 to-yellow-400 h-full shadow-[0_0_10px_rgba(250,204,21,0.3)]"
                       />
                     </div>
@@ -245,7 +269,7 @@ export default function BenchmarkTable({ results }: BenchmarkTableProps) {
                   </div>
                 </td>
                 <td className="px-6 py-5">
-                   <div className="bg-zinc-900 border border-zinc-800 px-3 py-1 rounded inline-block">
+                   <div className="bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-lg inline-block">
                      <span className="text-white text-[10px] font-black uppercase tracking-widest">{r.algorithm}</span>
                    </div>
                 </td>
@@ -260,7 +284,7 @@ export default function BenchmarkTable({ results }: BenchmarkTableProps) {
           </tbody>
         </table>
       </div>
-      <div className="bg-zinc-950 px-6 py-3 border-t border-zinc-900 flex justify-between text-xs text-zinc-500 uppercase tracking-wide">
+      <div className="bg-zinc-950 px-6 py-3 border-t border-zinc-900 flex flex-wrap justify-between gap-2 text-xs text-zinc-500">
         <span>Showing {filteredResults.length} leaderboard devices from {results.length} submissions</span>
         <span>Last updated: {mounted ? new Date().toLocaleString() : '---'}</span>
       </div>

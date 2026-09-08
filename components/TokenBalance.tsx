@@ -140,7 +140,7 @@ export default function TokenBalanceCard() {
 
   if (!connected) {
     return (
-      <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-6">
+      <div className="surface-panel p-6">
         <div className="flex items-center justify-center py-8">
           <div className="text-center">
             <Wallet className="w-12 h-12 text-zinc-600 mx-auto mb-4" />
@@ -149,7 +149,7 @@ export default function TokenBalanceCard() {
             </p>
             <Link
               href="/wallet-connect"
-              className="inline-block mt-4 px-4 py-2 bg-yellow-400 text-black font-bold uppercase text-xs tracking-wide hover:bg-yellow-500 transition-colors"
+              className="inline-block mt-4 rounded-lg px-4 py-2 bg-yellow-400 text-black font-bold uppercase text-xs tracking-wide hover:bg-yellow-500 transition-colors"
             >
               Connect Wallet
             </Link>
@@ -160,10 +160,10 @@ export default function TokenBalanceCard() {
   }
 
   return (
-    <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-6">
+    <div className="surface-panel p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-yellow-400/20 border border-yellow-400">
+          <div className="rounded-lg p-2 bg-yellow-400/20 border border-yellow-400">
             <Coins className="w-5 h-5 text-yellow-400" />
           </div>
           <div>
@@ -176,14 +176,14 @@ export default function TokenBalanceCard() {
         <button
           onClick={fetchBalances}
           disabled={loading}
-          className="p-2 border border-zinc-800 hover:border-yellow-400 text-zinc-500 hover:text-yellow-400 transition-all disabled:opacity-50"
+          className="rounded-lg p-2 border border-zinc-800 hover:border-yellow-400 text-zinc-500 hover:text-yellow-400 transition-all disabled:opacity-50"
         >
           <Loader2 className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
       {/* SOL Balance */}
-      <div className="mb-6 p-4 bg-zinc-900 border border-zinc-800">
+      <div className="mb-6 rounded-xl p-4 bg-zinc-900 border border-zinc-800">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xs">
@@ -204,7 +204,7 @@ export default function TokenBalanceCard() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="mb-6 p-4 bg-gradient-to-r from-yellow-400/10 to-transparent border border-yellow-400/30"
+            className="mb-6 rounded-xl p-4 bg-gradient-to-r from-yellow-400/10 to-transparent border border-yellow-400/30"
           >
             <div className="flex items-center space-x-2 mb-4">
               <Gift className="w-4 h-4 text-yellow-400" />
@@ -249,7 +249,7 @@ export default function TokenBalanceCard() {
               <button
                 onClick={handleClaim}
                 disabled={claiming}
-                className="w-full mt-4 py-3 bg-yellow-400 hover:bg-yellow-500 disabled:bg-zinc-700 text-black font-bold uppercase text-sm tracking-wide transition-all flex items-center justify-center space-x-2"
+                className="w-full mt-4 rounded-xl py-3 bg-yellow-400 hover:bg-yellow-500 disabled:bg-zinc-700 text-black font-bold uppercase text-sm tracking-wide transition-all flex items-center justify-center space-x-2"
               >
                 {claiming ? (
                   <>
@@ -278,7 +278,7 @@ export default function TokenBalanceCard() {
             {tokens.map((token) => (
               <div
                 key={token.mint}
-                className="flex items-center justify-between p-3 bg-zinc-900 border border-zinc-800"
+                className="flex items-center justify-between rounded-lg p-3 bg-zinc-900 border border-zinc-800"
               >
                 <div className="flex items-center space-x-2">
                   {token.logoURI ? (

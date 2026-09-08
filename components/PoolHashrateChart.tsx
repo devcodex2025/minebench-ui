@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Activity, Blocks, ExternalLink, RefreshCw, TrendingDown, TrendingUp } from 'lucide-react';
 import { formatHashrate } from '@/lib/utils';
+import { ThinkingOrb } from 'thinking-orbs';
 
 type Point = { t: string; hashrate: number; miners: number };
 type PoolBlock = {
@@ -265,12 +266,12 @@ export default function PoolHashrateChart() {
       <div ref={ref} className="relative pb-2 pt-4">
         {loading && points.length === 0 ? (
           <div className="flex h-[300px] items-center justify-center" role="status" aria-label="Loading pool hashrate history">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-700 border-t-yellow-400" />
+            <ThinkingOrb state="searching" size={64} theme="dark" aria-label="Loading pool hashrate history" />
           </div>
         ) : error && points.length === 0 ? (
           <div className="flex h-[300px] flex-col items-center justify-center gap-4 text-center">
             <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">Hashrate history unavailable</span>
-            <button type="button" onClick={retry} className="inline-flex items-center gap-2 border border-zinc-700 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:border-yellow-400 hover:text-yellow-400">
+            <button type="button" onClick={retry} className="inline-flex items-center gap-2 rounded-lg border border-zinc-700 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:border-yellow-400 hover:text-yellow-400">
               <RefreshCw className="h-3.5 w-3.5" /> Retry
             </button>
           </div>

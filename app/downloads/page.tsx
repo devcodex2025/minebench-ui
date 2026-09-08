@@ -7,16 +7,17 @@ export const dynamic = 'force-dynamic';
 export async function generateMetadata(): Promise<Metadata> {
   const release = await getLatestClientRelease();
   const version = release?.version || release?.tag_name || 'latest';
+  const description = 'Download the free MineBench client. Choose an available build for your operating system, run mining benchmarks, and compare your hardware with public results.';
 
   return {
-    title: `Downloads - Minebench ${version} | CPU & GPU Mining Benchmark Clients`,
-    description: `Download the latest MineBench ${version} stable clients for Windows, Linux, and macOS. Optimized for RandomX (Monero) and GPU algorithms with real-time performance tracking.`,
+    title: `Download MineBench ${version} | Free Mining Benchmark`,
+    description: description,
     alternates: {
       canonical: 'https://minebench.cloud/downloads',
     },
     openGraph: {
       title: `Downloads - Minebench ${version}`,
-      description: 'Get the latest MineBench clients for Windows, Linux, and macOS. Optimized for maximum hashrate and efficiency.',
+      description: description,
       url: 'https://minebench.cloud/downloads',
       siteName: 'Minebench',
       images: [
@@ -33,7 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
     twitter: {
       card: 'summary_large_image',
       title: `Downloads - Minebench ${version}`,
-      description: 'Get the latest MineBench clients for Windows, Linux, and macOS. Optimized for maximum hashrate.',
+      description: description,
       images: ['https://minebench.cloud/og-downloads.png'],
       creator: '@MineBenchdapp',
     },

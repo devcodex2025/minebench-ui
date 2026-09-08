@@ -1,7 +1,8 @@
 'use client';
 
+import FadeContent from '@/components/reactbits/FadeContent';
+
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { Download, Cpu, HardDrive, TrendingUp, Zap } from "lucide-react";
 import Image from "next/image";
@@ -10,6 +11,9 @@ import MacOSIcon from "@/public/img/macos-logo.svg";
 import LinuxIcon from "@/public/img/linux-logo.svg";
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { Button, ButtonLink } from '@/components/base/buttons/button';
+import { Badge } from '@/components/base/badges/badge';
+import { trackMarketingEvent } from '@/lib/marketingAnalytics';
 import { motion } from 'framer-motion';
 import ShaderScreenshotSlider, {
     ShaderSlide,
@@ -33,7 +37,6 @@ type BuildVariant = {
 
 const availableOnly = (variants: BuildVariant[]) => variants.filter((variant) => Boolean(variant.url));
 
-const Scene3D = dynamic(() => import('@/components/Scene3D'), { ssr: false, loading: () => null });
 
 const createBuildVariants = (release: Release | null): Record<string, BuildVariant[]> => {
     const assets = release?.assets || [];
@@ -167,6 +170,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
     };
 
     const handleDownloadClick = async (platform: string, arch: string) => {
+        trackMarketingEvent('download_selected', { platform, arch });
         try {
             await fetch('/api/increment-download', {
                 method: 'POST',
@@ -219,7 +223,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: platform === 'windows' ? 0.1 : platform === 'macos' ? 0.2 : 0.3 }}
-                className="border-2 border-zinc-800 hover:border-yellow-400 transition-all duration-300 p-8"
+                className="surface-panel p-6 sm:p-8 transition-colors hover:border-yellow-400/30"
             >
                 <div className="flex items-center gap-4 mb-6 pb-4 border-b border-zinc-900">
                     <Image 
@@ -256,27 +260,25 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                     {variants.map((variant) => variant.url && (
                         <div
                             key={variant.arch}
-                            className="border border-zinc-700 hover:border-yellow-400/50 p-3 transition-all"
+                            className="rounded-xl border border-zinc-700 hover:border-yellow-400/50 p-3 transition-colors"
                         >
                             <div className="flex items-start justify-between gap-3">
                                 <div>
-                                    <p className="font-bold text-white text-sm uppercase tracking-wide">{variant.label}</p>
+                                    <p className="font-medium text-white text-sm">{variant.label}</p>
                                     <p className="text-xs text-zinc-400 mt-1">{variant.description}</p>
                                 </div>
-                                <div className="px-3 py-2 border border-yellow-500/50 text-yellow-500 text-[10px] font-bold uppercase whitespace-nowrap">
-                                    STABLE RELEASE
-                                </div>
+                                <Badge>Stable</Badge>
                             </div>
-                            <a
+                            <ButtonLink
                                 href={variant.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={() => handleDownloadClick(platform, variant.arch)}
-                                className="mt-4 inline-flex items-center gap-2 bg-yellow-400 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-black transition-all hover:bg-white"
+                                leadingIcon={Download}
+                                className="mt-4"
                             >
-                                <Download className="w-4 h-4" />
                                 Download
-                            </a>
+                            </ButtonLink>
                         </div>
                     ))}
                 </div>
@@ -285,8 +287,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
     };
 
     return (
-        <div className="min-h-screen relative overflow-hidden bg-black flex flex-col">
-            <Scene3D />
+        <div className="board-page min-h-screen relative overflow-hidden bg-black flex flex-col">
             <Header />
 
             <main className="flex-grow pt-24 pb-20 px-4 sm:px-6 lg:px-8 relative z-10">
@@ -309,10 +310,10 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                                 />
                                 <div className="flex flex-col text-left">
                                     <h1 className="text-5xl md:text-7xl font-bold text-white tracking-tighter uppercase leading-none">
-                                        MineBench
+                                        Download MineBench
                                     </h1>
                                     {clientRelease && (
-                                        <p className="text-xl text-yellow-400 font-bold uppercase tracking-[0.3em] mt-2">
+                                        <p className="text-sm text-yellow-400 font-medium mt-3">
                                             {clientRelease.version}
                                         </p>
                                     )}
@@ -326,8 +327,8 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                         </div>
 
                         {/* Media Showcase */}
-                        <div className="max-w-4xl mx-auto mb-12 border border-zinc-800 p-2 bg-zinc-950">
-                            <div className="aspect-video relative overflow-hidden group">
+                        <div className="surface-panel max-w-4xl mx-auto mb-8 p-2">
+                            <div className="aspect-video relative overflow-hidden rounded-xl group">
                                 <video 
                                     ref={showcaseVideoRef}
                                     className="w-full h-full object-contain opacity-80 group-hover:opacity-100 transition-opacity"
@@ -362,25 +363,23 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
 
                         {/* Large Download CTA */}
                         <div className="flex justify-center mb-20">
-                            <motion.button
+                            <Button
                                 onClick={() => {
                                     const el = document.getElementById('download-section');
-                                    el?.scrollIntoView({ behavior: 'smooth' });
+                                    if (el) window.scrollTo({
+                                        top: el.getBoundingClientRect().top + window.scrollY - 112,
+                                        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+                                    });
                                 }}
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                className="group relative bg-yellow-400 text-black px-12 py-5 font-black uppercase tracking-tighter text-2xl flex items-center gap-4 hover:bg-white transition-colors overflow-hidden"
+                                leadingIcon={Download}
+                                className="h-11 px-5"
                             >
-                                <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500 skew-x-12" />
-                                <Download className="w-8 h-8 group-hover:bounce" />
-                                DOWNLOAD MINEBENCH
-                            </motion.button>
+                                Choose your download
+                            </Button>
                         </div>
 
                     {/* Application Overview Section */}
-                    <div className="mb-24">
+                    <FadeContent id="application-overview" className="mb-24 scroll-mt-28">
                         <div className="flex items-center gap-4 mb-10 border-b border-zinc-900 pb-6">
                             <div>
                                 <h2 className="text-3xl font-bold text-white uppercase tracking-tighter">Application Overview</h2>
@@ -389,7 +388,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                         </div>
 
                         <ShaderScreenshotSlider slides={APP_SCREENSHOTS} />
-                    </div>
+                    </FadeContent>
 
                     <p className="text-xl text-zinc-400 max-w-2xl mx-auto text-center font-sans font-semibold tracking-wide uppercase">
                         OPTIMIZED CPU MINING BENCHMARK
@@ -399,14 +398,14 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                     {/* Features Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
                         {[
-                            { title: "HYBRID CORE", desc: "Simultaneous CPU & GPU optimization for maximum hashrate." },
-                            { title: "AUTO-NODE", desc: "Automatically switches to the lowest latency mining node." },
-                            { title: "SILENT MODE", desc: "Runs in background with minimal system impact and noise." },
-                            { title: "REAL-TIME", desc: "Instant sync with the live dashboard and network stats." }
+                            { title: "Benchmarks", desc: "Run a test and inspect the reported hashrate for your hardware." },
+                            { title: "Hardware comparison", desc: "Compare your device with public CPU and GPU benchmark submissions." },
+                            { title: "Pool statistics", desc: "View workers, accepted shares, and pool activity in the client." },
+                            { title: "Optional Premium", desc: "Add custom wallet and pool settings when you need more control." }
                         ].map((f, i) => (
-                            <div key={i} className="p-6 border border-zinc-900 bg-zinc-950">
-                                <h4 className="text-yellow-400 font-bold uppercase text-xs tracking-widest mb-2">{f.title}</h4>
-                                <p className="text-zinc-500 text-[10px] uppercase leading-relaxed font-mono">{f.desc}</p>
+                            <div key={i} className="surface-panel p-6">
+                                <h3 className="text-yellow-400 font-semibold text-sm mb-2">{f.title}</h3>
+                                <p className="text-zinc-400 text-sm leading-relaxed">{f.desc}</p>
                             </div>
                         ))}
                     </div>
@@ -414,7 +413,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                     {/* Platform Sections */}
                     <div
                         id="download-section"
-                        className="grid grid-cols-1 gap-8 mb-16 md:grid-cols-2 xl:grid-cols-3"
+                        className="scroll-mt-28 grid grid-cols-1 gap-8 mb-16 md:grid-cols-2 xl:grid-cols-3"
                     >
                         {([
                             ['windows', builds.windows],
@@ -428,7 +427,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                     </div>
 
                     {/* Reward System Section */}
-                    <div className="border border-emerald-400/50 bg-emerald-400/10 p-8 mb-12 text-center relative overflow-hidden group">
+                    <div className="rounded-2xl border border-emerald-400/50 bg-emerald-400/10 p-8 mb-12 text-center relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                             <Zap className="w-32 h-32 text-emerald-400" />
                         </div>
@@ -473,13 +472,14 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="border border-yellow-400/40 bg-yellow-400/5 p-8 mb-12 text-center"
+                        className="rounded-2xl border border-yellow-400/40 bg-yellow-400/5 p-8 mb-12 text-center"
                     >
                         <h3 className="text-2xl font-bold text-white mb-4 uppercase tracking-wide">
-                            Want More Mining Control?
+                            Want to choose your own wallet and pool?
                         </h3>
                         <p className="text-zinc-300 text-sm max-w-3xl mx-auto leading-relaxed mb-6">
-                            If you want more features than the free app includes, upgrade to MineBench Premium for direct wallet routing, P2Pool and custom pool support, RandomX tuning, huge pages, and full mining control through a cleaner UI.
+                            Premium adds custom Monero wallet routing and P2Pool or custom pool settings.
+                            CPU tuning and benchmarks remain available in the free client. Compare the plans before upgrading.
                         </p>
                         <Link
                             href="/premium"
@@ -494,7 +494,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="border border-yellow-500/60 bg-yellow-500/5 p-6 mb-12"
+                        className="rounded-2xl border border-yellow-500/60 bg-yellow-500/5 p-6 mb-12"
                     >
                         <h3 className="text-2xl font-bold text-white mb-4 uppercase tracking-wide flex items-center gap-2">
                             Security / Antivirus Notice
@@ -527,7 +527,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="border border-zinc-900 p-8 mb-12"
+                        className="rounded-2xl border border-zinc-900 p-8 mb-12"
                     >
                         <h3 className="text-2xl font-bold text-white mb-6 uppercase tracking-wide border-b border-zinc-900 pb-4">
                             INSTALLATION GUIDE
@@ -562,7 +562,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="border border-yellow-400/50 bg-yellow-400/5 p-8"
+                        className="rounded-2xl border border-yellow-400/50 bg-yellow-400/5 p-8"
                     >
                         <h3 className="text-2xl font-bold text-white mb-6 uppercase tracking-wide border-b border-yellow-400/50 pb-4">
                             System Requirements
@@ -594,7 +594,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="border border-zinc-800 bg-zinc-950 p-8 mt-12"
+                        className="rounded-2xl border border-zinc-800 bg-zinc-950 p-8 mt-12"
                     >
                         <h3 className="text-2xl font-bold text-white mb-6 uppercase tracking-wide border-b border-zinc-900 pb-4">
                             Open Mining Stack

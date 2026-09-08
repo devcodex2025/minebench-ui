@@ -7,8 +7,7 @@ WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
-RUN npm_config_strict_ssl=false npm install -g npm@11.6.2 \
-    && npm_config_strict_ssl=false npm install --legacy-peer-deps
+RUN npm ci --no-audit --no-fund
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -39,6 +38,17 @@ WORKDIR /app
 ENV NODE_ENV=production
 # Uncomment the following line in case you want to disable telemetry during runtime.
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# Re-declare build args so Akash/runtime env can overlay, and so keys exist
+# even if Next inlined empty NEXT_PUBLIC_* during a previous local experiment.
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ARG NEXT_PUBLIC_SOLANA_RPC_URL
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+ENV NEXT_PUBLIC_SOLANA_RPC_URL=${NEXT_PUBLIC_SOLANA_RPC_URL}
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
 RUN groupadd -r nodejs && useradd -r -g nodejs -u 1001 nextjs
 
