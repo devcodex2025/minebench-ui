@@ -9,7 +9,7 @@ import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import { BenchmarkResult } from '@/types/benchmark';
 import { getLeaderboardRows } from '@/lib/leaderboard';
-import { Activity, Cpu, Download, RefreshCw, Search, Zap } from 'lucide-react';
+import { Activity, Cpu, Gpu, Trophy, Download, RefreshCw, Search } from 'lucide-react';
 
 export default function LeaderboardClient() {
   const [results, setResults] = useState<BenchmarkResult[]>([]);
@@ -44,14 +44,14 @@ export default function LeaderboardClient() {
   const totalRows = getLeaderboardRows(results);
 
   return (
-    <div className="board-page min-h-screen bg-black text-zinc-400">
+    <div className="board-page refresh-leaderboard min-h-screen bg-black text-zinc-400">
       <Header onRefresh={loadData} loading={loading} />
-      <main className="mx-auto max-w-7xl px-4 pb-20 pt-24 sm:px-6 lg:px-8">
+      <main id="refresh-content" tabIndex={-1} className="mx-auto max-w-7xl px-4 pb-20 pt-24 sm:px-6 lg:px-8">
         <FadeContent as="section" className="mb-10 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-8 md:p-10">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
             <div className="space-y-5">
               <div className="inline-flex items-center gap-2 border border-yellow-400/30 bg-yellow-400/10 px-3 py-1">
-                <Search className="h-4 w-4 text-yellow-400" />
+                <Trophy className="h-4 w-4 text-yellow-400" />
                 <span className="text-xs font-semibold tracking-normal text-yellow-400">Mining Benchmark Leaderboard</span>
               </div>
               <h1 className="text-4xl font-semibold leading-none tracking-tighter text-white md:text-6xl">
@@ -91,7 +91,7 @@ export default function LeaderboardClient() {
               </div>
               <div className="border border-zinc-800 bg-black p-4">
                 <div className="flex items-center gap-2 text-xs font-semibold tracking-normal text-zinc-500">
-                  <Zap className="h-3.5 w-3.5" />
+                  <Gpu className="h-3.5 w-3.5" />
                   GPU
                 </div>
                 <div className="mt-2 tabular-nums text-3xl font-semibold text-white">{gpuRows.length}</div>
@@ -105,7 +105,8 @@ export default function LeaderboardClient() {
 
         <FadeContent as="section" className="mb-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-7">
-            <h2 className="mb-4 text-2xl font-semibold tracking-tight text-white">
+              <h2 className="mb-4 text-2xl font-semibold tracking-tight text-white">
+                <span className="benchmark-section-icon"><Cpu size={22}/></span>
               Best CPU For <span className="text-yellow-400">Monero Mining</span>
             </h2>
             <p className="text-sm leading-relaxed text-zinc-400">
@@ -113,7 +114,8 @@ export default function LeaderboardClient() {
             </p>
           </div>
           <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-7">
-            <h2 className="mb-4 text-2xl font-semibold tracking-tight text-white">
+              <h2 className="mb-4 text-2xl font-semibold tracking-tight text-white">
+                <span className="benchmark-section-icon"><Gpu size={22}/></span>
               GPU Mining <span className="text-yellow-400">Performance Index</span>
             </h2>
             <p className="text-sm leading-relaxed text-zinc-400">
@@ -126,6 +128,7 @@ export default function LeaderboardClient() {
           <FadeContent as="section">
             <div className="mb-8 flex items-center gap-6">
               <h2 className="text-2xl sm:text-3xl font-semibold tracking-tighter text-white">
+                <span className="benchmark-section-icon"><Cpu size={22}/></span>
                 Top <span className="text-yellow-400">CPU</span> Performance
               </h2>
               <div className="h-px flex-grow bg-gradient-to-r from-zinc-800 to-transparent" />
@@ -138,6 +141,7 @@ export default function LeaderboardClient() {
           <FadeContent as="section">
             <div className="mb-8 flex items-center gap-6">
               <h2 className="text-2xl sm:text-3xl font-semibold tracking-tighter text-white">
+                <span className="benchmark-section-icon"><Gpu size={22}/></span>
                 Top <span className="text-yellow-400">GPU</span> Performance
               </h2>
               <div className="h-px flex-grow bg-gradient-to-r from-zinc-800 to-transparent" />
@@ -147,7 +151,7 @@ export default function LeaderboardClient() {
             </div>
           </FadeContent>
 
-          <FadeContent as="section" className="rounded-2xl border border-zinc-800 bg-zinc-950 p-8">
+          <FadeContent as="section" duration={0.4} className="rounded-2xl border border-zinc-800 bg-zinc-950 p-8">
             <div className="max-w-4xl space-y-4">
               <div className="inline-flex items-center gap-2 border border-yellow-400/30 bg-yellow-400/10 px-3 py-1">
                 <Activity className="h-4 w-4 text-yellow-400" />

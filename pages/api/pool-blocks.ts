@@ -85,6 +85,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const backendUrl = (process.env.BACKEND_API_URL || process.env.NEXT_PUBLIC_API_URL || 'https://backend.minebench.cloud')
     .replace(/\/+$/, '');
   const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+  params.set('excludeNoPayout', 'true');
   if (range) params.set('range', range);
 
   const controller = new AbortController();
@@ -103,6 +104,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const blocks = (Array.isArray(data?.blocks) ? data.blocks : [])
       .map(normalizeBlock)
       .filter((block: PoolBlock | null): block is PoolBlock => block !== null)
+      .filter((block: PoolBlock) => block.moneroPayoutStatus !== 'none')
       .sort((a: PoolBlock, b: PoolBlock) => b.foundAt.localeCompare(a.foundAt));
 
     res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=15, stale-while-revalidate=30');

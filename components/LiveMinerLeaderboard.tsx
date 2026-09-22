@@ -3,6 +3,9 @@ import { formatHashrate } from '@/lib/utils';
 
 export type LiveMiner = {
   id: string;
+  miningAsset?: 'BMT' | 'XMR' | 'unknown';
+  isPremium?: boolean;
+  minerType?: 'minebench' | 'xmr' | 'pool' | 'unknown';
   hashrate: number;
   connections: number;
   poolIds: string[];
@@ -62,8 +65,17 @@ export default function LiveMinerLeaderboard({ miners, onlineConnections }: Prop
                   {String(index + 1).padStart(2, '0')}
                 </span>
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="truncate font-mono text-[11px] font-bold text-white">{miner.id}</span>
+                    {miner.isPremium && <span className="rounded border border-yellow-400/40 px-1.5 py-0.5 text-[8px] font-bold uppercase text-yellow-400">Premium</span>}
+                    {miner.minerType === 'pool' && <span className="rounded border border-zinc-600 px-1.5 py-0.5 text-[8px] font-bold uppercase text-zinc-300">Pool miner</span>}
+                    <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide ${
+                      miner.miningAsset === 'BMT' ? 'border-yellow-400/30 text-yellow-400'
+                        : miner.miningAsset === 'XMR' ? 'border-orange-400/30 text-orange-400'
+                          : 'border-zinc-700 text-zinc-400'
+                    }`}>
+                      {miner.miningAsset === 'BMT' ? 'BMT miner' : miner.miningAsset === 'XMR' ? 'XMR miner' : 'Unknown'}
+                    </span>
                     <span className="truncate text-[8px] font-black uppercase tracking-widest text-zinc-600">
                       {miner.regions.join(' / ') || 'Pool'}
                     </span>

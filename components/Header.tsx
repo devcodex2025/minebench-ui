@@ -1,128 +1,67 @@
 'use client';
-
-import Link from 'next/link';
+import Link from '@/components/refresh/WorkspaceLink';
+import { useIQHost } from '@/components/iq/SiteLinks';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Menu, X, RefreshCw, ArrowUpRight } from 'lucide-react';
+import { Menu, X, RefreshCw, ArrowUpRight, Activity, Trophy, Layers, ArrowLeftRight, Download, Gem, BookOpen, Home, CircleHelp, ArrowRight, Network, Cpu } from 'lucide-react';
 import NetworkStrip from '@/components/NetworkStrip';
-import InteractiveBackdrop from '@/components/InteractiveBackdrop';
+import BrandBackground from '@/components/refresh/BrandBackground';
+import { WorkspaceSoundButton } from '@/components/refresh/WorkspaceLink';
 
-interface HeaderProps {
-  onRefresh?: () => void;
-  loading?: boolean;
-}
-
+interface HeaderProps { onRefresh?: () => void; loading?: boolean }
+const links = [
+  { name: 'Home', href: '/', icon: Home },
+  { name: 'Dashboard', href: '/dashboard', icon: Activity },
+  { name: 'Leaderboard', href: '/leaderboard', icon: Trophy },
+  { name: 'Pool rewards', href: '/pool-rewards', icon: Layers },
+  { name: 'Transactions', href: '/transactions', icon: ArrowLeftRight },
+  { name: 'Conversions', href: '/conversions', icon: ArrowLeftRight },
+  { name: 'Downloads', href: '/downloads', icon: Download },
+  { name: 'Premium', href: '/premium', icon: Gem },
+  { name: 'Whitepaper', href: '/whitepaper', icon: BookOpen },
+  { name: 'DePIN', href: '/depin', icon: Network },
+  { name: 'MineBench IQ', href: '/minebench-iq', icon: Cpu },
+];
 export default function Header({ onRefresh, loading }: HeaderProps = {}) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const pathname = usePathname();
-
+  const iqHost = useIQHost();
+  const currentPath = usePathname() ?? '/';
+  const pathname = iqHost ? '/minebench-iq' : currentPath;
+  const benchmarkDetail = pathname.startsWith('/benchmark/');
+  const activePath = benchmarkDetail ? '/leaderboard' : pathname;
+  const workspace = benchmarkDetail || ['/dashboard', '/leaderboard', '/pool-rewards', '/transactions', '/conversions'].includes(pathname);
+  const [open, setOpen] = useState(false);
+  useEffect(() => { setOpen(false); }, [pathname]);
   useEffect(() => {
-    if (!mobileMenuOpen) return;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setMobileMenuOpen(false);
-    };
-    window.addEventListener('keydown', closeOnEscape);
-    return () => window.removeEventListener('keydown', closeOnEscape);
-  }, [mobileMenuOpen]);
-
-  const navLinks = [
-    { name: 'Home', href: '/' },
-    { name: 'Leaderboard', href: '/leaderboard' },
-    { name: 'Dashboard', href: '/dashboard' },
-    { name: 'Pool rewards', href: '/pool-rewards' },
-    { name: 'Downloads', href: '/downloads' },
-    { name: 'Premium', href: '/premium' },
-    { name: 'Whitepaper', href: '/whitepaper' },
-  ];
-
-  return (
-    <>
-    <InteractiveBackdrop />
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[hsl(var(--canvas)/0.95)] backdrop-blur-xl">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-3 group">
-            <div className="relative w-8 h-8">
-              <Image src="/img/minebench-logo.png" alt="Minebench" fill className="object-contain" />
-            </div>
-            <span className="text-lg font-semibold tracking-tight text-white group-hover:text-yellow-400 transition-colors">
-              MineBench<span className="ml-1 text-yellow-400">.</span>
-            </span>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <nav aria-label="Main navigation" className="hidden xl:flex items-center gap-1">
-            {navLinks.map(link => {
-              const isActive = pathname === link.href;
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  aria-current={isActive ? 'page' : undefined}
-                  className={`rounded-lg px-3 py-2 text-[13px] font-medium transition-colors ${isActive ? 'text-yellow-400 bg-yellow-400/10' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
-                >
-                  {link.name}
-                </Link>
-              );
-            })}
-            {onRefresh && (
-              <button
-                onClick={onRefresh}
-                aria-label="Refresh live data"
-                className="ml-2 rounded-lg p-2 border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors disabled:opacity-50"
-                disabled={loading}
-              >
-                <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-              </button>
-            )}
-          </nav>
-
-          <Link href="/downloads" className="btn-primary hidden sm:inline-flex !px-3 !py-2 !text-xs">
-            Download free <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
-          </Link>
-
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label={mobileMenuOpen ? 'Close navigation' : 'Open navigation'}
-            aria-expanded={mobileMenuOpen}
-            aria-controls="mobile-navigation"
-            className="xl:hidden rounded-lg p-2 text-white hover:bg-white/5 transition-colors"
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+    if (!open) return;
+    const close = (event: KeyboardEvent) => { if (event.key === 'Escape') setOpen(false); };
+    window.addEventListener('keydown', close);
+    return () => window.removeEventListener('keydown', close);
+  }, [open]);
+  const brand = <Link href="/" className="refresh-brand"><Image src="/img/minebench-logo-yellow.png" alt="" width={42} height={42} priority/><span>Mine<span>Bench</span><small>HARDWARE. MEASURED.</small></span></Link>;
+  return <>
+    {!workspace && pathname !== '/' && <div className="refresh-page-atmosphere"><BrandBackground/></div>}
+    <a href="#refresh-content" className="refresh-skip">Skip to content</a>
+    <header className="refresh-header" data-workspace={workspace}>
+      <div className="refresh-header-row">
+        {workspace ? <nav aria-label="Breadcrumb" className="refresh-breadcrumb"><Link href="/" className="workspace-home" aria-label="Return to main site" title="Return to main site"><Home size={17}/><span>Main site</span></Link><span>/</span><span>Workspace</span><span>/</span><strong>{benchmarkDetail ? 'Benchmark details' : links.find(link => link.href === pathname)?.name}</strong></nav> : brand}
+        <nav className="refresh-top-nav" aria-label="Main navigation">{links.filter(link => ['/', '/dashboard', '/leaderboard', '/pool-rewards', '/premium', '/whitepaper', '/depin', '/minebench-iq'].includes(link.href)).map(link => <Link key={link.href} href={link.href} aria-current={pathname === link.href ? 'page' : undefined}>{link.name}</Link>)}</nav>
+        <div className="refresh-header-actions">
+          <WorkspaceSoundButton/>
+          {onRefresh && <button className="refresh-icon-button" onClick={onRefresh} disabled={loading} aria-label="Refresh live data"><RefreshCw size={17} className={loading ? 'animate-spin' : ''}/></button>}
+          <Link href="/downloads" className="refresh-download">Download client <ArrowUpRight size={16}/></Link>
+          <button className="refresh-menu" aria-expanded={open} aria-controls="refresh-mobile-nav" aria-label={open ? 'Close navigation' : 'Open navigation'} onClick={() => setOpen(!open)}>{open ? <X/> : <Menu/>}</button>
         </div>
       </div>
-
-      <NetworkStrip />
-
-      {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div
-            id="mobile-navigation"
-            className="xl:hidden border-t border-white/10 bg-[#171717]"
-          >
-            <nav aria-label="Mobile navigation" className="px-4 py-4 space-y-1">
-              {navLinks.map(link => {
-                const isActive = pathname === link.href;
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    aria-current={isActive ? 'page' : undefined}
-                    className={`block rounded-lg px-4 py-3 text-sm font-medium ${isActive ? 'text-yellow-400 bg-yellow-400/10' : 'text-zinc-400 hover:text-white hover:bg-white/5'}`}
-                  >
-                    {link.name}
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
-        )}
+      <NetworkStrip/>
+      {open && <nav id="refresh-mobile-nav" className="refresh-mobile-nav" aria-label="Mobile navigation">{links.map(({name,href,icon:Icon}) => <Link key={href} href={href} onClick={() => setOpen(false)} aria-current={activePath === href ? (benchmarkDetail ? 'location' : 'page') : undefined}><Icon size={17}/>{name}<ArrowUpRight size={14}/></Link>)}</nav>}
     </header>
-    </>
-  );
+    {workspace && <aside className="refresh-sidebar">
+      {brand}<Link href="/" className="workspace-exit"><Home size={17}/> Back to main site</Link><span className="refresh-nav-label">EXPLORE THE NETWORK</span>
+      <nav aria-label="Workspace navigation">{links.slice(1, 6).map(({name,href,icon:Icon}) => <Link key={href} href={href} aria-current={activePath === href ? (benchmarkDetail ? 'location' : 'page') : undefined}><Icon size={18}/>{name}{activePath === href && <span className="refresh-active-dot"/>}</Link>)}</nav>
+      <span className="refresh-nav-label">MINEBENCH</span>
+      <nav aria-label="Resources">{links.slice(6).map(({name,href,icon:Icon}) => <Link key={href} href={href}><Icon size={18}/>{name}</Link>)}</nav>
+      <div className="refresh-sidebar-bottom"><CircleHelp size={22}/><strong>A little help?<br/>A whole community.</strong><a href="https://discord.gg/vsDyYh4rma" target="_blank" rel="noopener noreferrer">Join our Discord <ArrowRight size={15}/></a></div><span className="refresh-sidebar-caption">KNOW YOUR HARDWARE.</span>
+    </aside>}
+  </>;
 }

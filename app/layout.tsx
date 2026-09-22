@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import '@fontsource-variable/inter';
 import './globals.css';
+import './refresh.css';
 import { SolanaWalletProvider } from './providers';
 import MarketingAnalytics from '@/components/marketing/MarketingAnalytics';
+import { WorkspaceMotion } from '@/components/refresh/WorkspaceLink';
 
 export const viewport = {
   width: 'device-width',
@@ -86,8 +88,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className="antialiased">
+      <body className="antialiased refresh-ui">
         <MarketingAnalytics />
+        <WorkspaceMotion />
         <SolanaWalletProvider>
           {children}
         </SolanaWalletProvider>

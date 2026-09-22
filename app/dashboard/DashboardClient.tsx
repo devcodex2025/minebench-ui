@@ -1,5 +1,6 @@
 'use client';
 
+import AnimatedContent from '@/components/reactbits/AnimatedContent';
 import FadeContent from '@/components/reactbits/FadeContent';
 
 import { useCallback, useEffect, useState } from 'react';
@@ -7,6 +8,7 @@ import Link from 'next/link';
 import { BenchmarkResult, BenchmarkSummary } from '@/types/benchmark';
 import { calculateSummary, formatHashCount, formatHashrate } from '@/lib/utils';
 import { getLeaderboardRows } from '@/lib/leaderboard';
+import { normalizePoolStats } from '@/lib/pool-stats';
 import StatsCards, { RecentTests } from '@/components/StatsCards';
 import PoolHashrateChart from '@/components/PoolHashrateChart';
 import LiveMinerLeaderboard, { LiveMiner } from '@/components/LiveMinerLeaderboard';
@@ -20,8 +22,11 @@ type PoolStatsResponse = {
   miners?: number;
   pools?: PoolNodeStats[];
   p2poolSharesFound?: number;
+  p2poolLastShareFoundAt?: number;
+  currentEffort?: number | null;
   verifiedShares?: number;
   minerLeaderboard?: LiveMiner[];
+  rewards?: { totalBmtRewards?: number; availableBmtRewards?: number };
   stratum?: {
     connections?: number;
     current_effort?: number;
@@ -78,10 +83,12 @@ export default function DashboardClient() {
   const [onlineClients, setOnlineClients] = useState(0);
   const [poolEffort, setPoolEffort] = useState<number | null>(null);
   const [p2poolSharesFound, setP2PoolSharesFound] = useState(0);
+  const [p2poolLastShareFoundAt, setP2PoolLastShareFoundAt] = useState<number | null>(null);
   const [poolNodes, setPoolNodes] = useState<PoolNodeStats[]>([]);
   const [liveMiners, setLiveMiners] = useState<LiveMiner[]>([]);
   const [rates, setRates] = useState<RatesResponse>({});
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [availableRewards, setAvailableRewards] = useState(0);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -120,20 +127,26 @@ export default function DashboardClient() {
 
       if (poolStatsResponse.status === 'fulfilled' && poolStatsResponse.value.ok) {
         const poolStatsPayload: PoolStatsResponse = await poolStatsResponse.value.json();
-        setTotalHashrate(Number(poolStatsPayload.poolHashrate || 0));
-        setOnlineClients(Number(poolStatsPayload.stratum?.connections || poolStatsPayload.miners || 0));
-        setPoolEffort(poolStatsPayload.stratum?.current_effort !== undefined ? poolStatsPayload.stratum.current_effort : null);
-        setP2PoolSharesFound(Number(poolStatsPayload.p2poolSharesFound ?? poolStatsPayload.verifiedShares ?? 0));
-        setPoolNodes(Array.isArray(poolStatsPayload.pools) ? poolStatsPayload.pools : []);
-        setLiveMiners(Array.isArray(poolStatsPayload.minerLeaderboard) ? poolStatsPayload.minerLeaderboard : []);
+        const normalizedPoolStats = normalizePoolStats(poolStatsPayload);
+        setTotalHashrate(normalizedPoolStats.poolHashrate);
+        setOnlineClients(normalizedPoolStats.miners);
+        setPoolEffort(poolStatsPayload.currentEffort ?? poolStatsPayload.stratum?.current_effort ?? null);
+        setP2PoolSharesFound(normalizedPoolStats.p2poolSharesFound);
+        const lastShare = Number(poolStatsPayload.p2poolLastShareFoundAt || 0);
+        setP2PoolLastShareFoundAt(lastShare > 0 ? (lastShare < 10_000_000_000 ? lastShare * 1000 : lastShare) : null);
+        setPoolNodes(normalizedPoolStats.pools);
+        setLiveMiners(normalizedPoolStats.minerLeaderboard as LiveMiner[]);
+        setAvailableRewards(Number(poolStatsPayload.rewards?.availableBmtRewards || 0));
         setLastUpdated(new Date().toISOString());
       } else {
         setTotalHashrate(0);
         setOnlineClients(0);
         setPoolEffort(null);
         setP2PoolSharesFound(0);
+        setP2PoolLastShareFoundAt(null);
         setPoolNodes([]);
         setLiveMiners([]);
+        setAvailableRewards(0);
         setLastUpdated(null);
       }
 
@@ -183,9 +196,9 @@ export default function DashboardClient() {
   });
 
   return (
-    <div className="board-page min-h-screen bg-black text-zinc-400">
+    <div className="board-page refresh-dashboard min-h-screen bg-black text-zinc-400">
       <Header />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+      <main id="refresh-content" tabIndex={-1} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         <FadeContent as="section" className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-8 md:p-10 mb-10">
           <div className="flex flex-col gap-8">
             <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
@@ -245,15 +258,25 @@ export default function DashboardClient() {
               </div>
               <div className="board-stat flex min-h-44 min-w-0 flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950/70 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] sm:p-6">
                 <div className="mb-3 flex min-w-0 items-start justify-between gap-3">
-                  <span className="min-w-0 text-xs font-semibold leading-relaxed tracking-normal text-zinc-500">P2Pool Shares Found</span>
+                  <span className="min-w-0 text-xs font-semibold leading-relaxed tracking-normal text-zinc-500">P2Pool Shares · 24h</span>
                   <Award className="h-5 w-5 shrink-0 text-yellow-400" />
                 </div>
                 <p className="tabular-nums text-3xl font-semibold leading-none tracking-tighter text-white sm:text-4xl">
                   {p2poolSharesFound.toLocaleString()}
                 </p>
                 <p className="mt-auto pt-4 text-xs leading-relaxed tracking-normal text-zinc-500">
-                  Native P2Pool shares found by the pool
+                  Native P2Pool shares found by the pool · {p2poolLastShareFoundAt ? `last ${new Date(p2poolLastShareFoundAt).toLocaleString()}` : 'no recent timestamp'}
                 </p>
+              </div>
+              <div className="board-stat flex min-h-44 min-w-0 flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950/70 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] sm:p-6">
+                <div className="mb-3 flex min-w-0 items-start justify-between gap-3">
+                  <span className="min-w-0 text-xs font-semibold leading-relaxed tracking-normal text-zinc-500">Available BMT Rewards</span>
+                  <Award className="h-5 w-5 shrink-0 text-yellow-400" />
+                </div>
+                <p className="whitespace-nowrap tabular-nums text-3xl font-semibold leading-none tracking-tighter text-yellow-400 sm:text-4xl">
+                  {availableRewards.toLocaleString(undefined, { maximumFractionDigits: 8 })}
+                </p>
+                <p className="mt-auto pt-4 text-xs leading-relaxed tracking-normal text-zinc-500">Credited mining rewards not yet paid</p>
               </div>
               <div className="board-stat flex min-h-44 min-w-0 flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950/70 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] sm:p-6">
                 <div className="mb-3 flex min-w-0 items-start justify-between gap-3">
@@ -419,7 +442,7 @@ export default function DashboardClient() {
         </FadeContent>
 
         <div className="space-y-16 pb-20">
-          <FadeContent as="section" className="rounded-2xl border border-zinc-800 bg-zinc-950 p-8 md:p-10">
+          <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-8 md:p-10">
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
               <div className="space-y-4">
                 <div className="inline-flex items-center gap-2 border border-yellow-400/30 bg-yellow-400/10 px-3 py-1">
@@ -460,8 +483,8 @@ export default function DashboardClient() {
                 Submit New Benchmark
               </Link>
             </div>
-          </FadeContent>
-          <FadeContent as="section" className="rounded-2xl border border-zinc-800 bg-zinc-950 p-8">
+          </section>
+          <AnimatedContent as="section" className="rounded-2xl border border-zinc-800 bg-zinc-950 p-8">
             <div className="max-w-4xl space-y-5">
               <h2 className="text-3xl md:text-4xl font-semibold text-white tracking-tighter">
                 Run Your Own <span className="text-yellow-400">Hardware Performance Check</span>
@@ -485,7 +508,7 @@ export default function DashboardClient() {
                 </Link>
               </div>
             </div>
-          </FadeContent>
+          </AnimatedContent>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-12 border-t border-zinc-900/50 mt-12">
             <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-6 overflow-hidden relative group shadow-xl h-[270px] flex flex-col">
