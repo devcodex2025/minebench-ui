@@ -28,6 +28,8 @@ function loadPage(fetch) {
     module, exports: module.exports, fetch, process: { env: {} },
     AbortSignal: { timeout: () => 'timeout' },
     require(id) {
+      if (id === 'react') return { Suspense: 'suspense' };
+      if (id === './TransactionsSkeleton') return { default: () => element('loading', { children: 'Loading transactions…' }) };
       if (id === 'react/jsx-runtime') return { jsx: element, jsxs: element, Fragment: 'fragment' };
       if (id === 'next/link') return ({ children, ...props }) => element('a', { ...props, children });
       if (id === '@/components/Header') return () => element('header', { children: 'header' });
@@ -37,7 +39,16 @@ function loadPage(fetch) {
     },
   });
   new vm.Script(compiled).runInContext(context);
-  return module.exports.default;
+  const Page = module.exports.default;
+  async function resolve(node) {
+    if (Array.isArray(node)) return Promise.all(node.map(resolve));
+    if (!node || typeof node !== 'object') return node;
+    if (typeof node.type === 'function') return resolve(await node.type(node.props));
+    return { ...node, props: { ...node.props, children: await resolve(node.props.children) } };
+  }
+  const render = async props => resolve(await Page(props));
+  render.shell = Page;
+  return render;
 }
 
 const bmtPayment = (overrides = {}) => ({
@@ -145,4 +156,54 @@ test('refresh control polls only while visible, supports manual refresh, and cle
   assert.equal(pending.timer(), undefined);
   assert.equal(pendingButton.props.disabled, true);
   assert.match(text(pending.view), /Refreshing…/);
+});
+
+test('page shell and keyed loading boundary render without waiting for history', async () => {
+  let fetched = false;
+  const Page = loadPage(() => { fetched = true; return new Promise(() => {}); });
+  const first = await Page.shell({ searchParams: Promise.resolve({ type: 'bmt', page: '0' }) });
+  assert.equal(fetched, false);
+  assert.match(text(first), /Transactions/);
+  const boundary = walk(first).find(node => node.type === 'suspense');
+  assert.equal(boundary.key, 'bmt:0');
+  assert.match(text(boundary.props.fallback.type()), /Loading transactions/);
+  const next = await Page.shell({ searchParams: Promise.resolve({ type: 'support', page: '1' }) });
+  assert.equal(walk(next).find(node => node.type === 'suspense').key, 'support:1');
+});
+
+test('both batch queues show independent progress and empty, full and overflow status', async () => {
+  for (const [standard, creation] of [[14, 2], [0, 0], [16, 6], [35, 8]]) {
+    const Page = loadPage(async () => response({
+      queue: { pendingCount: standard + creation, amountBmt: '100', feeBmt: '1', batches: {
+        existing_ata: { pendingCount: standard, targetSize: 16 },
+        missing_ata: { pendingCount: creation, targetSize: 6 },
+      } }, transactions: [], hasMore: false,
+    }));
+    const view = await Page({ searchParams: Promise.resolve({ type: 'bmt', page: '8' }) });
+    const bars = walk(view).filter(node => node.type === 'progress');
+    assert.deepEqual(bars.map(node => [node.props.value, node.props.max]), [[Math.min(standard, 16), 16], [Math.min(creation, 6), 6]]);
+    const content = text(view);
+    if (standard === 14) { assert.match(content, /Waiting for 2 more payouts/); assert.match(content, /Waiting for 4 more payouts/); }
+    if (standard === 0) assert.match(content, /No payouts queued/);
+    if (standard >= 16) assert.match(content, /Batch full — awaiting processing/);
+    if (standard === 35) assert.match(content, /35 queued in total · 2 full batches/);
+  }
+});
+
+test('missing, malformed or inconsistent batch counts stay unavailable without losing totals', async () => {
+  for (const batches of [undefined, null, {}, { existing_ata: { pendingCount: 14, targetSize: 0 }, missing_ata: { pendingCount: 2, targetSize: 6 } }, { existing_ata: { pendingCount: 13, targetSize: 16 }, missing_ata: { pendingCount: 2, targetSize: 6 } }]) {
+    const Page = loadPage(async () => response({ queue: { pendingCount: 16, amountBmt: '100', feeBmt: '1', batches }, transactions: [], hasMore: false }));
+    const view = await Page({ searchParams: Promise.resolve({ type: 'bmt' }) });
+    assert.equal(walk(view).filter(node => node.type === 'progress').length, 0);
+    assert.match(text(view), /Batch progress is temporarily unavailable/);
+    assert.match(text(view), /100 BMT/);
+  }
+});
+
+test('batch progress uses configured targets supplied by the backend', async () => {
+  const Page = loadPage(async () => response({ queue: { pendingCount: 5, amountBmt: '1', feeBmt: '0', batches: {
+    existing_ata: { pendingCount: 3, targetSize: 4 }, missing_ata: { pendingCount: 2, targetSize: 3 },
+  } }, transactions: [], hasMore: false }));
+  const view = await Page({ searchParams: Promise.resolve({ type: 'bmt' }) });
+  assert.deepEqual(walk(view).filter(node => node.type === 'progress').map(node => node.props.max), [4, 3]);
 });

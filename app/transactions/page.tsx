@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+import TransactionsSkeleton from './TransactionsSkeleton';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Header from '@/components/Header';
@@ -23,7 +25,32 @@ type Payment = { id: string; status: string; amount: string; fee: string | null;
 type Purchase = { id: string; status: string; xmr_atomic: string; sol_lamports: string | null;
   bmt_atomic: string | null; bmt_decimals: number; solana_signature: string | null;
   cluster: string; created_at: string };
-type PayoutQueue = { pendingCount: number; amountBmt: string; feeBmt: string };
+type BatchQueue = { pendingCount: number; targetSize: number };
+type BatchQueues = { existing_ata: BatchQueue; missing_ata: BatchQueue };
+type PayoutQueue = { pendingCount: number; amountBmt: string; feeBmt: string; batches?: unknown };
+
+function validBatches(value: unknown, total: number): value is BatchQueues {
+  if (!value || typeof value !== 'object') return false;
+  const batches = value as BatchQueues;
+  const validBatch = (batch: BatchQueue, max: number) => batch && Number.isSafeInteger(batch.pendingCount)
+    && batch.pendingCount >= 0 && Number.isSafeInteger(batch.targetSize) && batch.targetSize > 0 && batch.targetSize <= max;
+  return Boolean(validBatch(batches.existing_ata, 16) && validBatch(batches.missing_ata, 6)
+    && batches.existing_ata.pendingCount + batches.missing_ata.pendingCount === total);
+}
+
+function BatchProgress({ label, batch }: { label: string; batch: BatchQueue | null }) {
+  const filled = batch ? Math.min(batch.pendingCount, batch.targetSize) : 0;
+  const ready = batch ? Math.floor(batch.pendingCount / batch.targetSize) : 0;
+  return <section className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-5" aria-label={label}>
+    <h3 className="text-sm font-medium text-zinc-100">{label}</h3>
+    {batch ? <>
+      <p className="mt-3 text-2xl font-medium tabular-nums text-yellow-400">{filled} / {batch.targetSize}<span className="ml-2 text-xs font-normal text-zinc-400">next batch</span></p>
+      <progress aria-label={`${label}: next batch`} aria-valuetext={`${filled} of ${batch.targetSize} payouts queued for the next batch`} value={filled} max={batch.targetSize} className="mt-3 h-2 w-full overflow-hidden rounded-full [&::-webkit-progress-bar]:bg-zinc-800 [&::-webkit-progress-value]:bg-yellow-400 [&::-moz-progress-bar]:bg-yellow-400" />
+      <p className="mt-3 text-sm text-zinc-300">{batch.pendingCount === 0 ? 'No payouts queued' : ready > 0 ? 'Batch full — awaiting processing' : `Waiting for ${batch.targetSize - filled} more ${batch.targetSize - filled === 1 ? 'payout' : 'payouts'}`}</p>
+      <p className="mt-2 text-xs text-zinc-400">{batch.pendingCount.toLocaleString('en-US')} queued in total{ready > 0 ? ` · ${ready} full ${ready === 1 ? 'batch' : 'batches'}` : ''}</p>
+    </> : <p className="mt-3 text-sm text-amber-200">Batch progress is temporarily unavailable.</p>}
+  </section>;
+}
 
 function validQueue(value: unknown): value is PayoutQueue {
   if (!value || typeof value !== 'object') return false;
@@ -61,23 +88,6 @@ export default async function TransactionsPage({ searchParams }: {
   const type = typeof query.type === 'string' && Object.prototype.hasOwnProperty.call(tabs, query.type) ? query.type as keyof typeof tabs : 'xmr';
   const page = typeof query.page === 'string' && /^\d{1,5}$/.test(query.page) ? Math.min(Number(query.page), 10000) : 0;
   const support = type === 'support';
-  let rows: Array<Payment | Purchase> = [];
-  let unavailable = false;
-  let hasMore = false;
-  let queue: PayoutQueue | null = null;
-  try {
-    const base = (process.env.BACKEND_API_URL || 'https://backend.minebench.cloud').replace(/\/+$/, '');
-    const response = await fetch(`${base}/api/${support ? `conversions?page=${page}` : `transactions?type=${type}&page=${page}`}`, {
-      cache: 'no-store', signal: AbortSignal.timeout(8000)
-    });
-    if (!response.ok) throw new Error('Unavailable');
-    const data = await response.json();
-    if (type === 'bmt' && validQueue(data.queue)) queue = data.queue;
-    const entries = support ? data.conversions : data.transactions;
-    if (!Array.isArray(entries) || entries.length > 25 || !entries.every(row => valid(row, support))) throw new Error('Invalid history');
-    rows = entries;
-    hasMore = data.hasMore === true;
-  } catch { unavailable = true; }
 
   return <div className="board-page refresh-transactions min-h-screen bg-zinc-950 text-zinc-100">
     <Header />
@@ -96,6 +106,36 @@ export default async function TransactionsPage({ searchParams }: {
         ? 'Purchases funded by XMR allocated to BMT mining. Completed purchases appear as confirmed; the BMT market price can still change.'
         : type === 'xmr' ? 'XMR transfers to miner wallets. Reserved and pending payments are not yet confirmed on the network.'
           : 'BMT transfers to MineBench user wallets. Mining balance credits are shown separately on the pool rewards page.'}</p>
+      <Suspense key={`${type}:${page}`} fallback={<TransactionsSkeleton />}>
+        <TransactionHistory type={type} page={page} />
+      </Suspense>
+    </main><Footer />
+  </div>;
+}
+
+async function TransactionHistory({ type, page }: { type: keyof typeof tabs; page: number }) {
+  const support = type === 'support';
+  let rows: Array<Payment | Purchase> = [];
+  let unavailable = false;
+  let hasMore = false;
+  let queue: PayoutQueue | null = null;
+  try {
+    const base = (process.env.BACKEND_API_URL || 'https://backend.minebench.cloud').replace(/\/+$/, '');
+    const response = await fetch(`${base}/api/${support ? `conversions?page=${page}` : `transactions?type=${type}&page=${page}`}`, {
+      cache: 'no-store', signal: AbortSignal.timeout(8000)
+    });
+    if (!response.ok) throw new Error('Unavailable');
+    const data = await response.json();
+    if (type === 'bmt' && validQueue(data.queue)) queue = data.queue;
+    const entries = support ? data.conversions : data.transactions;
+    if (!Array.isArray(entries) || entries.length > 25 || !entries.every(row => valid(row, support))) throw new Error('Invalid history');
+    rows = entries;
+    hasMore = data.hasMore === true;
+  } catch { unavailable = true; }
+
+  const batches = queue && validBatches(queue.batches, queue.pendingCount) ? queue.batches : null;
+
+  return <>
       {type === 'bmt' && <section aria-labelledby="payout-queue-title" className="mb-8 rounded-xl border border-zinc-800 bg-zinc-900/30 p-5 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -114,6 +154,14 @@ export default async function TransactionsPage({ searchParams }: {
             ? 'No BMT payouts are currently queued.'
             : 'Payouts are sent in batches. Pending amounts and fees are estimates until the payouts are confirmed.'}</p>
         </> : <p role="status" className="mt-5 text-sm text-amber-200">Queue totals are temporarily unavailable. Use Refresh payouts to try again.</p>}
+        <div className="mt-6 grid gap-4 md:grid-cols-2" aria-live="polite">
+          <BatchProgress label="Standard queue" batch={batches?.existing_ata ?? null} />
+          <BatchProgress label="Account-creation queue" batch={batches?.missing_ata ?? null} />
+        </div>
+        <div className="mt-6 grid gap-5 border-t border-zinc-800 pt-6 text-sm leading-relaxed text-zinc-400 md:grid-cols-2">
+          <p><strong className="font-medium text-zinc-100">Standard batch.</strong>{' '}Payouts to wallets that already have a BMT token account wait until their batch reaches the target shown above. Sending them together shares the transaction network fee across the batch. Each bar shows the next batch for that queue across all wallets. The client shows the batch containing your payout, while the pending total includes both queue types.</p>
+          <p><strong className="font-medium text-zinc-100">Account-creation batch.</strong>{' '}Payouts that need a BMT token account wait until their separate batch reaches its target. Creating the account adds instructions and requires a SOL rent deposit, so this queue has its own batch target to accommodate Solana transaction-size limits. These requests do not fill a standard batch; each full batch can be processed once funding and transaction checks pass.</p>
+        </div>
       </section>}
       <div className="overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-900/30">
         {unavailable ? <div role="alert" className="p-8 text-amber-200">Transaction history is temporarily unavailable. <Link href={`/transactions?type=${type}&page=${page}`} className="underline">Try again</Link></div>
@@ -144,6 +192,5 @@ export default async function TransactionsPage({ searchParams }: {
         {page > 0 && <Link href={`/transactions?type=${type}&page=${page - 1}`} className="underline">Previous</Link>}
         {!unavailable && hasMore && page < 10000 && <Link href={`/transactions?type=${type}&page=${page + 1}`} className="underline">Next</Link>}
       </nav>
-    </main><Footer />
-  </div>;
+  </>;
 }
