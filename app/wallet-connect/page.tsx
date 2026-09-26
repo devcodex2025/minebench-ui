@@ -130,11 +130,11 @@ const WalletConnectContent = () => {
   }, [countdown]);
 
   return (
-    <div className="board-page min-h-screen flex flex-col bg-black">
+    <div className="board-page refresh-wallet min-h-screen flex flex-col bg-black">
       <Header />
       
       {/* Main content */}
-      <main className="flex-1 flex items-center justify-center px-4 py-24">
+      <main id="refresh-content" tabIndex={-1} className="flex-1 flex items-center justify-center px-4 py-24">
         <div className="w-full max-w-md">
           <div className="rounded-2xl bg-zinc-950 border border-zinc-800 p-8 space-y-6">
             <div className="text-center space-y-2">
@@ -254,7 +254,7 @@ const WalletConnectContent = () => {
 export default function WalletConnectPage() {
   return (
     <Suspense fallback={
-      <div className="board-page min-h-screen flex items-center justify-center bg-black">
+      <div className="board-page refresh-wallet min-h-screen flex items-center justify-center bg-black">
         <div className="text-yellow-400 font-mono">Loading...</div>
       </div>
     }>

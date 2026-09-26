@@ -2,6 +2,12 @@ import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
     return [
+        { url: 'https://minebench.cloud/depin', changeFrequency: 'monthly', priority: 0.8 },
+        {
+            url: 'https://minebench.cloud/transactions',
+            changeFrequency: 'hourly',
+            priority: 0.85,
+        },
         {
             url: 'https://minebench.cloud',
             changeFrequency: 'daily',

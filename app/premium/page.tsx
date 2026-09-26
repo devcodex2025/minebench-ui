@@ -16,7 +16,7 @@ import {
   createAssociatedTokenAccountInstruction,
   getAccount
 } from '@solana/spl-token';
-import Image from 'next/image';
+import PremiumGallery from '@/components/refresh/PremiumGallery';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { PREMIUM_PRICE_USDC, PREMIUM_FAQS } from '@/lib/marketing';
@@ -201,23 +201,30 @@ export default function PremiumPage() {
   }
 
   return (
-    <div className="board-page min-h-screen bg-black text-white flex flex-col">
+    <div className="board-page refresh-premium min-h-screen bg-black text-white flex flex-col">
       <Header />
-      <main className="flex-grow pb-20 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full">
+      <main id="refresh-content" tabIndex={-1} className="flex-grow pb-20 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full">
         <nav aria-label="Breadcrumb" className="mb-8 text-sm text-zinc-400">
           <Link href="/" className="hover:text-yellow-400">Home</Link><span aria-hidden="true"> / </span><span aria-current="page">Premium</span>
         </nav>
-        <FadeContent as="section" className="mb-12 max-w-3xl">
+        <FadeContent as="section" className="refresh-premium-cover mb-12">
+          <div>
           <p className="mb-4 text-sm font-medium text-yellow-400">MineBench Premium</p>
           <h1 className="text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">Your wallet. Your pool.<br /><span className="text-yellow-400">Your mining settings.</span></h1>
           <p className="mt-6 text-lg leading-8 text-zinc-400">Route mining to your own Monero wallet and choose P2Pool or a custom pool. Keep the benchmark and CPU controls you already use in the free client.</p>
-          <p className="mt-5 text-xl font-medium">{PREMIUM_PRICE_USDC} USDC <span className="text-base font-normal text-zinc-400">once, plus Solana network fees</span></p>
+          </div>
+          <div className="refresh-premium-offer">
+          <span className="refresh-overline">MINEBENCH / PREMIUM</span>
+          <p className="mt-5 text-xl font-medium"><strong>{PREMIUM_PRICE_USDC}</strong> USDC <span className="text-base font-normal text-zinc-400">once, plus Solana network fees</span></p>
           <div className="mt-7 flex flex-wrap gap-3">
             <a href="#premium-purchase" className="btn-primary">Review upgrade</a>
             <Link href="/downloads" className="btn-secondary">Try the free client</Link>
           </div>
           <p className="mt-4 text-sm text-zinc-400">No expiry and no recurring subscription. Compare the plans before connecting your wallet.</p>
+          </div>
         </FadeContent>
+
+        <PremiumGallery />
 
         <FadeContent as="section" id="compare-plans" aria-labelledby="compare-title" className="scroll-mt-28 mb-14">
           <h2 id="compare-title" className="mb-6 text-3xl font-semibold tracking-tight">Choose the controls you need</h2>
@@ -238,12 +245,6 @@ export default function PremiumPage() {
               </tbody>
             </table>
           </div>
-        </FadeContent>
-
-        <FadeContent as="section" className="mb-14 surface-panel p-3 sm:p-5">
-          <h2 className="mb-2 text-xl font-semibold">See the Premium interface</h2>
-          <p className="mb-5 text-sm leading-6 text-zinc-400">Custom wallet routing and pool settings in the MineBench desktop client.</p>
-          <Image src="/screenshots/app-overview-screenshots/premium.png" alt="MineBench Premium desktop settings for wallet, pool and mining controls" width={1600} height={900} sizes="(max-width: 1024px) 100vw, 960px" className="h-auto w-full rounded-xl border border-zinc-800" />
         </FadeContent>
 
         <div className="mb-16 grid gap-8 md:grid-cols-2">

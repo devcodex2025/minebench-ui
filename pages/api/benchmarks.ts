@@ -6,9 +6,11 @@ import {
   verifyBenchmarkToken,
 } from '../../lib/benchmarkSecurity';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!; // секрет, не публікувати на фронтенді
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabase = supabaseUrl && supabaseServiceKey
+  ? createClient(supabaseUrl, supabaseServiceKey)
+  : null;
 const DEFAULT_LIMIT = 500;
 const MAX_LIMIT = 2000;
 const SUBMISSION_COOLDOWN_SECONDS = 60;
@@ -28,9 +30,19 @@ const PUBLIC_FIELDS = [
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
+    if (!supabase) {
+      console.error('Benchmark API is missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+      return res.status(500).json({ error: 'Benchmark service is not configured' });
+    }
+
     if (req.method === 'POST') {
       const auth = verifyBenchmarkToken(req.headers.authorization, process.env.JWT_SECRET);
       const record = validateBenchmarkPayload(req.body, auth.walletAddress);
+      const metadataEnabled = process.env.BENCHMARK_METADATA_ENABLED === 'true';
+      const metadataFields = ['os_name', 'os_arch', 'client_version', 'cpu_cores', 'ram_total_bytes', 'xmrig_version'];
+      const insertRecord = metadataEnabled
+        ? record
+        : Object.fromEntries(Object.entries(record).filter(([key]) => !metadataFields.includes(key)));
       const createdAt = new Date().toISOString();
       const cooldownStart = new Date(Date.now() - SUBMISSION_COOLDOWN_SECONDS * 1000).toISOString();
 
@@ -53,7 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const { data, error } = await supabase
         .from('benchmarks')
-        .insert([{ ...record, created_at: createdAt }])
+        .insert([{ ...insertRecord, created_at: createdAt }])
         .select('id, created_at')
         .single();
 

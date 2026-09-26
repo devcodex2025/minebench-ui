@@ -34,6 +34,20 @@ const validPayload = () => ({
   created_at: '2000-01-01T00:00:00.000Z',
 });
 
+test('accepts optional public system metadata and preserves legacy records', () => {
+  const legacy = validateBenchmarkPayload(validPayload(), WALLET);
+  assert.equal('os_name' in legacy, false);
+  const metadata = {os_name:'linux',os_arch:'x86_64',client_version:'0.8.33',cpu_cores:16,ram_total_bytes:34359738368,xmrig_version:'6.25.0'};
+  const record = validateBenchmarkPayload({...validPayload(),...metadata}, WALLET);
+  for (const [key,value] of Object.entries(metadata)) assert.equal(record[key], value);
+});
+
+test('rejects unsafe metadata, invalid units, fractions and unknown properties', () => {
+  for (const metadata of [{os_name:'user@hostname'}, {os_arch:'<script>'}, {client_version:'file:///secret'}, {xmrig_version:'6.25.0\n'}, {cpu_cores:1.5}, {cpu_cores:4097}, {ram_total_bytes:32}, {ram_total_bytes:Infinity}, {ram_total_bytes:34359738368.5}, {hostname:'private-machine'}]) {
+    assert.throws(() => validateBenchmarkPayload({...validPayload(),...metadata}, WALLET), BenchmarkSecurityError);
+  }
+});
+
 test('accepts a valid backend JWT', () => {
   const token = signToken({ sub: 'user-1', walletAddress: WALLET, exp: 2_000 });
   const payload = verifyBenchmarkToken(`Bearer ${token}`, SECRET, 1_000);

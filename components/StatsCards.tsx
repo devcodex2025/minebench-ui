@@ -113,7 +113,8 @@ export function RecentTests({ tests }: RecentTestsProps) {
       const aTime = new Date(String(a.created_at ?? a.timestamp ?? 0)).getTime();
       const bTime = new Date(String(b.created_at ?? b.timestamp ?? 0)).getTime();
       return bTime - aTime;
-    });
+    })
+    .slice(0, 12);
 
   if (nonZeroTests.length === 0) return (
     <div className="border border-zinc-900/50 rounded-xl p-8 text-center bg-zinc-950/20 backdrop-blur-sm">

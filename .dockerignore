@@ -14,3 +14,4 @@ coverage
 .parcel-cache
 .DS_Store
 *.log
+.codex-home.html

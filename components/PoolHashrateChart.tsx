@@ -163,8 +163,12 @@ export default function PoolHashrateChart() {
     const maxRate = Math.max(...points.map((point) => point.hashrate), 1);
     const yMax = maxRate * 1.15;
     const times = points.map((point) => new Date(point.t).getTime());
-    const fromTime = times[0] || 0;
-    const toTime = times[times.length - 1] || fromTime;
+    const blockTimes = blocks
+      .map((block) => new Date(block.foundAt).getTime())
+      .filter((timestamp) => Number.isFinite(timestamp));
+    const allTimes = [...times, ...blockTimes];
+    const fromTime = allTimes.length ? Math.min(...allTimes) : 0;
+    const toTime = allTimes.length ? Math.max(...allTimes) : fromTime;
     const xAt = (timestamp: number) => toTime <= fromTime
       ? PAD.left + innerWidth / 2
       : PAD.left + ((timestamp - fromTime) / (toTime - fromTime)) * innerWidth;

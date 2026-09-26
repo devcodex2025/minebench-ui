@@ -10,7 +10,7 @@ import { SolflareWalletAdapter } from '@solana/wallet-adapter-solflare';
 import { clusterApiUrl } from '@solana/web3.js';
 
 // Import wallet adapter CSS
-import '@solana/wallet-adapter-react-ui/styles.css';
+import './wallet-adapter.css';
 
 export function SolanaWalletProvider({ children }: { children: React.ReactNode }) {
   const network = WalletAdapterNetwork.Mainnet;

@@ -6,7 +6,7 @@ import TokenomicsChart from '@/components/TokenomicsChart';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { FileText, Cpu, Coins, Globe, ExternalLink, ShieldCheck, Zap } from 'lucide-react';
-import Link from 'next/link';
+import Link from '@/components/refresh/WorkspaceLink';
 import { PREMIUM_PRICE_USDC } from '@/lib/marketing';
 
 const bmtDistribution = [
@@ -69,9 +69,9 @@ const rewardStages = [
 
 export default function WhitepaperClient() {
     return (
-        <div className="board-page min-h-screen relative overflow-hidden bg-black flex flex-col">
+        <div className="board-page refresh-whitepaper min-h-screen relative overflow-hidden bg-black flex flex-col">
             <Header />
-            <main className="flex-grow pt-24 pb-20 px-4 sm:px-6 lg:px-8 relative z-10">
+            <main id="refresh-content" tabIndex={-1} className="flex-grow pt-24 pb-20 px-4 sm:px-6 lg:px-8 relative z-10">
                 <article className="max-w-4xl mx-auto">
                     <div className="text-center mb-12 border-b border-zinc-900 pb-12">
                         <div className="inline-block rounded-2xl border border-yellow-400/20 bg-yellow-400/5 p-4 mb-6">
@@ -163,7 +163,14 @@ export default function WhitepaperClient() {
                                 </div>
                                 <div className="rounded-xl border border-zinc-800 p-5">
                                     <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Planned AI application</p>
-                                    <h3 className="my-3 text-xl font-semibold text-white">MineBench IQ / MBIQ</h3>
+                                    <h3 className="my-3 text-xl font-semibold text-white"><Link href="/minebench-iq" className="hover:text-yellow-400">MineBench IQ / MBIQ ↗</Link></h3>
+                                    <span className="inline-flex rounded-full border border-yellow-400/30 bg-yellow-400/5 px-3 py-1 text-xs text-yellow-400">Coming soon</span>
+                                    <p className="mt-3 text-sm leading-relaxed text-zinc-400">Development has not started yet. The application is planned; the token has launched.</p>
+                                    <a href="https://solscan.io/token/EQ9mKupWSS4AHUSRVvKPghezPGKhgDTj2VF5hXdhPray" target="_blank" rel="noopener noreferrer" className="mt-4 block rounded-lg border border-zinc-700 p-3 text-yellow-400 hover:border-yellow-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-yellow-400">
+                                        <span className="text-sm">View MBIQ token ↗</span>
+                                        <span className="mt-2 block text-xs text-zinc-400">CA · Solana</span>
+                                        <code className="mt-1 block break-all text-xs">EQ9mKupWSS4AHUSRVvKPghezPGKhgDTj2VF5hXdhPray</code>
+                                    </a>
                                     <p className="text-sm leading-relaxed text-zinc-400">MBIQ has been launched for the planned IQ direction. The proposed product connects AI users with compute providers. A token launch does not mean the AI marketplace or its provider rewards are already live.</p>
                                 </div>
                             </div>

@@ -1,12 +1,14 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/components/refresh/WorkspaceLink';
 import BenchmarkHero from '@/components/marketing/BenchmarkHero';
 import { GettingStarted, BenchmarkFAQ } from '@/components/marketing/GettingStarted';
 import { BorderBeam } from 'border-beam';
 import ShowcaseReveal from '@/components/marketing/ShowcaseReveal';
 import { useState, useEffect, useRef } from 'react';
-import { motion, useInView, useSpring, useMotionValue, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
+import CountUp from '@/components/reactbits/CountUp';
+import SpotlightCard from '@/components/reactbits/SpotlightCard';
 import {
     Download,
     Activity,
@@ -64,23 +66,10 @@ const formatAssetAmount = (value: number | null | undefined, suffix: string, dec
 };
 
 function Counter({ value, label }: { value: number; label: string }) {
-    const ref = useRef(null);
-    const isInView = useInView(ref, { once: true, margin: '-50px' });
-    const motionValue = useMotionValue(0);
-    const springValue = useSpring(motionValue, { damping: 30, stiffness: 100 });
-    const displayValue = useTransform(springValue, formatCounterValue);
-    const staticValue = formatCounterValue(value);
-
-    useEffect(() => {
-        if (isInView) {
-            motionValue.set(value);
-        }
-    }, [isInView, value, motionValue]);
-
     return (
-        <div ref={ref} className="surface-panel p-6 transition-colors duration-200 hover:border-yellow-400/30">
+        <div className="surface-panel p-6 transition-colors duration-200 hover:border-yellow-400/30">
             <div className="mb-2 text-4xl font-medium tracking-tight text-white md:text-5xl tabular-nums">
-                <motion.span>{isInView ? displayValue : staticValue}</motion.span>
+                <CountUp to={value} format={formatCounterValue} />
             </div>
             <div className="text-xs font-medium text-zinc-400">{label}</div>
         </div>
@@ -226,24 +215,32 @@ export default function LandingPageClient({
     }, []);
 
     return (
-        <div className="board-page relative flex min-h-screen flex-col overflow-hidden bg-[hsl(var(--canvas))]">
+        <div className="board-page refresh-home relative flex min-h-screen flex-col overflow-hidden bg-[hsl(var(--canvas))]">
 
             <Header />
 
-            <main className="relative z-10 flex-grow">
+            <main id="refresh-content" tabIndex={-1} className="relative z-10 flex-grow">
                 <BenchmarkHero clientVersion={latestClientVersion} />
 
                 <section aria-label="MineBench community statistics" className="px-4 pb-8 sm:px-6 lg:px-8">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2, duration: 0.6 }}
+                        <div
                             className="mx-auto grid max-w-7xl grid-cols-1 gap-3 sm:grid-cols-3"
                         >
                             <Counter value={stats.downloads} label="Total Downloads" />
                             <Counter value={stats.benchmarks} label="Benchmarks Completed" />
                             <Counter value={stats.miners} label="Unique Devices" />
-                        </motion.div>
+                        </div>
+                </section>
+
+                <section className="refresh-product px-4 sm:px-6 lg:px-8">
+                    <div className="refresh-product-heading">
+                        <div><span className="refresh-overline">01 / YOUR MINING WORKSPACE</span><h2>All the detail.<br /><span className="text-yellow-400">A clearer picture.</span></h2></div>
+                        <p>Meet your hardware in the MineBench client. Inspect every benchmark, then compare your results with the community.</p>
+                    </div>
+                    <div className="refresh-product-frame">
+                        <div className="refresh-product-toolbar"><span>● ● ●</span><span>MineBench / Benchmarks</span><Link href="/downloads#application-overview">Explore the client ↗</Link></div>
+                        <Image src="/screenshots/app-overview-screenshots/benchmarks.png" alt="MineBench client with hardware details and benchmark telemetry" width={1440} height={900}/>
+                    </div>
                 </section>
 
                 <section className="relative flex items-center justify-center overflow-hidden px-4 py-10 sm:px-6 lg:px-8">
@@ -566,7 +563,7 @@ export default function LandingPageClient({
                         </h3>
                     </div>
                     <div className="grid gap-8 md:grid-cols-2">
-                        <div className="group flex flex-col items-start border border-zinc-900 bg-zinc-950/50 p-10 shadow-xl transition-all hover:border-yellow-400 hover:bg-zinc-950">
+                        <SpotlightCard className="group flex flex-col items-start border border-zinc-900 bg-zinc-950/50 p-10 shadow-xl transition-all hover:border-yellow-400 hover:bg-zinc-950">
                             <div className="mb-8 flex h-16 w-16 items-center justify-center border border-zinc-800 bg-zinc-900 transition-all group-hover:bg-yellow-400 group-hover:text-black">
                                 <Database className="h-8 w-8" />
                             </div>
@@ -574,8 +571,8 @@ export default function LandingPageClient({
                             <p className="text-lg font-medium leading-relaxed text-zinc-400">
                                 Follow <span className="text-white">BMT reward status</span> alongside pool activity. A submitted benchmark measures performance; it does not by itself establish a mining reward.
                             </p>
-                        </div>
-                        <div className="group flex flex-col items-start border border-zinc-900 bg-zinc-950/50 p-10 shadow-xl transition-all hover:border-yellow-400 hover:bg-zinc-950">
+                        </SpotlightCard>
+                        <SpotlightCard className="group flex flex-col items-start border border-zinc-900 bg-zinc-950/50 p-10 shadow-xl transition-all hover:border-yellow-400 hover:bg-zinc-950">
                             <div className="mb-8 flex h-16 w-16 items-center justify-center border border-zinc-800 bg-zinc-900 transition-all group-hover:bg-yellow-400 group-hover:text-black">
                                 <Activity className="h-8 w-8" />
                             </div>
@@ -583,8 +580,8 @@ export default function LandingPageClient({
                             <p className="text-lg font-medium leading-relaxed text-zinc-400">
                                 Watch hashrate in real time with power consumption and temperature indicators for smarter hardware optimization, efficiency tracking, and better benchmark context.
                             </p>
-                        </div>
-                        <div className="group flex flex-col items-start border border-zinc-900 bg-zinc-950/50 p-10 shadow-xl transition-all hover:border-yellow-400 hover:bg-zinc-950">
+                        </SpotlightCard>
+                        <SpotlightCard className="group flex flex-col items-start border border-zinc-900 bg-zinc-950/50 p-10 shadow-xl transition-all hover:border-yellow-400 hover:bg-zinc-950">
                             <div className="mb-8 flex h-16 w-16 items-center justify-center border border-zinc-800 bg-zinc-900 transition-all group-hover:bg-yellow-400 group-hover:text-black">
                                 <Cpu className="h-8 w-8" />
                             </div>
@@ -592,8 +589,8 @@ export default function LandingPageClient({
                             <p className="text-lg font-medium leading-relaxed text-zinc-400">
                                 Explore <span className="text-white">CPU and GPU benchmark results</span> and check the algorithm used in each run. Available client builds are listed by platform on the downloads page.
                             </p>
-                        </div>
-                        <div className="group flex flex-col items-start border border-zinc-900 bg-zinc-950/50 p-10 shadow-xl transition-all hover:border-yellow-400 hover:bg-zinc-950">
+                        </SpotlightCard>
+                        <SpotlightCard className="group flex flex-col items-start border border-zinc-900 bg-zinc-950/50 p-10 shadow-xl transition-all hover:border-yellow-400 hover:bg-zinc-950">
                             <div className="mb-8 flex h-16 w-16 items-center justify-center border border-zinc-800 bg-zinc-900 transition-all group-hover:bg-yellow-400 group-hover:text-black">
                                 <Shield className="h-8 w-8" />
                             </div>
@@ -601,7 +598,7 @@ export default function LandingPageClient({
                             <p className="text-lg font-medium leading-relaxed text-zinc-400">
                                 Inspect the public client repository on Bitbucket and browse submitted benchmark results. Check how the software works before running it on your hardware.
                             </p>
-                        </div>
+                        </SpotlightCard>
                     </div>
                 </section>
 

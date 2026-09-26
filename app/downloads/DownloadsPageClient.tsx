@@ -1,5 +1,6 @@
 'use client';
 
+import SpotlightCard from '@/components/reactbits/SpotlightCard';
 import FadeContent from '@/components/reactbits/FadeContent';
 
 import Link from "next/link";
@@ -214,15 +215,11 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
         fetchReleases();
     }, [initialClientRelease]);
 
-    const PlatformSection = ({ platform, variants }: { platform: 'windows' | 'macos' | 'linux'; variants: BuildVariant[] }) => {
+    const renderPlatformSection = ({ platform, variants }: { platform: 'windows' | 'macos' | 'linux'; variants: BuildVariant[] }) => {
         const info = platformInfo[platform];
         
         return (
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: platform === 'windows' ? 0.1 : platform === 'macos' ? 0.2 : 0.3 }}
+            <FadeContent key={platform}
                 className="surface-panel p-6 sm:p-8 transition-colors hover:border-yellow-400/30"
             >
                 <div className="flex items-center gap-4 mb-6 pb-4 border-b border-zinc-900">
@@ -282,21 +279,21 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                         </div>
                     ))}
                 </div>
-            </motion.div>
+            </FadeContent>
         );
     };
 
     return (
-        <div className="board-page min-h-screen relative overflow-hidden bg-black flex flex-col">
+        <div className="board-page refresh-downloads min-h-screen relative overflow-hidden bg-black flex flex-col">
             <Header />
 
-            <main className="flex-grow pt-24 pb-20 px-4 sm:px-6 lg:px-8 relative z-10">
+            <main id="refresh-content" tabIndex={-1} className="flex-grow pt-24 pb-20 px-4 sm:px-6 lg:px-8 relative z-10">
                 <div className="max-w-6xl mx-auto">
                     {/* Header */}
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={false}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-center mb-16 border-b border-zinc-900 pb-12"
+                        className="refresh-download-cover text-center mb-16 border-b border-zinc-900 pb-12"
                     >
                         <div className="flex flex-col items-center mb-8">
                             <div className="flex items-start gap-6 mb-8">
@@ -403,10 +400,10 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                             { title: "Pool statistics", desc: "View workers, accepted shares, and pool activity in the client." },
                             { title: "Optional Premium", desc: "Add custom wallet and pool settings when you need more control." }
                         ].map((f, i) => (
-                            <div key={i} className="surface-panel p-6">
+                            <SpotlightCard key={i} className="surface-panel p-6">
                                 <h3 className="text-yellow-400 font-semibold text-sm mb-2">{f.title}</h3>
                                 <p className="text-zinc-400 text-sm leading-relaxed">{f.desc}</p>
-                            </div>
+                            </SpotlightCard>
                         ))}
                     </div>
 
@@ -422,7 +419,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                         ] as const)
                             .filter(([, variants]) => variants.length > 0)
                             .map(([platform, variants]) => (
-                                <PlatformSection key={platform} platform={platform} variants={variants} />
+                                renderPlatformSection({ platform, variants })
                             ))}
                     </div>
 

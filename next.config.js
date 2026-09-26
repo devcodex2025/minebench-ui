@@ -4,6 +4,18 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  async rewrites() {
+    return {
+      beforeFiles: [
+        { source: '/', destination: '/minebench-iq' },
+        { source: '/robots.txt', destination: '/minebench-iq/robots.txt' },
+        { source: '/sitemap.xml', destination: '/minebench-iq/sitemap.xml' },
+      ].map((route) => ({
+        ...route,
+        has: [{ type: 'host', value: '^iq\\.minebench\\.cloud$' }],
+      })),
+    };
+  },
   async headers() {
     return [
       {
@@ -13,6 +25,12 @@ const nextConfig = {
           { key: 'Access-Control-Allow-Origin', value: '*' },
           { key: 'Access-Control-Allow-Methods', value: 'GET, OPTIONS' },
           { key: 'Access-Control-Allow-Headers', value: 'Content-Type' },
+        ],
+      },
+      {
+        source: '/dashboard',
+        headers: [
+          { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate, proxy-revalidate' },
         ],
       },
     ];

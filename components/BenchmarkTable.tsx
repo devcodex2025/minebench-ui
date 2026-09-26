@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
-import { Search, Zap, Cpu, Monitor, ChevronUp, ChevronDown, Clock3 } from 'lucide-react';
-import Image from 'next/image';
+import { Search, Cpu, Gpu, Microchip, Gauge, BarChart3, PlugZap, Thermometer, Binary, ArrowUpRight, ChevronUp, ChevronDown, Clock3 } from 'lucide-react';
+import Link from 'next/link';
 import { BenchmarkTableProps, BenchmarkResult } from '@/types/benchmark';
 import { formatHashrate } from '@/lib/utils';
 import { getBenchmarkHashrate, getLeaderboardRows, normalizeDeviceName } from '@/lib/leaderboard';
@@ -53,20 +53,6 @@ export default function BenchmarkTable({ results, showRank = false }: BenchmarkT
     result.sensors?.temperature
   );
 
-  const getVendorIcon = (deviceName: string) => {
-    const name = deviceName?.toLowerCase() || '';
-    if (name.includes('nvidia') || name.includes('geforce') || name.includes('rtx') || name.includes('gtx')) {
-      return { icon: '/img/nvidia-icon.svg', color: 'text-green-500' };
-    }
-    if (name.includes('amd') || name.includes('radeon') || name.includes('rx ')) {
-      return { icon: '/img/radeon-icon.svg', color: 'text-red-500' };
-    }
-    if (name.includes('intel') || name.includes('arc') || name.includes('core')) {
-      return { icon: '/img/cpu-icon.svg', color: 'text-blue-500' };
-    }
-    return null;
-  };
-
   const deduplicatedResults = getLeaderboardRows(results);
   const ranks = new Map(deduplicatedResults.map((result, index) => [result.id, index + 1]));
 
@@ -105,13 +91,14 @@ export default function BenchmarkTable({ results, showRank = false }: BenchmarkT
     <motion.div
       initial={reducedMotion ? false : { opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="glass-panel rounded-xl overflow-hidden"
+      className="benchmark-results glass-panel rounded-xl overflow-hidden"
     >
       <div className="px-6 py-4 flex items-center bg-zinc-950/50 border-b border-zinc-900">
-        <h2 className="text-xl font-bold text-white uppercase tracking-[0.1em] flex items-center gap-3 italic">
-          <Zap className="w-5 h-5 text-yellow-400" />
-          Benchmark Results
+        <h2 className="text-xl font-medium text-white flex items-center gap-3">
+          <span className="benchmark-title-icon"><Microchip size={20} strokeWidth={1.6} /></span>
+          Benchmark results
         </h2>
+        <span className="benchmark-table-hint">Select hardware to inspect its benchmark <ArrowUpRight size={14}/></span>
       </div>
 
       <div className="p-6 border-b border-zinc-900 bg-zinc-950/40 grid grid-cols-1 gap-4">
@@ -135,26 +122,26 @@ export default function BenchmarkTable({ results, showRank = false }: BenchmarkT
             <tr>
               {showRank && <th scope="col" className="px-4 py-3 text-center">Rank</th>}
               {[
-                { key: 'device_name', label: 'Hardware' },
-                { key: 'avg_hashrate', label: 'Average Rate' },
-                { key: '_power_bar', label: 'Performance Index' },
-                { key: 'avg_power', label: 'Consumption' },
-                { key: 'avg_temp', label: 'Thermal' },
-                { key: 'algorithm', label: 'Algo' },
-                { key: 'duration_seconds', label: 'Duration' },
-              ].map(({ key, label }) => (
+                { key: 'device_name', label: 'Hardware', icon: Microchip },
+                { key: 'avg_hashrate', label: 'Hashrate', icon: Gauge },
+                { key: '_power_bar', label: 'Relative rate', icon: BarChart3 },
+                { key: 'avg_power', label: 'Power', icon: PlugZap },
+                { key: 'avg_temp', label: 'Temperature', icon: Thermometer },
+                { key: 'algorithm', label: 'Algorithm', icon: Binary },
+                { key: 'duration_seconds', label: 'Duration', icon: Clock3 },
+              ].map(({ key, label, icon: Icon }) => (
                 <th
                   key={key}
                   scope="col"
                   aria-sort={sortField === key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : undefined}
                   className="px-6 py-3 text-left"
                 >
-                  {key === '_power_bar' ? label : <button
+                  {key === '_power_bar' ? <span className="flex items-center gap-2"><Icon size={13}/>{label}</span> : <button
                     type="button"
                     onClick={() => handleSort(key as keyof BenchmarkResult)}
                     className="flex items-center gap-2 rounded-lg py-1 hover:text-yellow-400"
                   >
-                    {key === 'duration_seconds' && <Clock3 className="w-3 h-3 text-zinc-500" />}
+                    <Icon size={13} strokeWidth={1.6}/>
                     <span>{label}</span>
                     {sortField === key && (
                       sortDirection === 'asc' ? <ChevronUp className="w-3 h-3 text-yellow-400" /> : <ChevronDown className="w-3 h-3 text-yellow-400" />
@@ -176,7 +163,6 @@ export default function BenchmarkTable({ results, showRank = false }: BenchmarkT
             {filteredResults.map((r, index) => {
               const deviceName = normalizeDeviceName(r);
               const rank = ranks.get(r.id)!;
-              const vendor = getVendorIcon(deviceName);
               const rates = getBenchmarkHashrate(r);
               const relativePower = (rates / maxHashrate) * 100;
               const displayPower = getDisplayPower(r);
@@ -197,18 +183,14 @@ export default function BenchmarkTable({ results, showRank = false }: BenchmarkT
                 </td>}
                 <td className="px-6 py-5">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center group-hover:border-yellow-400/50 transition-colors p-2 text-zinc-500">
-                      {vendor ? (
-                        <div className="relative w-full h-full">
-                          <Image src={vendor.icon} alt="Vendor" fill className="object-contain filter grayscale brightness-200" />
-                        </div>
-                      ) : (
-                        r.device_type?.toLowerCase() === 'cpu' ? <Cpu className="w-5 h-5" /> : <Monitor className="w-5 h-5" />
-                      )}
+                    <div className="benchmark-hardware-icon" aria-hidden="true">
+                      {r.device_type?.toLowerCase() === 'cpu' ? <Cpu size={21} strokeWidth={1.5}/> : <Gpu size={21} strokeWidth={1.5}/>}
                     </div>
                     <div>
-                      <div className="font-medium text-sm text-white leading-snug mb-1">{deviceName}</div>
-                      <div className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">{r.device_type}</div>
+                      <Link href={`/benchmark/${encodeURIComponent(String(r.id))}`} prefetch={false} className="benchmark-device-link">
+                        <span>{deviceName}</span><ArrowUpRight size={15}/>
+                      </Link>
+                      <div className="benchmark-device-caption"><span>{r.device_type}</span><span>View benchmark #{r.id}</span></div>
                     </div>
                   </div>
                 </td>

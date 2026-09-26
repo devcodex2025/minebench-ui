@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { formatHashrate } from '@/lib/utils';
+import { normalizePoolStats } from '@/lib/pool-stats';
 import { TrendingUp, Users, Activity, Server } from 'lucide-react';
 
 export default function NetworkStrip() {
@@ -22,10 +23,11 @@ export default function NetworkStrip() {
         ]);
         const poolData = poolRes?.ok ? await poolRes.json() : {};
         const ratesData = ratesRes?.ok ? await ratesRes.json() : {};
+        const normalizedPool = normalizePoolStats(poolData);
         
         setMetrics({
-          hashrate: Number(poolData.poolHashrate || 0),
-          miners: Number(poolData.stratum?.connections || poolData.miners || 0),
+          hashrate: normalizedPool.poolHashrate,
+          miners: normalizedPool.miners,
           xmrPrice: Number(ratesData.xmr_usd || 0),
           bmtPrice: Number(ratesData.bmt_usd || 0),
           xmrBmtRatio: Number(ratesData.rate_xmr_bmt || 0)

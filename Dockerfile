@@ -5,15 +5,23 @@ FROM node:22 AS base
 FROM base AS deps
 WORKDIR /app
 
+# bigint-buffer has an optional native addon. Build it in the dependency stage
+# so the production image does not silently fall back to the slower JS path.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends python3 make g++ \
+  && rm -rf /var/lib/apt/lists/*
+
 # Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
 RUN npm ci --no-audit --no-fund
+RUN npm rebuild bigint-buffer --build-from-source
 
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+RUN node scripts/patch-bigint-buffer-warning.cjs
 
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
@@ -61,6 +69,12 @@ RUN mkdir -p .next && chown -R nextjs:nodejs .next
 # https://nextjs.org/docs/advanced-features/output-file-tracing
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Next standalone tracing may omit optional package files and native addons;
+# keep the complete bigint-buffer package available to the production server.
+COPY --from=deps /app/node_modules/bigint-buffer ./node_modules/bigint-buffer
+COPY --from=deps /app/node_modules/bindings ./node_modules/bindings
+COPY --from=deps /app/node_modules/file-uri-to-path ./node_modules/file-uri-to-path
+COPY --from=deps /app/node_modules/bigint-buffer/build/Release/bigint_buffer.node ./build/bigint_buffer.node
 
 USER nextjs
 
