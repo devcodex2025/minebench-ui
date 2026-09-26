@@ -12,6 +12,8 @@ import MacOSIcon from "@/public/img/macos-logo.svg";
 import LinuxIcon from "@/public/img/linux-logo.svg";
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { Button, ButtonLink } from '@/components/base/buttons/button';
+import { Badge } from '@/components/base/badges/badge';
 import { trackMarketingEvent } from '@/lib/marketingAnalytics';
 import { motion } from 'framer-motion';
 import ShaderScreenshotSlider, {
@@ -262,18 +264,18 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                                     <p className="font-medium text-white text-sm">{variant.label}</p>
                                     <p className="text-xs text-zinc-400 mt-1">{variant.description}</p>
                                 </div>
-                                <span className="shrink-0 rounded-full border border-yellow-400/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.2em] text-yellow-400">Stable</span>
+                                <Badge>Stable</Badge>
                             </div>
-                            <a
+                            <ButtonLink
                                 href={variant.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={() => handleDownloadClick(platform, variant.arch)}
-                                className="mt-4 inline-flex items-center justify-center gap-2 rounded-full border border-yellow-400/40 bg-yellow-400/10 px-4 py-2 text-xs font-black uppercase tracking-[0.28em] text-yellow-400 transition-all duration-300 hover:border-yellow-400 hover:bg-yellow-400 hover:text-black"
+                                leadingIcon={Download}
+                                className="mt-4"
                             >
-                                <Download className="h-4 w-4" aria-hidden />
                                 Download
-                            </a>
+                            </ButtonLink>
                         </div>
                     ))}
                 </div>
@@ -358,8 +360,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
 
                         {/* Large Download CTA */}
                         <div className="flex justify-center mb-20">
-                            <button
-                                type="button"
+                            <Button
                                 onClick={() => {
                                     const el = document.getElementById('download-section');
                                     if (el) window.scrollTo({
@@ -367,11 +368,11 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                                         behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
                                     });
                                 }}
-                                className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-yellow-400/40 bg-yellow-400/10 px-5 text-xs font-black uppercase tracking-[0.28em] text-yellow-400 transition-all duration-300 hover:border-yellow-400 hover:bg-yellow-400 hover:text-black"
+                                leadingIcon={Download}
+                                className="h-11 px-5"
                             >
-                                <Download className="h-4 w-4" aria-hidden />
                                 Choose your download
-                            </button>
+                            </Button>
                         </div>
 
                     {/* Application Overview Section */}
