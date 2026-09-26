@@ -2,6 +2,7 @@
 
 import AnimatedContent from '@/components/reactbits/AnimatedContent';
 import FadeContent from '@/components/reactbits/FadeContent';
+import { StatusDot } from '@/components/base/indicators/status-dot';
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -527,7 +528,7 @@ export default function DashboardClient() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 text-sm pt-2">
-                  <div className={`w-2 h-2 rounded-full ${nonAggregatePools.length > 0 ? 'bg-green-500 animate-pulse' : 'bg-zinc-600'}`}></div>
+                  <StatusDot tone={nonAggregatePools.length > 0 ? 'ok' : 'idle'} pulse={nonAggregatePools.length > 0} />
                   <span className="text-zinc-400 tracking-normal font-semibold text-[9px]">
                     {nonAggregatePools.length > 0 ? `${nonAggregatePools.length} pool node${nonAggregatePools.length === 1 ? '' : 's'} reporting` : 'Awaiting pool data'}
                   </span>

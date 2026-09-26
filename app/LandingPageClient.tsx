@@ -9,6 +9,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import CountUp from '@/components/reactbits/CountUp';
 import SpotlightCard from '@/components/reactbits/SpotlightCard';
+import { StatusDot } from '@/components/base/indicators/status-dot';
 import {
     Download,
     Activity,
@@ -362,7 +363,7 @@ export default function LandingPageClient({
                                 <div className="pointer-events-none absolute -inset-4 bg-yellow-400/20 blur-3xl opacity-0 transition-opacity duration-700 group-hover:opacity-100" />
                                 <div className="relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 shadow-[0_0_80px_rgba(0,0,0,0.5)]">
                                     <div className="absolute left-6 top-6 z-10 flex items-center gap-4 border border-yellow-400/30 bg-black/80 p-4 backdrop-blur-xl">
-                                        <div className="h-3 w-3 animate-pulse rounded-full bg-red-600" />
+                                        <StatusDot tone="warn" className="h-3 w-3" />
                                         <span className="font-mono text-xs font-black uppercase tracking-widest text-white italic">
                                             Real-Time Hashrate Tracking
                                         </span>

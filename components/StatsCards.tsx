@@ -1,5 +1,6 @@
 import { BenchmarkSummary, BenchmarkResult } from '@/types/benchmark';
 import { formatHashrate, formatEfficiency } from '@/lib/utils';
+import { StatusDot } from '@/components/base/indicators/status-dot';
 import { TrendingUp, Cpu, Zap, Award, Clock, Monitor } from 'lucide-react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
@@ -89,7 +90,7 @@ export default function StatsCards({ summary }: StatsCardsProps) {
                 </div>
                 {stat.subtitle && (
                   <div className="mt-2 flex items-center gap-2">
-                    <div className="h-1 w-1 rounded-full bg-yellow-400 animate-pulse"></div>
+                    <StatusDot className="h-1 w-1" />
                     <p className="text-[10px] font-bold text-zinc-400 truncate uppercase tracking-widest">{stat.subtitle}</p>
                   </div>
                 )}
@@ -126,7 +127,7 @@ export function RecentTests({ tests }: RecentTestsProps) {
     <div className="glass-panel rounded-xl overflow-hidden shadow-2xl relative group h-full flex flex-col">
       <div className="p-5 border-b border-zinc-900 bg-zinc-950/40 flex items-center justify-between shrink-0">
         <h3 className="text-sm font-black text-white uppercase tracking-[0.2em] italic flex items-center gap-3">
-          <Clock className="w-4 h-4 text-yellow-400 animate-pulse" />
+          <Clock className="w-4 h-4 text-yellow-400 motion-safe:animate-pulse" />
           Recent Activity
         </h3>
         <div className="flex gap-1">
