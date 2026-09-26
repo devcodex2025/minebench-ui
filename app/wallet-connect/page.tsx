@@ -49,7 +49,6 @@ const WalletConnectContent = () => {
   useEffect(() => {
     // Get callback URL from query params
     const url = searchParams?.get('callbackUrl');
-    console.log('[WalletConnect] Callback URL from params:', url);
     if (url) {
       setCallbackUrl(url);
     }
@@ -66,13 +65,11 @@ const WalletConnectContent = () => {
     setError(null);
 
     try {
-      console.log('[WalletConnect] Starting authentication...');
       const timestamp = Date.now();
       const message = new TextEncoder().encode(
         `MineBench Wallet Authentication\nTimestamp: ${timestamp}\nPublic Key: ${publicKeyText}`
       );
 
-      console.log('[WalletConnect] Requesting signature from wallet...');
       const signed = await sign(message);
       const signature = signed instanceof Uint8Array ? signed : signed.signature;
       const signatureB64 = Buffer.from(signature).toString('base64');
@@ -82,7 +79,6 @@ const WalletConnectContent = () => {
       redirectUrl.searchParams.set('signature', signatureB64);
       redirectUrl.searchParams.set('message', new TextDecoder().decode(message));
 
-      console.log('[WalletConnect] Sending callback to:', redirectUrl.toString());
       await fetch(redirectUrl.toString(), {
         method: 'GET',
         mode: 'no-cors'
