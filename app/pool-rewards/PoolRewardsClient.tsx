@@ -139,7 +139,7 @@ export default function PoolRewardsClient() {
             <div>
               <div className="inline-flex items-center gap-2 border border-emerald-400/30 bg-emerald-400/10 px-3 py-1">
                 <Blocks className="h-4 w-4 text-emerald-400" />
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-400">Pool receipt ledger</span>
+                <span className="text-[11px] font-black uppercase tracking-[0.3em] text-emerald-400">Pool receipt ledger</span>
               </div>
               <h1 className="mt-5 text-4xl font-black uppercase leading-none tracking-tighter text-white md:text-6xl">
                 Pool Block <span className="text-yellow-400">Rewards</span>
@@ -168,7 +168,7 @@ export default function PoolRewardsClient() {
               <h2 className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.2em] text-white">
                 <CircleDollarSign className="h-4 w-4 text-yellow-400" /> Block lifecycle history
               </h2>
-              <p className="mt-1 text-[9px] uppercase tracking-widest text-zinc-600">
+              <p className="mt-1 text-[11px] uppercase tracking-widest text-zinc-600">
                 {lastUpdated ? `Synced ${new Date(lastUpdated).toLocaleString()}` : 'Waiting for pool data'}
               </p>
             </div>
@@ -176,7 +176,7 @@ export default function PoolRewardsClient() {
               type="button"
               onClick={refresh}
               disabled={loading}
-              className="inline-flex items-center gap-2 rounded-lg border border-zinc-700 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:border-yellow-400 hover:text-yellow-400 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg border border-zinc-700 px-4 py-2 text-[11px] font-black uppercase tracking-widest text-white hover:border-yellow-400 hover:text-yellow-400 disabled:opacity-50"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh
             </button>
@@ -189,7 +189,7 @@ export default function PoolRewardsClient() {
           ) : error && blocks.length === 0 ? (
             <div className="flex h-72 flex-col items-center justify-center gap-4 text-center">
               <span className="text-xs font-black uppercase tracking-widest text-zinc-500">Block history unavailable</span>
-              <button type="button" onClick={() => void loadBlocks()} className="rounded-lg border border-zinc-700 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-yellow-400 hover:border-yellow-400">
+              <button type="button" onClick={() => void loadBlocks()} className="rounded-lg border border-zinc-700 px-4 py-2 text-[11px] font-black uppercase tracking-widest text-yellow-400 hover:border-yellow-400">
                 Try again
               </button>
             </div>
@@ -202,7 +202,7 @@ export default function PoolRewardsClient() {
             <>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[780px] text-left">
-                  <thead className="border-b border-zinc-900 bg-black text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600">
+                  <thead className="border-b border-zinc-900 bg-black text-[11px] font-black uppercase tracking-[0.2em] text-zinc-600">
                     <tr>
                       <th className="px-6 py-3">Found at</th>
                       <th className="px-4 py-3">Monero block</th>
@@ -223,13 +223,13 @@ export default function PoolRewardsClient() {
                             }`} />
                             <div>
                               <div className="font-mono text-xs font-bold text-white">{new Date(block.foundAt).toLocaleDateString()}</div>
-                              <div className="mt-0.5 font-mono text-[10px] text-zinc-600">{new Date(block.foundAt).toLocaleTimeString()}</div>
+                              <div className="mt-0.5 font-mono text-[11px] text-zinc-600">{new Date(block.foundAt).toLocaleTimeString()}</div>
                             </div>
                           </div>
                         </td>
                         <td className="px-4 py-4 font-mono text-xs font-bold text-zinc-400">
                           <div>#{block.blockHeight.toLocaleString()}</div>
-                          {block.blockHash ? <div className="mt-1 max-w-36 truncate text-[9px] text-zinc-700">{block.blockHash}</div> : null}
+                          {block.blockHash ? <div className="mt-1 max-w-36 truncate text-[11px] text-zinc-700">{block.blockHash}</div> : null}
                         </td>
                         <td className={`px-4 py-4 text-right font-mono text-xs font-black ${
                           block.moneroPayoutStatus === 'received'
@@ -240,15 +240,15 @@ export default function PoolRewardsClient() {
                             ? `${block.walletPayoutXmr?.toFixed(6) || '—'} XMR`
                             : 'Awaiting payout'}
                           {block.payoutDetectedAt ? (
-                            <div className="mt-1 text-[9px] font-normal text-zinc-700">{new Date(block.payoutDetectedAt).toLocaleString()}</div>
+                            <div className="mt-1 text-[11px] font-normal text-zinc-700">{new Date(block.payoutDetectedAt).toLocaleString()}</div>
                           ) : null}
                         </td>
                         <td className="px-4 py-4 text-right font-mono text-xs font-bold text-emerald-400">{block.userBmt > 0 ? block.userBmt.toFixed(2) : '—'}</td>
                         <td className="px-6 py-4 text-right">
-                          <span className={`inline-flex rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] ${PAYOUT_STATUS[block.bmtSettlementStatus].className}`}>
+                          <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.14em] ${PAYOUT_STATUS[block.bmtSettlementStatus].className}`}>
                             {PAYOUT_STATUS[block.bmtSettlementStatus].label}
                           </span>
-                          <div className="mt-1 font-mono text-[9px] text-zinc-600">
+                          <div className="mt-1 font-mono text-[11px] text-zinc-600">
                             {block.paidDistributions}/{block.distributions} allocations paid
                           </div>
                         </td>
@@ -258,7 +258,7 @@ export default function PoolRewardsClient() {
                 </table>
               </div>
 
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-zinc-900 bg-black/40 px-6 py-4 text-[10px] uppercase tracking-[0.14em] text-zinc-500">
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-zinc-900 bg-black/40 px-6 py-4 text-[11px] uppercase tracking-[0.14em] text-zinc-500">
                 <span className="inline-flex items-center gap-2">
                   <span className="h-2.5 w-2.5 rotate-45 border-2 border-yellow-400 bg-zinc-950" />
                   Block found · payout pending
@@ -279,7 +279,7 @@ export default function PoolRewardsClient() {
                     type="button"
                     onClick={() => void loadBlocks(blocks.length, true)}
                     disabled={loadingMore}
-                    className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white hover:border-yellow-400 hover:text-yellow-400 disabled:opacity-50"
+                    className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 px-6 py-3 text-[11px] font-black uppercase tracking-[0.2em] text-white hover:border-yellow-400 hover:text-yellow-400 disabled:opacity-50"
                   >
                     {loadingMore && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
                     Load older blocks
@@ -290,7 +290,7 @@ export default function PoolRewardsClient() {
           )}
         </FadeContent>
 
-        <p className="mt-5 text-[10px] leading-relaxed text-zinc-600">
+        <p className="mt-5 text-[11px] leading-relaxed text-zinc-600">
           A found P2Pool block and a wallet payout are two stages of the same block lifecycle. This ledger keeps XMR receipt, BMT credit, and completed Solana payouts separate. Miner identities and wallet addresses are never exposed.
         </p>
       </main>
