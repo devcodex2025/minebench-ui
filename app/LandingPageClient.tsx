@@ -93,7 +93,6 @@ export default function LandingPageClient({
         guildName: 'MineBench Discord',
     });
     const [discordUnavailable, setDiscordUnavailable] = useState(false);
-    const [activeCta, setActiveCta] = useState<'benchmark' | 'token' | 'opensource' | null>(null);
     const [isMuted, setIsMuted] = useState(true);
     const [volume, setVolume] = useState(0.5);
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -393,10 +392,7 @@ export default function LandingPageClient({
                         <div className="mb-32 grid grid-cols-1 gap-8 md:grid-cols-3">
                             <motion.div
                                 whileHover={{ y: -10 }}
-                                onClick={() => setActiveCta('benchmark')}
-                                className={`group flex cursor-pointer flex-col items-center rounded-2xl border bg-zinc-950 p-8 text-center shadow-xl shadow-black transition-all ${
-                                    activeCta === 'benchmark' ? 'border-yellow-400 shadow-[0_0_35px_rgba(250,204,21,0.14)]' : 'border-zinc-900 hover:border-yellow-400'
-                                }`}
+                                className="group flex flex-col items-center rounded-2xl border border-zinc-900 bg-zinc-950 p-8 text-center shadow-xl shadow-black transition-all hover:border-yellow-400"
                             >
                                 <div className="mb-4 text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Desktop Benchmark</div>
                                         <div className="mb-10 flex h-24 w-24 rotate-3 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-900 transition-all group-hover:rotate-0 group-hover:bg-yellow-400 group-hover:text-black">
@@ -412,12 +408,7 @@ export default function LandingPageClient({
                             </motion.div>
                             <motion.div
                                 whileHover={{ y: -10 }}
-                                onClick={() => setActiveCta('token')}
-                                    className={`group flex cursor-pointer flex-col items-center rounded-2xl bg-zinc-950 p-12 text-center transition-all ${
-                                    activeCta === 'token'
-                                        ? 'border-4 border-yellow-400 shadow-[0_0_40px_rgba(250,204,21,0.18)]'
-                                        : 'border border-zinc-900 shadow-xl shadow-black hover:border-yellow-400'
-                                }`}
+                                className="group flex flex-col items-center rounded-2xl border border-zinc-900 bg-zinc-950 p-12 text-center shadow-xl shadow-black transition-all hover:border-yellow-400"
                             >
                                 <div className="mb-4 text-[10px] font-black uppercase tracking-[0.35em] text-yellow-200">Token Market</div>
                                 <div className="mb-10 flex h-24 w-24 -rotate-3 items-center justify-center rounded-2xl bg-yellow-400 text-black transition-transform group-hover:rotate-0">
@@ -434,10 +425,7 @@ export default function LandingPageClient({
 
                             <motion.div
                                 whileHover={{ y: -10 }}
-                                onClick={() => setActiveCta('opensource')}
-                                className={`group flex cursor-pointer flex-col items-center rounded-2xl border bg-zinc-950 p-8 text-center shadow-xl shadow-black transition-all ${
-                                    activeCta === 'opensource' ? 'border-yellow-400 shadow-[0_0_35px_rgba(250,204,21,0.14)]' : 'border-zinc-900 hover:border-yellow-400'
-                                }`}
+                                className="group flex flex-col items-center rounded-2xl border border-zinc-900 bg-zinc-950 p-8 text-center shadow-xl shadow-black transition-all hover:border-yellow-400"
                             >
                                 <div className="mb-4 text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Open Development</div>
                                         <div className="mb-10 flex h-24 w-24 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-900 transition-all group-hover:bg-white group-hover:text-black">

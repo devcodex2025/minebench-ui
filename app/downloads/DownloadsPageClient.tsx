@@ -421,6 +421,14 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                             .map(([platform, variants]) => (
                                 renderPlatformSection({ platform, variants })
                             ))}
+                        {!loading && ![builds.windows, builds.macos, builds.linux].some((variants) => variants.length > 0) && (
+                            <div className="col-span-full rounded-2xl border border-zinc-800 bg-zinc-950 p-10 text-center">
+                                <p className="text-sm font-black uppercase tracking-[0.3em] text-zinc-500">No builds available</p>
+                                <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-zinc-400">
+                                    Download packages are being prepared. Check back shortly, or join our Discord for release updates.
+                                </p>
+                            </div>
+                        )}
                     </div>
 
                     {/* Reward System Section */}
@@ -437,7 +445,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                                 MineBench rewards are active. Connect your Solana wallet in the desktop app and mine through the MineBench pool. Authenticated mining sessions contribute accepted shares to the current reward window.
                             </p>
                             <p>
-                                When P2Pool confirms eaned XMR, MineBench divides the reward proportionally to each miner&apos;s accepted shares, converts the XMR value to <strong className="text-white">BMT at the current XMR/BMT rate</strong>, and credits the confirmed BMT balance in the app.
+                                When P2Pool confirms earned XMR, MineBench divides the reward proportionally to each miner&apos;s accepted shares, converts the XMR value to <strong className="text-white">BMT at the current XMR/BMT rate</strong>, and credits the confirmed BMT balance in the app.
                             </p>
                             <p>
                                 The client shows your current reward-window share, confirmed balance, and reward history. Use <strong className="text-white">Claim</strong> to review the estimated Solana payout cost and request a BMT transfer to your connected wallet; the payout cost is deducted from the claimed amount.
@@ -571,7 +579,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                                     <li>4 GB RAM</li>
                                     <li>2 GB free disk space</li>
                                     <li>Quad-core processor</li>
-                                    <li>Intenet connection</li>
+                                    <li>Internet connection</li>
                                 </ul>
                             </div>
                             <div>
