@@ -519,16 +519,18 @@ export default function DashboardClient() {
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between mb-1">
-                    <span className="text-xs font-mono text-zinc-500">Sync Status</span>
-                    <span className="text-xs font-mono text-yellow-400">100%</span>
+                    <span className="text-xs font-mono text-zinc-500">Last Synced</span>
+                    <span className="text-xs font-mono text-yellow-400">{lastUpdated ? new Date(lastUpdated).toLocaleTimeString() : '—'}</span>
                   </div>
                   <div className="w-full bg-zinc-900 h-1">
-                    <div className="bg-yellow-400 h-full w-full shadow-[0_0_10px_rgba(250,204,21,0.5)]"></div>
+                    <div className={`bg-yellow-400 h-full shadow-[0_0_10px_rgba(250,204,21,0.5)] ${lastUpdated ? 'w-full' : 'w-0'}`}></div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 text-sm pt-2">
-                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                  <span className="text-zinc-400 tracking-normal font-semibold text-[9px]">All Pool Nodes Optimal</span>
+                  <div className={`w-2 h-2 rounded-full ${nonAggregatePools.length > 0 ? 'bg-green-500 animate-pulse' : 'bg-zinc-600'}`}></div>
+                  <span className="text-zinc-400 tracking-normal font-semibold text-[9px]">
+                    {nonAggregatePools.length > 0 ? `${nonAggregatePools.length} pool node${nonAggregatePools.length === 1 ? '' : 's'} reporting` : 'Awaiting pool data'}
+                  </span>
                 </div>
               </div>
             </div>
