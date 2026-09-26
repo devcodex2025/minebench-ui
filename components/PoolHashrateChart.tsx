@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Activity, Blocks, ExternalLink, RefreshCw, TrendingDown, TrendingUp } from 'lucide-react';
 import { formatHashrate } from '@/lib/utils';
 import { ThinkingOrb } from 'thinking-orbs';
@@ -199,7 +199,9 @@ export default function PoolHashrateChart() {
   const deltaPct = first > 0 ? ((latest - first) / first) * 100 : 0;
   const trendingUp = deltaPct >= 0;
 
-  const onMove = (event: React.MouseEvent<SVGSVGElement>) => {
+  const reduceMotion = useReducedMotion();
+
+  const onMove = (event: React.PointerEvent<SVGSVGElement>) => {
     if (points.length < 2 || view.innerWidth <= 0) return;
     const mouseX = event.clientX - event.currentTarget.getBoundingClientRect().left;
     const ratio = (mouseX - PAD.left) / view.innerWidth;
@@ -288,7 +290,8 @@ export default function PoolHashrateChart() {
           <svg
             width={width}
             height={HEIGHT}
-            onMouseMove={onMove}
+            onPointerMove={onMove}
+            onPointerDown={onMove}
             onMouseLeave={() => {
               setHover(null);
               setHoverRewardId(null);
@@ -311,7 +314,7 @@ export default function PoolHashrateChart() {
             ))}
             {view.area && <path d={view.area} fill={`url(#${gradientId})`} />}
             {view.line && (
-              <motion.path d={view.line} fill="none" stroke="rgb(250 204 21)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" initial={{ pathLength: 0, opacity: 0.4 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.9, ease: 'easeOut' }} />
+              <motion.path d={view.line} fill="none" stroke="rgb(250 204 21)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" initial={reduceMotion ? { pathLength: 1, opacity: 1 } : { pathLength: 0, opacity: 0.4 }} animate={{ pathLength: 1, opacity: 1 }} transition={reduceMotion ? { duration: 0 } : { duration: 0.9, ease: 'easeOut' }} />
             )}
             {view.blockMarkers.map((marker) => {
               const isActive = marker.block.id === activeRewardId;
