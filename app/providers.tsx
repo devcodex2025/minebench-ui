@@ -5,8 +5,6 @@ import { MotionConfig } from 'framer-motion';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom';
-import { SolflareWalletAdapter } from '@solana/wallet-adapter-solflare';
 import { clusterApiUrl } from '@solana/web3.js';
 
 // Import wallet adapter CSS
@@ -20,13 +18,10 @@ export function SolanaWalletProvider({ children }: { children: React.ReactNode }
     return rpcUrl || clusterApiUrl(network);
   }, [network]);
 
-  const wallets = React.useMemo(
-    () => [
-      new PhantomWalletAdapter(),
-      new SolflareWalletAdapter({ network }),
-    ],
-    [network]
-  );
+  // Wallet Standard wallets (Phantom, Solflare, Backpack, Glow, Magic Eden, ...)
+  // are discovered automatically by @solana/wallet-adapter-react. The `wallets`
+  // list is only for legacy adapters, so no per-wallet dependency is required.
+  const wallets = React.useMemo(() => [], []);
 
   return (
     <ConnectionProvider endpoint={endpoint}>
@@ -38,3 +33,4 @@ export function SolanaWalletProvider({ children }: { children: React.ReactNode }
     </ConnectionProvider>
   );
 }
+
