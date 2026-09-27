@@ -43,7 +43,7 @@ Updated: 2026-09-07. Scope: existing website, React 19 / Tailwind 4 / Board UI s
 
 ## Tracking plan
 
-No external analytics destination was supplied. Events are available in `window.minebenchEvents` (last 50 only, cleared on page unload) and the `minebench:analytics` CustomEvent. No cookies, persistence, external pixels or analytics network calls are introduced. Existing operational APIs are unchanged.
+Local events are available in `window.minebenchEvents` (last 50 only, cleared on page unload) and the `minebench:analytics` CustomEvent. A consent-gated GA4 destination (`G-VN2T49YVLX`) is loaded by `components/analytics/GoogleAnalyticsConsent.tsx` only after explicit opt-in: before consent no Google script, cookie or request is created, and a decline persists in `localStorage` (`minebench:analytics-consent`). Manual pageviews send origin + pathname only (query string stripped) and `/wallet-connect` is excluded from GA pageviews; GA4's Enhanced Measurement "Page changes based on browser history events" must be disabled in the property to avoid double counting. Visitors can reset their choice from the footer "Cookie settings" control. Existing operational APIs are unchanged.
 
 | Event | Trigger | Properties | Decision |
 | --- | --- | --- | --- |
@@ -55,7 +55,7 @@ No external analytics destination was supplied. Events are available in `window.
 
 No wallet addresses, signatures, balances, full URLs, query strings, referrers or typed searches are collected. `arch` preserves the existing release variant keys (including installer formats). A click is not a completed download; checkout start is not payment success. A future confirmed-purchase event needs server-side payment verification, not the client success flag.
 
-To add GA4/PostHog later, supply the property/project ID and wire a consent-aware adapter to `minebench:analytics`; do not retroactively send the diagnostic buffer. The current local instrumentation cannot produce historical conversion reports. Before interpreting growth, record a real baseline and compare download selections/visits and checkout starts/Premium visits over the same traffic sources. Do not claim causal uplift without an experiment.
+GA4 is wired through the consent-aware `GoogleAnalyticsConsent` component (property `G-VN2T49YVLX`). To add PostHog later, wire a consent-aware adapter to `minebench:analytics`; do not retroactively send the diagnostic buffer. The current local instrumentation cannot produce historical conversion reports. Before interpreting growth, record a real baseline and compare download selections/visits and checkout starts/Premium visits over the same traffic sources. Do not claim causal uplift without an experiment.
 
 ## SEO validation and boundaries
 

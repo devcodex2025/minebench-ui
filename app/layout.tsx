@@ -4,6 +4,7 @@ import './globals.css';
 import './refresh.css';
 import { SolanaWalletProvider } from './providers';
 import MarketingAnalytics from '@/components/marketing/MarketingAnalytics';
+import GoogleAnalyticsConsent from '@/components/analytics/GoogleAnalyticsConsent';
 import { WorkspaceMotion } from '@/components/refresh/WorkspaceLink';
 
 export const viewport = {
@@ -89,6 +90,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="antialiased refresh-ui">
+        <GoogleAnalyticsConsent />
         <MarketingAnalytics />
         <WorkspaceMotion />
         <SolanaWalletProvider>
