@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import TransactionsRefresh from './TransactionsRefresh';
+import { formatBmtAmount } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
@@ -147,8 +148,8 @@ async function TransactionHistory({ type, page }: { type: keyof typeof tabs; pag
         {queue ? <>
           <dl aria-live="polite" aria-atomic="true" className="mt-6 grid gap-5 sm:grid-cols-3">
             <div><dt className="text-xs text-zinc-400">Pending payouts</dt><dd className="mt-2 text-2xl font-medium tabular-nums text-yellow-400">{queue.pendingCount.toLocaleString('en-US')}</dd></div>
-            <div className="min-w-0"><dt className="text-xs text-zinc-400">Estimated amount to wallets</dt><dd className="mt-2 break-words text-xl font-medium tabular-nums">{queue.amountBmt} BMT</dd></div>
-            <div className="min-w-0"><dt className="text-xs text-zinc-400">Estimated total fees</dt><dd className="mt-2 break-words text-xl font-medium tabular-nums">{queue.feeBmt} BMT</dd></div>
+            <div className="min-w-0"><dt className="text-xs text-zinc-400">Estimated amount to wallets</dt><dd className="mt-2 break-words text-xl font-medium tabular-nums">{formatBmtAmount(queue.amountBmt)} BMT</dd></div>
+            <div className="min-w-0"><dt className="text-xs text-zinc-400">Estimated total fees</dt><dd className="mt-2 break-words text-xl font-medium tabular-nums">{formatBmtAmount(queue.feeBmt)} BMT</dd></div>
           </dl>
           <p className="mt-5 text-sm text-zinc-400">{queue.pendingCount === 0
             ? 'No BMT payouts are currently queued.'
@@ -180,8 +181,8 @@ async function TransactionHistory({ type, page }: { type: keyof typeof tabs; pag
                 return <tr key={row.id} className="border-b border-zinc-800 last:border-0">
                   <td className="whitespace-nowrap p-4 text-zinc-400">{new Date(row.created_at).toISOString().slice(0, 16).replace('T', ' ')}</td>
                   <td className="p-4"><span className={['confirmed', 'completed'].includes(row.status) ? 'text-emerald-400' : type === 'bmt' && row.status === 'pending' ? 'text-yellow-400' : 'text-zinc-300'}>{type === 'bmt' && row.status === 'pending' ? hash ? 'Awaiting confirmation' : 'Queued' : statuses[row.status]}</span>{type === 'bmt' && row.status === 'pending' && <span className="mt-1 block text-xs text-zinc-400">Amount and fee estimated</span>}{support && purchase.cluster !== 'mainnet-beta' && <span className="block text-xs text-amber-300">{purchase.cluster}</span>}</td>
-                  {support ? <><td className="p-4 tabular-nums">{atomic(purchase.xmr_atomic, 12)}</td><td className="p-4 tabular-nums">{atomic(purchase.sol_lamports, 9)}</td><td className="p-4 tabular-nums">{atomic(purchase.bmt_atomic, purchase.bmt_decimals)}</td></>
-                    : <><td className="p-4 tabular-nums">{payment.amount}</td><td className="p-4 tabular-nums">{payment.fee ?? '—'}</td></>}
+                  {support ? <><td className="p-4 tabular-nums">{atomic(purchase.xmr_atomic, 12)}</td><td className="p-4 tabular-nums">{atomic(purchase.sol_lamports, 9)}</td><td className="p-4 tabular-nums">{formatBmtAmount(atomic(purchase.bmt_atomic, purchase.bmt_decimals))}</td></>
+                    : <><td className="p-4 tabular-nums">{type === 'bmt' ? formatBmtAmount(payment.amount) : payment.amount}</td><td className="p-4 tabular-nums">{payment.fee === null ? '—' : type === 'bmt' ? formatBmtAmount(payment.fee) : payment.fee}</td></>}
                   <td className="p-4">{hash ? href ? <a href={href} target="_blank" rel="noopener noreferrer" className="text-yellow-400 underline">View transaction ↗</a>
                     : <details><summary className="cursor-pointer font-mono text-xs text-yellow-400">{hash.slice(0, 8)}…{hash.slice(-6)}</summary><code className="mt-2 block max-w-56 break-all text-xs text-zinc-400">{hash}</code></details> : <span className="text-zinc-500">Not submitted</span>}</td>
                 </tr>;

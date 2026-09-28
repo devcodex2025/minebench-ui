@@ -275,7 +275,7 @@ export default function DashboardClient() {
                   <Award className="h-5 w-5 shrink-0 text-yellow-400" />
                 </div>
                 <p className="whitespace-nowrap tabular-nums text-3xl font-semibold leading-none tracking-tighter text-yellow-400 sm:text-4xl">
-                  {availableRewards.toLocaleString(undefined, { maximumFractionDigits: 8 })}
+                  {availableRewards.toLocaleString(undefined, { maximumFractionDigits: 6 })}
                 </p>
                 <p className="mt-auto pt-4 text-xs leading-relaxed tracking-normal text-zinc-500">Credited mining rewards not yet paid</p>
               </div>

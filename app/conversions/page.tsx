@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { formatBmtAmount } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
@@ -103,7 +104,7 @@ export default async function ConversionsPage({ searchParams }: {
                 <td className="p-4">{labels[row.status]}{row.cluster !== 'mainnet-beta' && <span className="block text-amber-300">{row.cluster}</span>}</td>
                 <td className="p-4 tabular-nums">{amount(row.xmr_atomic, 12)}</td>
                 <td className="p-4 tabular-nums">{amount(row.sol_lamports, 9)}</td>
-                <td className="p-4 tabular-nums">{amount(row.bmt_atomic, row.bmt_decimals)}</td>
+                <td className="p-4 tabular-nums">{formatBmtAmount(amount(row.bmt_atomic, row.bmt_decimals))}</td>
                 <td className="p-4">{row.solana_signature && <a className="text-emerald-400 underline" href={`https://explorer.solana.com/tx/${row.solana_signature}${row.cluster === 'mainnet-beta' ? '' : `?cluster=${row.cluster}`}`} target="_blank" rel="noopener noreferrer">Solana transaction</a>}
                   {(row.residual_xmr != null || row.residual_usdt != null || row.residual_sol != null || row.residual_wsol_lamports != null) && <details className="mt-2 text-zinc-400">
                     <summary className="cursor-pointer">Unconverted balances</summary>
