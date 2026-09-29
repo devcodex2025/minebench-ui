@@ -32,14 +32,6 @@ export const metadata: Metadata = {
     description: 'Compare mining hardware, inspect the live dashboard, and download the MineBench client.',
     url: 'https://minebench.cloud',
     siteName: 'MineBench',
-    images: [
-      {
-        url: 'https://minebench.cloud/og-home.png',
-        width: 1200,
-        height: 630,
-        alt: 'Minebench - Hardware Benchmarking Platform',
-      },
-    ],
     locale: 'en_US',
     type: 'website',
   },
@@ -47,7 +39,6 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'MineBench | RandomX Benchmark And Hardware Results Dashboard',
     description: 'Mining benchmark software for CPU and GPU miners with hardware comparison and cleaner client UX.',
-    images: ['https://minebench.cloud/og-home.png'],
     creator: '@MineBenchdapp',
   },
 };

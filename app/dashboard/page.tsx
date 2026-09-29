@@ -22,14 +22,6 @@ export const metadata: Metadata = {
     description: 'Live hashrate, online clients, CPU mining benchmark results, and ranked GPU and CPU data from MineBench.',
     url: 'https://minebench.cloud/dashboard',
     siteName: 'Minebench',
-    images: [
-      {
-        url: 'https://minebench.cloud/og-dashboard.png',
-        width: 1200,
-        height: 630,
-        alt: 'Minebench Network Dashboard',
-      },
-    ],
     locale: 'en_US',
     type: 'website',
   },
@@ -37,7 +29,6 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'MineBench Dashboard | Live Mining Benchmark Results',
     description: 'Monitor live hashrate, online clients, CPU benchmark results, and GPU mining performance.',
-    images: ['https://minebench.cloud/og-dashboard.png'],
     creator: '@MineBenchdapp',
   },
 };

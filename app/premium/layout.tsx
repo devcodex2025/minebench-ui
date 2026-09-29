@@ -8,8 +8,8 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: 'https://minebench.cloud/premium' },
-  openGraph: { title, description, url: 'https://minebench.cloud/premium', siteName: 'MineBench', images: [{ url: 'https://minebench.cloud/og-downloads.png' }] },
-  twitter: { card: 'summary_large_image', title, description, images: ['https://minebench.cloud/og-downloads.png'] },
+  openGraph: { title, description, url: 'https://minebench.cloud/premium', siteName: 'MineBench' },
+  twitter: { card: 'summary_large_image', title, description },
 };
 
 export default function PremiumLayout({ children }: { children: React.ReactNode }) {
