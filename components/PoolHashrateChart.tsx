@@ -5,7 +5,23 @@ import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Activity, Blocks, ExternalLink, RefreshCw, TrendingDown, TrendingUp } from 'lucide-react';
 import { formatHashrate } from '@/lib/utils';
+import { normalizeRewardCoverage, type RewardCoverage } from '@/lib/pool-stats';
 import { ThinkingOrb } from 'thinking-orbs';
+
+// The reference line and its swatch use the same colour as the y-axis hashrate
+// labels (zinc-600) so the threshold reads as a neutral axis annotation.
+const AXIS_LABEL_COLOR = 'rgb(82 82 91)';
+const COVERAGE_MARKER_COLORS: Record<'mini' | 'nano', string> = {
+  mini: 'rgb(232 121 249)',
+  nano: AXIS_LABEL_COLOR
+};
+// The on-chart label needs to stay readable over the dark panel.
+const COVERAGE_LINE_LABEL_COLOR = 'rgb(161 161 170)';
+
+// The mini threshold usually sits far above the pool's own hashrate, so drawing
+// it would squeeze the real hashrate into a sliver of the chart. Show its value
+// but only draw the line that is actually comparable to the data (nano).
+const COVERAGE_DRAW_LINE: Record<'mini' | 'nano', boolean> = { mini: false, nano: true };
 
 type Point = { t: string; hashrate: number; miners: number };
 type PoolBlock = {
@@ -86,17 +102,23 @@ export default function PoolHashrateChart() {
   const [hover, setHover] = useState<number | null>(null);
   const [hoverRewardId, setHoverRewardId] = useState<string | null>(null);
   const [pinnedRewardId, setPinnedRewardId] = useState<string | null>(null);
+  const [coverage, setCoverage] = useState<RewardCoverage | null>(null);
   const refreshRef = useRef<() => void>(() => undefined);
   const gradientId = `hashrate-fill-${useId().replace(/:/g, '')}`;
   const { ref, width } = useMeasuredWidth();
 
   const load = useCallback(async (selectedRange: Range, signal: AbortSignal) => {
     try {
-      const [historyResult, blocksResult] = await Promise.allSettled([
+      const [historyResult, blocksResult, coverageResult] = await Promise.allSettled([
         fetch(`/api/pool-stats-history?range=${selectedRange}`, { signal }),
-        fetch(`/api/pool-blocks?range=${selectedRange}&limit=400`, { signal })
+        fetch(`/api/pool-blocks?range=${selectedRange}&limit=400`, { signal }),
+        fetch('/api/pool-stats', { signal })
       ]);
       if (historyResult.status !== 'fulfilled' || !historyResult.value.ok) throw new Error('bad status');
+      if (coverageResult.status === 'fulfilled' && coverageResult.value.ok) {
+        const coverageData = await coverageResult.value.json();
+        if (!signal.aborted) setCoverage(normalizeRewardCoverage(coverageData?.rewardCoverage));
+      }
       const data = await historyResult.value.json();
       if (signal.aborted) return;
       setPoints(Array.isArray(data.points) ? data.points : []);
@@ -161,7 +183,13 @@ export default function PoolHashrateChart() {
     const innerWidth = Math.max(0, width - PAD.left - PAD.right);
     const innerHeight = HEIGHT - PAD.top - PAD.bottom;
     const maxRate = Math.max(...points.map((point) => point.hashrate), 1);
-    const yMax = maxRate * 1.15;
+    const thresholdLines = (['mini', 'nano'] as const).flatMap((key) => {
+      const line = coverage?.sidechains[key];
+      if (!line || !(line.hashrate > 0)) return [];
+      return [{ key, color: COVERAGE_MARKER_COLORS[key], source: line.source, hashrate: line.hashrate, draw: COVERAGE_DRAW_LINE[key] }];
+    });
+    const drawnLines = thresholdLines.filter((entry) => entry.draw);
+    const yMax = Math.max(maxRate, ...drawnLines.map((entry) => entry.hashrate), 1) * 1.15;
     const times = points.map((point) => new Date(point.t).getTime());
     const blockTimes = blocks
       .map((block) => new Date(block.foundAt).getTime())
@@ -191,8 +219,9 @@ export default function PoolHashrateChart() {
       ), 0);
       return [{ block, x: xAt(timestamp), y: coordinates[nearestIndex]?.y ?? PAD.top }];
     });
-    return { coordinates, line, area, gridY, baseY, innerWidth, fromTime, toTime, times, blockMarkers };
-  }, [points, blocks, width]);
+    const thresholdMarkers = thresholdLines.map((entry) => ({ ...entry, y: y(entry.hashrate) }));
+    return { coordinates, line, area, gridY, baseY, innerWidth, fromTime, toTime, times, blockMarkers, thresholdMarkers };
+  }, [points, blocks, width, coverage]);
 
   const latest = points.length ? points[points.length - 1].hashrate : 0;
   const first = points.length ? points[0].hashrate : 0;
@@ -269,6 +298,20 @@ export default function PoolHashrateChart() {
         </div>
       </div>
 
+      {view.thresholdMarkers.length > 0 && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-zinc-900 bg-zinc-950/40 px-6 py-3 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+          <span>100% rewards above</span>
+          {view.thresholdMarkers.map((threshold) => (
+            <span key={threshold.key} className="inline-flex items-center gap-2">
+              {threshold.draw
+                ? <span className="h-0 w-4 border-t-2 border-dashed" style={{ borderColor: threshold.color }} />
+                : <span className="h-2 w-2 rounded-full" style={{ backgroundColor: threshold.color }} />}
+              {threshold.key} {formatHashrate(threshold.hashrate)}{threshold.source === 'nominal' ? ' est' : ''}
+            </span>
+          ))}
+        </div>
+      )}
+
       <div ref={ref} className="relative pb-2 pt-4">
         {loading && points.length === 0 ? (
           <div className="flex h-[300px] items-center justify-center" role="status" aria-label="Loading pool hashrate history">
@@ -310,6 +353,14 @@ export default function PoolHashrateChart() {
               <g key={index}>
                 <line x1={PAD.left} y1={grid.y} x2={width - PAD.right} y2={grid.y} stroke="rgb(39 39 42)" strokeWidth="1" strokeDasharray="3 4" />
                 <text x={PAD.left - 10} y={grid.y + 3} textAnchor="end" className="fill-zinc-600 font-mono" fontSize="10">{formatHashrate(grid.value)}</text>
+              </g>
+            ))}
+            {view.thresholdMarkers.filter((threshold) => threshold.draw).map((threshold) => (
+              <g key={threshold.key}>
+                <line x1={PAD.left} y1={threshold.y} x2={width - PAD.right} y2={threshold.y} stroke={threshold.color} strokeWidth="1.5" strokeDasharray="6 4" />
+                <text x={width - PAD.right - 4} y={threshold.y - 6} textAnchor="end" fontSize="10" fontWeight="700" fill={COVERAGE_LINE_LABEL_COLOR} stroke="rgb(9 9 11)" strokeWidth="3" paintOrder="stroke">
+                  {`${threshold.key} 100% ≈ ${formatHashrate(threshold.hashrate)}`}
+                </text>
               </g>
             ))}
             {view.area && <path d={view.area} fill={`url(#${gradientId})`} />}
@@ -453,6 +504,14 @@ export default function PoolHashrateChart() {
         <span className="inline-flex items-center gap-2">
           <span className="h-2.5 w-2.5 rotate-45 border border-zinc-400 bg-zinc-500" /> No wallet PPLNS payout
         </span>
+        {view.thresholdMarkers.map((threshold) => (
+          <span key={threshold.key} className="inline-flex items-center gap-2">
+            {threshold.draw
+              ? <span className="h-0 w-4 border-t-2 border-dashed" style={{ borderColor: threshold.color }} />
+              : <span className="h-2 w-2 rounded-full" style={{ backgroundColor: threshold.color }} />}
+            {' '}{threshold.key} {formatHashrate(threshold.hashrate)} for 100% rewards{threshold.source === 'nominal' ? ' (est)' : ''}
+          </span>
+        ))}
       </div>
     </div>
   );
