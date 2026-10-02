@@ -45,8 +45,8 @@ export default function NetworkStrip() {
   return (
     <div className="relative z-40 w-full overflow-x-auto border-t border-white/5 bg-white/[0.025] py-2">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 whitespace-nowrap px-4 text-[10px] font-medium text-zinc-400 sm:px-6 lg:px-8">
-            <div className="flex items-center gap-2"><Server className="w-3 h-3 text-yellow-400"/><span>Pool <span className="text-zinc-300">xmr.minebench.cloud:3333</span></span></div>
-            <div className="hidden sm:flex items-center gap-2"><Server className="w-3 h-3 text-yellow-400/60"/><span>Direct <span className="text-zinc-500">(Monero wallet)</span> <span className="text-zinc-300">direct.minebench.cloud:3334</span></span></div>
+            <div className="flex items-center gap-2"><Server className="w-3 h-3 text-yellow-400"/><span>Pool <span className="text-zinc-300">xmr.minebench.cloud</span></span></div>
+            <div className="hidden sm:flex items-center gap-2"><Server className="w-3 h-3 text-yellow-400/60"/><span>BMT <span className="text-zinc-300">bmt.minebench.cloud</span></span></div>
             {hasLiveData && (<>
             <div className="flex items-center gap-1.5"><TrendingUp className="w-3 h-3 text-yellow-400"/><span>Hashrate <span className="text-zinc-200">{formatHashrate(metrics.hashrate)}</span></span></div>
             <div className="flex items-center gap-1.5"><Users className="w-3 h-3"/><span>Miners <span className="text-zinc-200">{metrics.miners}</span></span></div>
