@@ -43,13 +43,13 @@ export async function generateMetadata(): Promise<Metadata> {
     : FALLBACK_DESCRIPTION;
 
   return {
-    title: `Download MineBench ${version} | Free Mining Benchmark`,
+    title: `CPU Mining Benchmark Software Download | MineBench ${version}`,
     description: description,
     alternates: {
       canonical: 'https://minebench.cloud/downloads',
     },
     openGraph: {
-      title: `Download MineBench ${version} | Free Mining Benchmark`,
+      title: `CPU Mining Benchmark Software Download | MineBench ${version}`,
       description: description,
       url: 'https://minebench.cloud/downloads',
       siteName: 'MineBench',
@@ -58,7 +58,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     twitter: {
       card: 'summary_large_image',
-      title: `Download MineBench ${version} | Free Mining Benchmark`,
+      title: `CPU Mining Benchmark Software Download | MineBench ${version}`,
       description: description,
       creator: '@MineBenchdapp',
     },

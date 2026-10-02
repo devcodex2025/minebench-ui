@@ -15,6 +15,11 @@ The client is free to download. Premium is an optional one-time upgrade for cust
 - [Live dashboard](https://minebench.cloud/dashboard): Current network and benchmark activity.
 - [Pool rewards](https://minebench.cloud/pool-rewards): Pool activity and BMT reward status.
 - [Whitepaper](https://minebench.cloud/whitepaper): Project model and technical background.
+- [Mining benchmark guides](https://minebench.cloud/guides): Practical guides for RandomX benchmarking, hashrate efficiency, and download verification.
+- [RandomX benchmarking guide](https://minebench.cloud/guides/randomx-benchmarking): How to run and interpret a repeatable CPU mining benchmark.
+- [Hashrate per watt guide](https://minebench.cloud/guides/measure-hashrate-per-watt): How to measure mining efficiency without treating it as a profit guarantee.
+- [Mining profitability calculator inputs](https://minebench.cloud/guides/mining-profitability-calculator): Inputs and limitations to check before estimating mining profitability.
+- [Download verification guide](https://minebench.cloud/guides/verify-minebench-download): How to verify the official client download and investigate security warnings.
 - [Client source and releases](https://bitbucket.org/minebenchapp/minebench-client): Public Bitbucket repository.
 
 ## Support

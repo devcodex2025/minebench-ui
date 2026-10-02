@@ -407,6 +407,18 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                         ))}
                     </div>
 
+                    <div className="mb-20 grid gap-5 md:grid-cols-3" aria-label="Mining benchmark setup guides">
+                        {[
+                            ['Run a RandomX CPU benchmark', '/guides/randomx-benchmarking'],
+                            ['Measure hashrate per watt', '/guides/measure-hashrate-per-watt'],
+                            ['Verify your MineBench download', '/guides/verify-minebench-download'],
+                        ].map(([label, href]) => (
+                            <Link key={href} href={href} className="surface-panel p-5 text-sm font-semibold text-yellow-300 transition-colors hover:text-white">
+                                {label} <span aria-hidden="true">→</span>
+                            </Link>
+                        ))}
+                    </div>
+
                     {/* Platform Sections */}
                     <div
                         id="download-section"

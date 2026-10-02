@@ -112,6 +112,9 @@ export default function LeaderboardClient() {
             <p className="text-sm leading-relaxed text-zinc-400">
               Use the CPU table to compare RandomX hashrate, power, thermal behavior, and measured benchmark duration from real MineBench client submissions.
             </p>
+            <Link href="/guides/randomx-benchmarking" className="mt-4 inline-flex text-sm font-semibold text-yellow-400 hover:text-yellow-300">
+              How to run a repeatable RandomX benchmark →
+            </Link>
           </div>
           <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-7">
               <h2 className="mb-4 text-2xl font-semibold tracking-tight text-white">
@@ -121,6 +124,9 @@ export default function LeaderboardClient() {
             <p className="text-sm leading-relaxed text-zinc-400">
               CPU and GPU results are listed separately. Check each run’s algorithm and units before comparing devices.
             </p>
+            <Link href="/guides/measure-hashrate-per-watt" className="mt-4 inline-flex text-sm font-semibold text-yellow-400 hover:text-yellow-300">
+              Measure hashrate per watt →
+            </Link>
           </div>
         </FadeContent>
 

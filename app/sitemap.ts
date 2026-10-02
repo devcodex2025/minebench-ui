@@ -1,6 +1,13 @@
 import { MetadataRoute } from 'next';
+import { GUIDES } from '@/lib/guides';
 
 export default function sitemap(): MetadataRoute.Sitemap {
+    const guidePages: MetadataRoute.Sitemap = GUIDES.map(({ slug }) => ({
+        url: `https://minebench.cloud/guides/${slug}`,
+        changeFrequency: 'monthly',
+        priority: 0.7,
+    }));
+
     return [
         { url: 'https://minebench.cloud/depin', changeFrequency: 'monthly', priority: 0.8 },
         {
@@ -23,6 +30,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
             changeFrequency: 'weekly',
             priority: 0.8,
         },
+        {
+            url: 'https://minebench.cloud/guides',
+            changeFrequency: 'weekly',
+            priority: 0.75,
+        },
+        ...guidePages,
         {
             url: 'https://minebench.cloud/premium',
             changeFrequency: 'weekly',

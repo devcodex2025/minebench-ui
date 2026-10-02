@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 
 const origin = process.env.PREVIEW_ORIGIN || 'http://127.0.0.1:3001';
-const pages = ['/', '/downloads', '/premium', '/leaderboard', '/dashboard', '/pool-rewards', '/whitepaper'];
+const pages = [
+  '/', '/downloads', '/premium', '/leaderboard', '/dashboard', '/pool-rewards', '/whitepaper', '/depin', '/guides',
+  '/guides/randomx-benchmarking', '/guides/measure-hashrate-per-watt',
+  '/guides/mining-profitability-calculator', '/guides/verify-minebench-download'
+];
 for (const path of [...pages, '/robots.txt', '/sitemap.xml', '/llms.txt', '/pricing.txt', '/wallet-connect']) {
   const response = await fetch(origin + path);
   const html = await response.text();
@@ -28,10 +32,13 @@ for (const path of [...pages, '/robots.txt', '/sitemap.xml', '/llms.txt', '/pric
   if (path === '/wallet-connect') assert.match(html, /content="noindex, nofollow"/);
   if (path === '/sitemap.xml') {
     assert.doesNotMatch(html, /wallet-connect|<lastmod>/);
-    assert.equal((html.match(/<loc>/g) || []).length, pages.length);
+    for (const page of pages) assert.match(html, new RegExp(`<loc>https://minebench\\.cloud${page === '/' ? '' : page}</loc>`), `${page}: sitemap entry`);
   }
   if (path === '/pricing.txt') assert.match(html, /29 USDC once.*No expiry/);
   if (path === '/robots.txt') assert.match(html, /Sitemap: https:\/\/minebench.cloud\/sitemap.xml/);
-  if (path === '/llms.txt') assert.match(html, /https:\/\/minebench.cloud\/pricing.txt/);
+  if (path === '/llms.txt') {
+    assert.match(html, /https:\/\/minebench.cloud\/pricing.txt/);
+    assert.match(html, /https:\/\/minebench.cloud\/guides\/mining-profitability-calculator/);
+  }
   console.log(`PASS ${path}`);
 }
