@@ -6,11 +6,12 @@ const root = path.resolve(__dirname, '..');
 const strip = fs.readFileSync(path.join(root, 'components/NetworkStrip.tsx'), 'utf8');
 const footer = fs.readFileSync(path.join(root, 'components/Footer.tsx'), 'utf8');
 
-// The proxy endpoint stays the primary/default on the network strip.
-assert.match(strip, /Pool <span className="text-zinc-300">xmr\.minebench\.cloud<\/span>/);
-// The BMT endpoint is shown alongside it, hidden on very small screens.
-assert.match(strip, /hidden sm:flex items-center gap-2[^\n]*bmt\.minebench\.cloud/);
-// Footer lists both hostnames.
-assert.match(footer, /xmr\.minebench\.cloud · bmt\.minebench\.cloud/);
+// Only the XMR pool endpoint (with its port) is shown on the network strip.
+assert.match(strip, /Pool <span className="text-zinc-300">xmr\.minebench\.cloud:3334<\/span>/);
+// The BMT endpoint must no longer be present in these components.
+assert.doesNotMatch(strip, /bmt\.minebench\.cloud/);
+// Footer lists only the XMR pool hostname with its port.
+assert.match(footer, /xmr\.minebench\.cloud:3334/);
+assert.doesNotMatch(footer, /bmt\.minebench\.cloud/);
 
 console.log('public endpoint tests passed');
