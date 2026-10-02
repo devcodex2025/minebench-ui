@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 const ALLOWED_RANGES = new Set(['1h', '24h', '7d', '30d']);
 const REQUEST_TIMEOUT_MS = 8_000;
 
-type HistoryPoint = { t: string; hashrate: number; miners: number };
+type HistoryPoint = { t: string; hashrate: number; bmtHashrate: number; xmrHashrate: number; miners: number };
 
 function normalizePoint(value: unknown): HistoryPoint | null {
   if (!value || typeof value !== 'object') return null;
@@ -12,9 +12,13 @@ function normalizePoint(value: unknown): HistoryPoint | null {
   const hashrate = Number(raw.hashrate);
   const miners = Number(raw.miners);
   if (!Number.isFinite(timestamp.getTime()) || !Number.isFinite(hashrate) || !Number.isFinite(miners)) return null;
+  const bmtHashrate = Number(raw.bmtHashrate);
+  const xmrHashrate = Number(raw.xmrHashrate);
   return {
     t: timestamp.toISOString(),
     hashrate: Math.max(0, hashrate),
+    bmtHashrate: Number.isFinite(bmtHashrate) ? Math.max(0, bmtHashrate) : 0,
+    xmrHashrate: Number.isFinite(xmrHashrate) ? Math.max(0, xmrHashrate) : 0,
     miners: Math.max(0, Math.round(miners))
   };
 }
