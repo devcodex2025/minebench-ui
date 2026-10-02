@@ -9,7 +9,7 @@ export default function Footer() {
       <div><span className="refresh-nav-label">GET STARTED</span>{[['DePIN architecture','/depin'],['MineBench IQ','/minebench-iq'],['Download client','/downloads'],['Free vs. Premium','/premium#compare-plans'],['Whitepaper','/whitepaper']].map(([label,path])=><Link key={path} href={path}>{label}</Link>)}</div>
       <div><span className="refresh-nav-label">STAY CONNECTED</span>{[['Discord','https://discord.gg/vsDyYh4rma'],['X / Twitter','https://x.com/MineBenchdapp'],['Source on Bitbucket','https://bitbucket.org/minebenchapp/minebench-client'],['BMT on pump.fun','https://pump.fun/coin/67ipDsgK6D7bqTW89H8T1KTxUvVuaFy92GX7Q2XFVdev']].map(([label,path])=><a key={path} href={path} target="_blank" rel="noopener noreferrer">{label}<ArrowUpRight size={13}/></a>)}</div>
     </div>
-    <div className="refresh-footer-bottom"><span>© {new Date().getFullYear()} MineBench</span><span>Monero mining. Solana rewards.</span><span>xmr.minebench.cloud:3333</span><span><CookieSettingsButton /></span></div>
+    <div className="refresh-footer-bottom"><span>© {new Date().getFullYear()} MineBench</span><span>Monero mining. Solana rewards.</span><span>xmr.minebench.cloud:3333 · direct.minebench.cloud:3334 (Monero wallet)</span><span><CookieSettingsButton /></span></div>
     <p className="refresh-contract">BMT / 67ipDsgK6D7bqTW89H8T1KTxUvVuaFy92GX7Q2XFVdev</p>
   </footer>;
 }
