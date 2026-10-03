@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { motion, useReducedMotion } from 'framer-motion';
 import { Activity, Blocks, ExternalLink, RefreshCw, TrendingDown, TrendingUp } from 'lucide-react';
 import { formatHashrate } from '@/lib/utils';
 import { normalizeRewardCoverage, type RewardCoverage } from '@/lib/pool-stats';
@@ -18,10 +17,13 @@ const COVERAGE_MARKER_COLORS: Record<'mini' | 'nano', string> = {
 // The on-chart label needs to stay readable over the dark panel.
 const COVERAGE_LINE_LABEL_COLOR = 'rgb(161 161 170)';
 
-// Layer colours: the BMT (MineBench) layer keeps the existing yellow, the
-// direct XMR (non-BMT) layer is drawn in orange.
-const BMT_LINE_COLOR = 'rgb(250 204 21)';
-const XMR_LINE_COLOR = 'rgb(251 146 60)';
+// The layers behave like two immiscible liquids: denser copper XMR settles at
+// the bottom while lighter golden BMT sits above it. Their shared edge stays
+// crisp, and the upper gold surface represents the combined pool hashrate.
+const BMT_LINE_COLOR = 'rgb(232 183 45)';
+const BMT_BODY_COLOR = 'rgb(203 145 31)';
+const XMR_LINE_COLOR = 'rgb(204 112 44)';
+const XMR_BODY_COLOR = 'rgb(154 71 29)';
 
 // The mini threshold usually sits far above the pool's own hashrate, so drawing
 // it would squeeze the real hashrate into a sliver of the chart. Show its value
@@ -90,6 +92,13 @@ function smoothLine(points: { x: number; y: number }[]): string {
   return path;
 }
 
+function getHashrateLayers(point: Point) {
+  const total = Number.isFinite(point.hashrate) ? Math.max(0, point.hashrate) : 0;
+  const reportedXmr = Number.isFinite(point.xmrHashrate) ? Math.max(0, point.xmrHashrate as number) : 0;
+  const xmr = Math.min(total, reportedXmr);
+  return { bmt: total - xmr, xmr };
+}
+
 function formatTick(iso: string, range: Range): string {
   const date = new Date(iso);
   return range === '7d' || range === '30d'
@@ -111,6 +120,8 @@ export default function PoolHashrateChart() {
   const refreshRef = useRef<() => void>(() => undefined);
   const gradientId = `hashrate-fill-${useId().replace(/:/g, '')}`;
   const xmrGradientId = `xmr-fill-${useId().replace(/:/g, '')}`;
+  const stackClipId = `hashrate-stack-${useId().replace(/:/g, '')}`;
+  const bmtMaskId = `hashrate-bmt-${useId().replace(/:/g, '')}`;
   const { ref, width } = useMeasuredWidth();
 
   const load = useCallback(async (selectedRange: Range, signal: AbortSignal) => {
@@ -210,18 +221,19 @@ export default function PoolHashrateChart() {
     const coordinates = points.map((point, index) => ({ x: xAt(times[index]), y: y(point.hashrate) }));
     const baseY = PAD.top + innerHeight;
     const line = smoothLine(coordinates);
-    const area = coordinates.length >= 2
+    const totalArea = coordinates.length >= 2
       ? `${line} L ${coordinates[coordinates.length - 1].x.toFixed(2)} ${baseY} L ${coordinates[0].x.toFixed(2)} ${baseY} Z`
       : '';
-    // BMT layer: when the backend has no split yet, treat the whole total as BMT
-    // so existing history renders exactly as before.
-    const bmtCoordinates = points.map((point, index) => {
-      const bmt = Number.isFinite(point.bmtHashrate) ? Math.max(0, point.bmtHashrate as number) : point.hashrate;
-      return { x: xAt(times[index]), y: y(bmt) };
-    });
-    const bmtLine = smoothLine(bmtCoordinates);
-    const bmtArea = bmtCoordinates.length >= 2
-      ? `${bmtLine} L ${bmtCoordinates[bmtCoordinates.length - 1].x.toFixed(2)} ${baseY} L ${bmtCoordinates[0].x.toFixed(2)} ${baseY} Z`
+    // The lower XMR layer grows from the baseline. The BMT layer is the band
+    // between XMR and the combined total, so the two fills meet without a
+    // stroke, glow or blur. History without a split remains entirely BMT.
+    const xmrCoordinates = points.map((point, index) => ({
+      x: xAt(times[index]),
+      y: y(getHashrateLayers(point).xmr)
+    }));
+    const xmrLine = smoothLine(xmrCoordinates);
+    const xmrArea = xmrCoordinates.length >= 2
+      ? `${xmrLine} L ${xmrCoordinates[xmrCoordinates.length - 1].x.toFixed(2)} ${baseY} L ${xmrCoordinates[0].x.toFixed(2)} ${baseY} Z`
       : '';
     const gridY = Array.from({ length: 4 }, (_, index) => {
       const value = (yMax / 4) * (index + 1);
@@ -236,15 +248,13 @@ export default function PoolHashrateChart() {
       return [{ block, x: xAt(timestamp), y: coordinates[nearestIndex]?.y ?? PAD.top }];
     });
     const thresholdMarkers = thresholdLines.map((entry) => ({ ...entry, y: y(entry.hashrate) }));
-    return { coordinates, line, area, bmtLine, bmtArea, gridY, baseY, innerWidth, fromTime, toTime, times, blockMarkers, thresholdMarkers };
+    return { coordinates, totalLine: line, totalArea, xmrArea, gridY, baseY, innerWidth, fromTime, toTime, times, blockMarkers, thresholdMarkers };
   }, [points, blocks, width, coverage]);
 
   const latest = points.length ? points[points.length - 1].hashrate : 0;
   const first = points.length ? points[0].hashrate : 0;
   const deltaPct = first > 0 ? ((latest - first) / first) * 100 : 0;
   const trendingUp = deltaPct >= 0;
-
-  const reduceMotion = useReducedMotion();
 
   const onMove = (event: React.PointerEvent<SVGSVGElement>) => {
     if (points.length < 2 || view.innerWidth <= 0) return;
@@ -358,17 +368,25 @@ export default function PoolHashrateChart() {
             }}
             className="block"
             role="img"
-            aria-label={`Pool hashrate history for ${range}, latest ${formatHashrate(latest)}, ${view.blockMarkers.length} pool blocks, BMT and XMR miner layers`}
+            aria-label={`Pool hashrate history for ${range}, latest total ${formatHashrate(latest)}, ${view.blockMarkers.length} pool blocks, total hashrate line with stacked BMT and XMR miner layers`}
           >
             <defs>
               <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="rgb(250 204 21)" stopOpacity="0.35" />
-                <stop offset="100%" stopColor="rgb(250 204 21)" stopOpacity="0" />
+                <stop offset="0%" stopColor={BMT_LINE_COLOR} stopOpacity="0.96" />
+                <stop offset="100%" stopColor={BMT_BODY_COLOR} stopOpacity="0.9" />
               </linearGradient>
               <linearGradient id={xmrGradientId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="rgb(251 146 60)" stopOpacity="0.35" />
-                <stop offset="100%" stopColor="rgb(251 146 60)" stopOpacity="0" />
+                <stop offset="0%" stopColor={XMR_LINE_COLOR} stopOpacity="0.95" />
+                <stop offset="100%" stopColor={XMR_BODY_COLOR} stopOpacity="0.98" />
               </linearGradient>
+              <clipPath id={stackClipId}>
+                <path d={view.totalArea} />
+              </clipPath>
+              <mask id={bmtMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width={width} height={HEIGHT}>
+                <rect width={width} height={HEIGHT} fill="black" />
+                <path d={view.totalArea} fill="white" />
+                <path d={view.xmrArea} fill="black" />
+              </mask>
             </defs>
             {view.gridY.map((grid, index) => (
               <g key={index}>
@@ -384,16 +402,20 @@ export default function PoolHashrateChart() {
                 </text>
               </g>
             ))}
-            {/* Direct XMR (non-BMT) miners envelope — drawn first so the BMT layer sits on top. */}
-            {view.area && <path d={view.area} fill={`url(#${xmrGradientId})`} />}
-            {view.line && (
-              <motion.path d={view.line} fill="none" stroke={XMR_LINE_COLOR} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" initial={reduceMotion ? { pathLength: 1, opacity: 1 } : { pathLength: 0, opacity: 0.4 }} animate={{ pathLength: 1, opacity: 1 }} transition={reduceMotion ? { duration: 0 } : { duration: 0.9, ease: 'easeOut' }} />
-            )}
-            {/* BMT (MineBench) miners layer. */}
-            {view.bmtArea && <path d={view.bmtArea} fill={`url(#${gradientId})`} />}
-            {view.bmtLine && (
-              <motion.path d={view.bmtLine} fill="none" stroke={BMT_LINE_COLOR} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" initial={reduceMotion ? { pathLength: 1, opacity: 1 } : { pathLength: 0, opacity: 0.4 }} animate={{ pathLength: 1, opacity: 1 }} transition={reduceMotion ? { duration: 0 } : { duration: 0.9, ease: 'easeOut' }} />
-            )}
+            {/* XMR is the lower wave; BMT occupies the non-overlapping wave above it. */}
+            {view.xmrArea && <path d={view.xmrArea} fill={`url(#${xmrGradientId})`} clipPath={`url(#${stackClipId})`} />}
+            {view.totalArea && <path d={view.totalArea} fill={`url(#${gradientId})`} mask={`url(#${bmtMaskId})`} />}
+            {/* The upper gold edge is the combined pool hashrate, without a white contour. */}
+            {view.totalLine && <path d={view.totalLine} fill="none" stroke={BMT_LINE_COLOR} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />}
+            {/* Open reservoir sides and base make the combined liquid level explicit. */}
+            <path
+              d={`M ${PAD.left} ${PAD.top} V ${view.baseY} H ${width - PAD.right} V ${PAD.top}`}
+              fill="none"
+              stroke="rgb(63 63 70)"
+              strokeOpacity="0.72"
+              strokeWidth="1"
+              vectorEffect="non-scaling-stroke"
+            />
             {view.blockMarkers.map((marker) => {
               const isActive = marker.block.id === activeRewardId;
               const color = marker.block.moneroPayoutStatus === 'received'
@@ -456,8 +478,8 @@ export default function PoolHashrateChart() {
             })}
             {hover !== null && view.coordinates[hover] && (
               <g>
-                <line x1={view.coordinates[hover].x} y1={PAD.top} x2={view.coordinates[hover].x} y2={view.baseY} stroke="rgb(250 204 21)" strokeOpacity="0.4" strokeWidth="1" />
-                <circle cx={view.coordinates[hover].x} cy={view.coordinates[hover].y} r="4" fill="rgb(250 204 21)" stroke="black" strokeWidth="2" />
+                <line x1={view.coordinates[hover].x} y1={PAD.top} x2={view.coordinates[hover].x} y2={view.baseY} stroke={BMT_LINE_COLOR} strokeOpacity="0.4" strokeWidth="1" />
+                <circle cx={view.coordinates[hover].x} cy={view.coordinates[hover].y} r="4" fill={BMT_LINE_COLOR} stroke="rgb(9 9 11)" strokeWidth="2" />
               </g>
             )}
           </svg>
@@ -515,19 +537,22 @@ export default function PoolHashrateChart() {
 
         {!activeMarker && hoverPoint && width > 0 && (
           <div className="pointer-events-none absolute z-10 -translate-x-1/2 rounded-lg border border-zinc-700 bg-black/90 px-3 py-2 shadow-xl" style={{ left: Math.min(Math.max(view.coordinates[hover as number].x, 70), width - 70), top: Math.max(view.coordinates[hover as number].y - 64, 8) }}>
-            <div className="font-mono text-sm font-black text-white">{formatHashrate(hoverPoint.hashrate)}</div>
+            <div className="flex items-baseline justify-between gap-4 font-mono text-sm font-black text-white">
+              <span className="text-[9px] uppercase tracking-widest text-zinc-500">Total</span>
+              <span>{formatHashrate(hoverPoint.hashrate)}</span>
+            </div>
             <div className="mt-1 flex items-center gap-2 font-mono text-[10px] font-bold">
               <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: BMT_LINE_COLOR }} />
               <span className="uppercase tracking-widest text-zinc-500">BMT</span>
-              <span className="text-yellow-400">
-                {formatHashrate(Number.isFinite(hoverPoint.bmtHashrate) ? Math.max(0, hoverPoint.bmtHashrate as number) : hoverPoint.hashrate)}
+              <span style={{ color: BMT_LINE_COLOR }}>
+                {formatHashrate(getHashrateLayers(hoverPoint).bmt)}
               </span>
             </div>
             <div className="mt-0.5 flex items-center gap-2 font-mono text-[10px] font-bold">
               <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: XMR_LINE_COLOR }} />
               <span className="uppercase tracking-widest text-zinc-500">XMR</span>
               <span style={{ color: XMR_LINE_COLOR }}>
-                {formatHashrate(Number.isFinite(hoverPoint.xmrHashrate) ? Math.max(0, hoverPoint.xmrHashrate as number) : 0)}
+                {formatHashrate(getHashrateLayers(hoverPoint).xmr)}
               </span>
             </div>
             <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-zinc-500">{hoverPoint.miners} miners</div>
@@ -546,10 +571,13 @@ export default function PoolHashrateChart() {
           <span className="h-2.5 w-2.5 rotate-45 border border-zinc-400 bg-zinc-500" /> No wallet PPLNS payout
         </span>
         <span className="inline-flex items-center gap-2">
-          <span className="h-0 w-4 border-t-2" style={{ borderColor: BMT_LINE_COLOR }} /> BMT miners
+          <span className="h-0 w-4 border-t-2" style={{ borderColor: BMT_LINE_COLOR }} /> Total hashrate
         </span>
         <span className="inline-flex items-center gap-2">
-          <span className="h-0 w-4 border-t-2" style={{ borderColor: XMR_LINE_COLOR }} /> XMR miners
+          <span className="h-2 w-4 rounded-sm" style={{ backgroundColor: BMT_LINE_COLOR }} /> BMT miners
+        </span>
+        <span className="inline-flex items-center gap-2">
+          <span className="h-2 w-4 rounded-sm" style={{ backgroundColor: XMR_LINE_COLOR }} /> XMR miners
         </span>
         {view.thresholdMarkers.map((threshold) => (
           <span key={threshold.key} className="inline-flex items-center gap-2">
