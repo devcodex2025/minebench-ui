@@ -25,6 +25,11 @@ type PoolBlock = {
   paidDistributions: number;
   creditedDistributions: number;
   bmtSettlementStatus: 'not_created' | 'processing' | 'credited' | 'partially_paid' | 'paid';
+  sharedCompensation: {
+    totalRecipients: number;
+    creditedRecipients: number;
+    paidRecipients: number;
+  } | null;
 };
 
 const PAGE_SIZE = 30;
@@ -42,6 +47,14 @@ const PAYOUT_STATUS = {
   partially_paid: { label: 'Partially paid', className: 'border-orange-400/40 bg-orange-400/10 text-orange-300' },
   paid: { label: 'Paid on Solana', className: 'border-emerald-400/40 bg-emerald-400/10 text-emerald-300' },
 } as const;
+
+function displayedSettlementStatus(block: PoolBlock): PoolBlock['bmtSettlementStatus'] {
+  const shared = block.sharedCompensation;
+  if (!shared) return block.bmtSettlementStatus;
+  if (shared.totalRecipients > 0 && shared.paidRecipients === shared.totalRecipients) return 'paid';
+  if (shared.paidRecipients > 0) return 'partially_paid';
+  return shared.creditedRecipients > 0 ? 'credited' : 'not_created';
+}
 
 function RewardCoin({ asset, className }: { asset: 'XMR' | 'BMT'; className: string }) {
   const isMonero = asset === 'XMR';
@@ -245,12 +258,20 @@ export default function PoolRewardsClient() {
                         </td>
                         <td className="px-4 py-4 text-right font-mono text-xs font-bold text-emerald-400">{block.userBmt > 0 ? block.userBmt.toFixed(2) : '—'}</td>
                         <td className="px-6 py-4 text-right">
-                          <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.14em] ${PAYOUT_STATUS[block.bmtSettlementStatus].className}`}>
-                            {PAYOUT_STATUS[block.bmtSettlementStatus].label}
+                          <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.14em] ${PAYOUT_STATUS[displayedSettlementStatus(block)].className}`}>
+                            {PAYOUT_STATUS[displayedSettlementStatus(block)].label}
                           </span>
-                          <div className="mt-1 font-mono text-[11px] text-zinc-600">
-                            {block.paidDistributions}/{block.distributions} allocations paid
-                          </div>
+                          {block.sharedCompensation ? (
+                            <div className="mt-1 font-mono text-[11px] text-zinc-600">
+                              <div>{block.sharedCompensation.creditedRecipients}/{block.sharedCompensation.totalRecipients} users credited</div>
+                              <div>{block.sharedCompensation.paidRecipients}/{block.sharedCompensation.totalRecipients} users received</div>
+                              <div className="mt-0.5 text-zinc-700">Shared compensation cohort</div>
+                            </div>
+                          ) : (
+                            <div className="mt-1 font-mono text-[11px] text-zinc-600">
+                              {block.paidDistributions}/{block.distributions} allocations paid
+                            </div>
+                          )}
                         </td>
                       </tr>
                     ))}

@@ -23,6 +23,11 @@ export type PoolBlock = {
   paidDistributions: number;
   creditedDistributions: number;
   bmtSettlementStatus: 'not_created' | 'processing' | 'credited' | 'partially_paid' | 'paid';
+  sharedCompensation: {
+    totalRecipients: number;
+    creditedRecipients: number;
+    paidRecipients: number;
+  } | null;
 };
 
 function normalizeBlock(value: unknown): PoolBlock | null {
@@ -39,6 +44,12 @@ function normalizeBlock(value: unknown): PoolBlock | null {
     : Number(raw.walletPayoutXmr);
   const payoutDetectedAt = raw.payoutDetectedAt ? new Date(String(raw.payoutDetectedAt)) : null;
   const distributions = Math.max(0, Math.round(Number(raw.distributions) || 0));
+  const rawCompensation = raw.sharedCompensation && typeof raw.sharedCompensation === 'object'
+    ? raw.sharedCompensation as Record<string, unknown>
+    : null;
+  const totalRecipients = Math.max(0, Math.round(Number(rawCompensation?.totalRecipients) || 0));
+  const creditedRecipients = Math.min(totalRecipients, Math.max(0, Math.round(Number(rawCompensation?.creditedRecipients) || 0)));
+  const paidRecipients = Math.min(creditedRecipients, Math.max(0, Math.round(Number(rawCompensation?.paidRecipients) || 0)));
 
   return {
     id: String(raw.id),
@@ -67,7 +78,10 @@ function normalizeBlock(value: unknown): PoolBlock | null {
     creditedDistributions: Math.min(distributions, Math.max(0, Math.round(Number(raw.creditedDistributions) || 0))),
     bmtSettlementStatus: BMT_STATUSES.has(String(raw.bmtSettlementStatus))
       ? raw.bmtSettlementStatus as PoolBlock['bmtSettlementStatus']
-      : 'not_created'
+      : 'not_created',
+    sharedCompensation: rawCompensation
+      ? { totalRecipients, creditedRecipients, paidRecipients }
+      : null
   };
 }
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {

@@ -87,6 +87,7 @@ const block = (overrides = {}) => ({
   paidDistributions: 4,
   creditedDistributions: 4,
   bmtSettlementStatus: 'paid',
+  sharedCompensation: null,
   ...overrides
 });
 
@@ -122,7 +123,15 @@ const reward = (overrides = {}) => ({
       () => Promise.resolve(fakeResponse({
         blocks: [
           block({ id: 'b-old', foundAt: '2026-09-14T08:00:00.000Z' }),
-          block({ id: 'b-new', foundAt: '2026-09-14T12:00:00.000Z' }),
+          block({
+            id: 'b-new',
+            foundAt: '2026-09-14T12:00:00.000Z',
+            sharedCompensation: {
+              totalRecipients: 88,
+              creditedRecipients: 90,
+              paidRecipients: 91
+            }
+          }),
           block({ id: 'b-no-payout', foundAt: '2026-09-14T11:00:00.000Z', moneroPayoutStatus: 'none' }),
           // Dropped by normalizeBlock: no id, unparsable date, and a non-positive height.
           block({ id: '' }),
@@ -138,6 +147,9 @@ const reward = (overrides = {}) => ({
     check('blocks: malformed rows are dropped', result.payload.blocks.length, 2);
     check('blocks: no-PPLNS-payout rows are hidden', result.payload.blocks.some((row) => row.id === 'b-no-payout'), false);
     check('blocks: newest first', result.payload.blocks[0].id, 'b-new');
+    check('blocks: shared compensation total is preserved', result.payload.blocks[0].sharedCompensation.totalRecipients, 88);
+    check('blocks: shared credited count is clamped to total', result.payload.blocks[0].sharedCompensation.creditedRecipients, 88);
+    check('blocks: shared paid count is clamped to credited', result.payload.blocks[0].sharedCompensation.paidRecipients, 88);
     check('blocks: total comes from upstream', result.payload.total, 9);
     check('blocks: generatedAt is normalized', result.payload.generatedAt, '2026-09-14T12:00:00.000Z');
     check('blocks: limit is clamped to 400', calls[0].url.includes('limit=400'), true);
