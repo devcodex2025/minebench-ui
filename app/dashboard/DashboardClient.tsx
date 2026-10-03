@@ -9,17 +9,22 @@ import StatsCards, { RecentTests } from '@/components/StatsCards';
 import { Activity, Award, Cpu, Download, RefreshCw, TrendingUp, Users } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import PoolHashrateChart from '@/components/PoolHashrateChart';
 
 type PoolStatsResponse = {
   poolHashrate?: number;
   miners?: number;
   pools?: PoolNodeStats[];
   verifiedShares?: number;
+  minerLeaderboard?: DirectMiner[];
+  liveMiners?: DirectMiner[];
   stratum?: {
     connections?: number;
     current_effort?: number;
   };
 };
+
+type DirectMiner = { id?: string; minerType?: 'xmr' | 'pool'; hashrate?: number; connections?: number };
 
 type PoolNodeStats = {
   id?: string;
@@ -74,6 +79,7 @@ export default function DashboardClient() {
   const [poolNodes, setPoolNodes] = useState<PoolNodeStats[]>([]);
   const [rates, setRates] = useState<RatesResponse>({});
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [directMiners, setDirectMiners] = useState<DirectMiner[]>([]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -117,6 +123,9 @@ export default function DashboardClient() {
         setPoolEffort(poolStatsPayload.stratum?.current_effort !== undefined ? poolStatsPayload.stratum.current_effort : null);
         setVerifiedShares(Number(poolStatsPayload.verifiedShares || 0));
         setPoolNodes(Array.isArray(poolStatsPayload.pools) ? poolStatsPayload.pools : []);
+        setDirectMiners(Array.isArray(poolStatsPayload.minerLeaderboard)
+          ? poolStatsPayload.minerLeaderboard
+          : Array.isArray(poolStatsPayload.liveMiners) ? poolStatsPayload.liveMiners : []);
         setLastUpdated(new Date().toISOString());
       } else {
         setTotalHashrate(0);
@@ -124,6 +133,7 @@ export default function DashboardClient() {
         setPoolEffort(null);
         setVerifiedShares(0);
         setPoolNodes([]);
+        setDirectMiners([]);
         setLastUpdated(null);
       }
 
@@ -360,6 +370,31 @@ export default function DashboardClient() {
                     </div>
                   );
                 })}
+              </div>
+            </div>
+
+            <PoolHashrateChart />
+
+            <div className="space-y-4">
+              <div className="flex items-end justify-between">
+                <div>
+                  <h2 className="text-sm font-black uppercase tracking-[0.3em] text-white">Direct XMR Miners</h2>
+                  <p className="mt-1 text-xs uppercase tracking-widest text-zinc-500">Rows group by wallet and sum hashrate and connections across devices</p>
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-400">{directMiners.length} miners</span>
+              </div>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                {directMiners.map((miner, index) => (
+                  <div key={`${miner.id || 'miner'}-${index}`} className="border border-zinc-800 bg-black p-4">
+                    <div className="truncate text-xs font-mono text-white">{miner.id || 'Direct miner'}</div>
+                    <div className="mt-2 flex items-baseline justify-between gap-3">
+                      <span className="font-mono text-xl font-black text-orange-400">{formatHashrate(Number(miner.hashrate || 0))}</span>
+                      <span className="text-[10px] uppercase tracking-widest text-zinc-600">{Number(miner.connections || 0)} connections</span>
+                    </div>
+                    <div className="mt-2 text-[9px] uppercase tracking-widest text-zinc-600">{miner.minerType === 'pool' ? 'Akash pool miner' : 'Direct XMR miner'}</div>
+                  </div>
+                ))}
+                {directMiners.length === 0 && <div className="border border-zinc-800 bg-black p-4 text-xs uppercase tracking-widest text-zinc-600">No direct miners reported yet</div>}
               </div>
             </div>
 
