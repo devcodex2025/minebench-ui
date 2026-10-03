@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Activity, Blocks, ExternalLink, RefreshCw, TrendingDown, TrendingUp } from 'lucide-react';
+import { buildSmoothLine, getHashrateLayers, mergeLiveMinerHashrate, type PoolHashratePoint } from '@/lib/pool-hashrate';
 import { formatHashrate } from '@/lib/utils';
 import { normalizeRewardCoverage, type RewardCoverage } from '@/lib/pool-stats';
 import { ThinkingOrb } from 'thinking-orbs';
@@ -30,7 +31,7 @@ const XMR_BODY_COLOR = 'rgb(154 71 29)';
 // but only draw the line that is actually comparable to the data (nano).
 const COVERAGE_DRAW_LINE: Record<'mini' | 'nano', boolean> = { mini: false, nano: true };
 
-type Point = { t: string; hashrate: number; miners: number; bmtHashrate?: number; xmrHashrate?: number };
+type Point = PoolHashratePoint;
 type PoolBlock = {
   id: string;
   foundAt: string;
@@ -74,31 +75,6 @@ function useMeasuredWidth() {
   return { ref, width };
 }
 
-function smoothLine(points: { x: number; y: number }[]): string {
-  if (points.length === 0) return '';
-  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
-  let path = `M ${points[0].x} ${points[0].y}`;
-  for (let index = 0; index < points.length - 1; index++) {
-    const p0 = points[index - 1] || points[index];
-    const p1 = points[index];
-    const p2 = points[index + 1];
-    const p3 = points[index + 2] || points[index + 1];
-    const cp1x = p1.x + (p2.x - p0.x) / 6;
-    const cp1y = p1.y + (p2.y - p0.y) / 6;
-    const cp2x = p2.x - (p3.x - p1.x) / 6;
-    const cp2y = p2.y - (p3.y - p1.y) / 6;
-    path += ` C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)} ${cp2x.toFixed(2)} ${cp2y.toFixed(2)} ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
-  }
-  return path;
-}
-
-function getHashrateLayers(point: Point) {
-  const total = Number.isFinite(point.hashrate) ? Math.max(0, point.hashrate) : 0;
-  const reportedXmr = Number.isFinite(point.xmrHashrate) ? Math.max(0, point.xmrHashrate as number) : 0;
-  const xmr = Math.min(total, reportedXmr);
-  return { bmt: total - xmr, xmr };
-}
-
 function formatTick(iso: string, range: Range): string {
   const date = new Date(iso);
   return range === '7d' || range === '30d'
@@ -132,13 +108,13 @@ export default function PoolHashrateChart() {
         fetch('/api/pool-stats', { signal })
       ]);
       if (historyResult.status !== 'fulfilled' || !historyResult.value.ok) throw new Error('bad status');
-      if (coverageResult.status === 'fulfilled' && coverageResult.value.ok) {
-        const coverageData = await coverageResult.value.json();
-        if (!signal.aborted) setCoverage(normalizeRewardCoverage(coverageData?.rewardCoverage));
-      }
+      const coverageData = coverageResult.status === 'fulfilled' && coverageResult.value.ok
+        ? await coverageResult.value.json()
+        : null;
+      if (!signal.aborted) setCoverage(normalizeRewardCoverage(coverageData?.rewardCoverage));
       const data = await historyResult.value.json();
       if (signal.aborted) return;
-      setPoints(Array.isArray(data.points) ? data.points : []);
+      setPoints(mergeLiveMinerHashrate(Array.isArray(data.points) ? data.points : [], coverageData));
       setLastUpdated(data.generatedAt || new Date().toISOString());
       if (blocksResult.status === 'fulfilled' && blocksResult.value.ok) {
         const blocksData = await blocksResult.value.json();
@@ -199,7 +175,7 @@ export default function PoolHashrateChart() {
   const view = useMemo(() => {
     const innerWidth = Math.max(0, width - PAD.left - PAD.right);
     const innerHeight = HEIGHT - PAD.top - PAD.bottom;
-    const maxRate = Math.max(...points.map((point) => point.hashrate), 1);
+    const maxRate = Math.max(...points.map((point) => getHashrateLayers(point).total), 1);
     const thresholdLines = (['mini', 'nano'] as const).flatMap((key) => {
       const line = coverage?.sidechains[key];
       if (!line || !(line.hashrate > 0)) return [];
@@ -218,9 +194,9 @@ export default function PoolHashrateChart() {
       ? PAD.left + innerWidth / 2
       : PAD.left + ((timestamp - fromTime) / (toTime - fromTime)) * innerWidth;
     const y = (value: number) => PAD.top + innerHeight - (value / yMax) * innerHeight;
-    const coordinates = points.map((point, index) => ({ x: xAt(times[index]), y: y(point.hashrate) }));
+    const coordinates = points.map((point, index) => ({ x: xAt(times[index]), y: y(getHashrateLayers(point).total) }));
     const baseY = PAD.top + innerHeight;
-    const line = smoothLine(coordinates);
+    const line = buildSmoothLine(coordinates);
     const totalArea = coordinates.length >= 2
       ? `${line} L ${coordinates[coordinates.length - 1].x.toFixed(2)} ${baseY} L ${coordinates[0].x.toFixed(2)} ${baseY} Z`
       : '';
@@ -231,7 +207,7 @@ export default function PoolHashrateChart() {
       x: xAt(times[index]),
       y: y(getHashrateLayers(point).xmr)
     }));
-    const xmrLine = smoothLine(xmrCoordinates);
+    const xmrLine = buildSmoothLine(xmrCoordinates);
     const xmrArea = xmrCoordinates.length >= 2
       ? `${xmrLine} L ${xmrCoordinates[xmrCoordinates.length - 1].x.toFixed(2)} ${baseY} L ${xmrCoordinates[0].x.toFixed(2)} ${baseY} Z`
       : '';
@@ -248,11 +224,11 @@ export default function PoolHashrateChart() {
       return [{ block, x: xAt(timestamp), y: coordinates[nearestIndex]?.y ?? PAD.top }];
     });
     const thresholdMarkers = thresholdLines.map((entry) => ({ ...entry, y: y(entry.hashrate) }));
-    return { coordinates, totalLine: line, totalArea, xmrArea, gridY, baseY, innerWidth, fromTime, toTime, times, blockMarkers, thresholdMarkers };
+    return { coordinates, xmrCoordinates, totalLine: line, totalArea, xmrArea, gridY, baseY, innerWidth, fromTime, toTime, times, blockMarkers, thresholdMarkers };
   }, [points, blocks, width, coverage]);
 
-  const latest = points.length ? points[points.length - 1].hashrate : 0;
-  const first = points.length ? points[0].hashrate : 0;
+  const latest = points.length ? getHashrateLayers(points[points.length - 1]).total : 0;
+  const first = points.length ? getHashrateLayers(points[0]).total : 0;
   const deltaPct = first > 0 ? ((latest - first) / first) * 100 : 0;
   const trendingUp = deltaPct >= 0;
 
@@ -394,17 +370,32 @@ export default function PoolHashrateChart() {
                 <text x={PAD.left - 10} y={grid.y + 3} textAnchor="end" className="fill-zinc-600 font-mono" fontSize="10">{formatHashrate(grid.value)}</text>
               </g>
             ))}
-            {view.thresholdMarkers.filter((threshold) => threshold.draw).map((threshold) => (
-              <g key={threshold.key}>
-                <line x1={PAD.left} y1={threshold.y} x2={width - PAD.right} y2={threshold.y} stroke={threshold.color} strokeWidth="1.5" strokeDasharray="6 4" />
-                <text x={width - PAD.right - 4} y={threshold.y - 6} textAnchor="end" fontSize="10" fontWeight="700" fill={COVERAGE_LINE_LABEL_COLOR} stroke="rgb(9 9 11)" strokeWidth="3" paintOrder="stroke">
-                  {`${threshold.key} 100% ≈ ${formatHashrate(threshold.hashrate)}`}
-                </text>
-              </g>
-            ))}
             {/* XMR is the lower wave; BMT occupies the non-overlapping wave above it. */}
             {view.xmrArea && <path d={view.xmrArea} fill={`url(#${xmrGradientId})`} clipPath={`url(#${stackClipId})`} />}
             {view.totalArea && <path d={view.totalArea} fill={`url(#${gradientId})`} mask={`url(#${bmtMaskId})`} />}
+            {view.coordinates.length === 1 && (
+              <g aria-hidden="true">
+                <line
+                  x1={view.coordinates[0].x}
+                  y1={view.baseY}
+                  x2={view.xmrCoordinates[0].x}
+                  y2={view.xmrCoordinates[0].y}
+                  stroke={XMR_BODY_COLOR}
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                />
+                <line
+                  x1={view.xmrCoordinates[0].x}
+                  y1={view.xmrCoordinates[0].y}
+                  x2={view.coordinates[0].x}
+                  y2={view.coordinates[0].y}
+                  stroke={BMT_BODY_COLOR}
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                />
+                <circle cx={view.coordinates[0].x} cy={view.coordinates[0].y} r="4" fill={BMT_LINE_COLOR} />
+              </g>
+            )}
             {/* The upper gold edge is the combined pool hashrate, without a white contour. */}
             {view.totalLine && <path d={view.totalLine} fill="none" stroke={BMT_LINE_COLOR} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />}
             {/* Open reservoir sides and base make the combined liquid level explicit. */}
@@ -416,6 +407,15 @@ export default function PoolHashrateChart() {
               strokeWidth="1"
               vectorEffect="non-scaling-stroke"
             />
+            {/* Coverage guides stay above the liquid layers instead of being hidden by them. */}
+            {view.thresholdMarkers.filter((threshold) => threshold.draw).map((threshold) => (
+              <g key={threshold.key}>
+                <line x1={PAD.left} y1={threshold.y} x2={width - PAD.right} y2={threshold.y} stroke={threshold.color} strokeWidth="1.5" strokeDasharray="6 4" />
+                <text x={width - PAD.right - 4} y={threshold.y - 6} textAnchor="end" fontSize="10" fontWeight="700" fill={COVERAGE_LINE_LABEL_COLOR} stroke="rgb(9 9 11)" strokeWidth="3" paintOrder="stroke">
+                  {`${threshold.key} 100% ≈ ${formatHashrate(threshold.hashrate)}`}
+                </text>
+              </g>
+            ))}
             {view.blockMarkers.map((marker) => {
               const isActive = marker.block.id === activeRewardId;
               const color = marker.block.moneroPayoutStatus === 'received'
@@ -539,7 +539,7 @@ export default function PoolHashrateChart() {
           <div className="pointer-events-none absolute z-10 -translate-x-1/2 rounded-lg border border-zinc-700 bg-black/90 px-3 py-2 shadow-xl" style={{ left: Math.min(Math.max(view.coordinates[hover as number].x, 70), width - 70), top: Math.max(view.coordinates[hover as number].y - 64, 8) }}>
             <div className="flex items-baseline justify-between gap-4 font-mono text-sm font-black text-white">
               <span className="text-[9px] uppercase tracking-widest text-zinc-500">Total</span>
-              <span>{formatHashrate(hoverPoint.hashrate)}</span>
+              <span>{formatHashrate(getHashrateLayers(hoverPoint).total)}</span>
             </div>
             <div className="mt-1 flex items-center gap-2 font-mono text-[10px] font-bold">
               <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: BMT_LINE_COLOR }} />
