@@ -12,13 +12,25 @@ function normalizePoint(value: unknown): HistoryPoint | null {
   const hashrate = Number(raw.hashrate);
   const miners = Number(raw.miners);
   if (!Number.isFinite(timestamp.getTime()) || !Number.isFinite(hashrate) || !Number.isFinite(miners)) return null;
-  const bmtHashrate = Number(raw.bmtHashrate);
-  const xmrHashrate = Number(raw.xmrHashrate);
+  let bmtHashrate = Number(raw.bmtHashrate);
+  let xmrHashrate = Number(raw.xmrHashrate);
+  const normalizedHashrate = Math.max(0, hashrate);
+  bmtHashrate = Number.isFinite(bmtHashrate) ? Math.max(0, bmtHashrate) : 0;
+  xmrHashrate = Number.isFinite(xmrHashrate) ? Math.max(0, xmrHashrate) : 0;
+
+  if (normalizedHashrate > 0 && bmtHashrate === 0 && xmrHashrate === 0) {
+    bmtHashrate = normalizedHashrate;
+  } else if (bmtHashrate + xmrHashrate > 0) {
+    const splitHashrate = bmtHashrate + xmrHashrate;
+    bmtHashrate = normalizedHashrate * (bmtHashrate / splitHashrate);
+    // Assign the floating point residual to XMR so the split deterministically equals the total.
+    xmrHashrate = normalizedHashrate - bmtHashrate;
+  }
   return {
     t: timestamp.toISOString(),
-    hashrate: Math.max(0, hashrate),
-    bmtHashrate: Number.isFinite(bmtHashrate) ? Math.max(0, bmtHashrate) : 0,
-    xmrHashrate: Number.isFinite(xmrHashrate) ? Math.max(0, xmrHashrate) : 0,
+    hashrate: normalizedHashrate,
+    bmtHashrate,
+    xmrHashrate,
     miners: Math.max(0, Math.round(miners))
   };
 }

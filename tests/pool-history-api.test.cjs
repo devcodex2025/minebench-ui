@@ -247,6 +247,37 @@ const reward = (overrides = {}) => ({
   }
 
   {
+    const { result } = await withFetch(
+      () => Promise.resolve(fakeResponse({
+        points: [
+          { t: '2026-09-14T10:00:00Z', hashrate: '100', bmtHashrate: '0', xmrHashrate: '0', miners: '2' },
+          { t: '2026-09-14T11:00:00Z', hashrate: '90', bmtHashrate: '60', xmrHashrate: '60', miners: '3' },
+          { t: '2026-09-14T12:00:00Z', hashrate: '50', bmtHashrate: '-10', xmrHashrate: '20', miners: '4' },
+          { t: '2026-09-14T12:30:00Z', hashrate: '40', bmtHashrate: 'invalid', xmrHashrate: '10', miners: '5' },
+          { t: '2026-09-14T12:45:00Z', hashrate: '0', bmtHashrate: '20', xmrHashrate: '20', miners: '6' },
+          { t: '2026-09-14T13:00:00Z', hashrate: 'invalid', bmtHashrate: '1', xmrHashrate: '1', miners: '1' }
+        ]
+      })),
+      () => poolHistory(createReq(), createRes())
+    );
+    check('history: invalid total rows are dropped', result.payload.points.length, 5);
+    check('history: numeric strings are normalized', result.payload.points[0].hashrate, 100);
+    check('history: legacy unsplit points inherit BMT history', result.payload.points[0].bmtHashrate, 100);
+    check('history: legacy unsplit points keep XMR at zero', result.payload.points[0].xmrHashrate, 0);
+    check('history: over-total BMT is proportionally clamped', result.payload.points[1].bmtHashrate, 45);
+    check('history: over-total XMR is proportionally clamped', result.payload.points[1].xmrHashrate, 45);
+    check('history: negative asset values are clamped before normalization', result.payload.points[2].bmtHashrate, 0);
+    check('history: under-total splits are normalized to total', result.payload.points[2].xmrHashrate, 50);
+    check('history: malformed split values use the valid asset ratio', result.payload.points[3].xmrHashrate, 40);
+    check('history: zero total forces both assets to zero', result.payload.points[4].bmtHashrate + result.payload.points[4].xmrHashrate, 0);
+    check(
+      'history: every asset split equals total within numeric tolerance',
+      result.payload.points.every((point) => Math.abs(point.bmtHashrate + point.xmrHashrate - point.hashrate) <= Number.EPSILON * Math.max(1, point.hashrate) * 4),
+      true
+    );
+  }
+
+  {
     const { result } = await withFetch(() => Promise.resolve(fakeResponse({ points: [] })), () => poolHistory(createReq({ range: '30d' }), createRes()));
     check('history: allowed range is echoed', result.payload.range, '30d');
     check('history: missing generatedAt is replaced', Number.isFinite(Date.parse(result.payload.generatedAt)), true);
