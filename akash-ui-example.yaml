@@ -1,22 +1,29 @@
 ---
 version: "2.0"
 
+# Before rollout, retain the current UI manifest and image digest. Rollback is
+# a manifest update back to that digest; this service has no persistent state.
+
 services:
   frontend:
-    image: karbivskyi/minebench-ui:latest
+    # Explicit UNPUBLISHED next-release target derived from the current
+    # verified v0.1.5.74 release line. Build and verify it before deployment,
+    # then prefer its registry sha256 digest in the private manifest.
+    image: karbivskyi/minebench-ui:v0.1.5.75-dynamic-fee.1
     env:
       # Core Configuration
       - NODE_ENV=production
       - PORT=3000
       - HOST=0.0.0.0
 
-      # ⚠️ ВАЖЛИВО: Замінити на реальні значення з Supabase Dashboard!
-      # Supabase Configuration
-      - NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co  # <-- ЗАМІНИТИ
-      - NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY       # <-- ЗАМІНИТИ
+      # Public build/runtime configuration only. Resolve placeholders in the
+      # private deployment manifest; never put service-role credentials here.
+      - NEXT_PUBLIC_SUPABASE_URL=REPLACE_AT_DEPLOY_PUBLIC_SUPABASE_URL
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=REPLACE_AT_DEPLOY_PUBLIC_SUPABASE_ANON_KEY
+      - NEXT_PUBLIC_API_URL=https://backend.minebench.cloud
 
       # Solana RPC Configuration (set in Akash environment)
-      - NEXT_PUBLIC_SOLANA_RPC_URL=https://your-rpc-provider.com  # <-- ЗАМІНИТИ
+      - NEXT_PUBLIC_SOLANA_RPC_URL=REPLACE_AT_DEPLOY_PUBLIC_SOLANA_RPC_URL
 
     expose:
       - port: 3000
@@ -29,7 +36,7 @@ profiles:
     frontend:
       resources:
         cpu:
-          units: 100m
+          units: 250m
         memory:
           size: 512Mi
         storage:
@@ -39,7 +46,7 @@ profiles:
     akash:
       pricing:
         frontend:
-          denom: uakt
+          denom: uact
           amount: 1000
 
 deployment:
