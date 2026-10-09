@@ -13,6 +13,7 @@ import { normalizePoolStats } from '@/lib/pool-stats';
 import StatsCards, { RecentTests } from '@/components/StatsCards';
 import PoolHashrateChart from '@/components/PoolHashrateChart';
 import LiveMinerLeaderboard, { LiveMiner } from '@/components/LiveMinerLeaderboard';
+import DynamicManagedFeePanel, { DynamicFeePolicy } from '@/components/DynamicManagedFeePanel';
 import { Activity, Award, Cpu, Download, RefreshCw, TrendingUp, Users } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -26,12 +27,15 @@ type PoolStatsResponse = {
   p2poolLastShareFoundAt?: number;
   currentEffort?: number | null;
   verifiedShares?: number;
+  telemetryStale?: boolean;
+  telemetryWarning?: string;
   minerLeaderboard?: LiveMiner[];
   rewards?: { totalBmtRewards?: number; availableBmtRewards?: number };
   stratum?: {
     connections?: number;
     current_effort?: number;
   };
+  dynamicFee?: DynamicFeePolicy | null;
 };
 
 type PoolNodeStats = {
@@ -90,6 +94,8 @@ export default function DashboardClient() {
   const [rates, setRates] = useState<RatesResponse>({});
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [availableRewards, setAvailableRewards] = useState(0);
+  const [telemetryStale, setTelemetryStale] = useState(false);
+  const [dynamicFee, setDynamicFee] = useState<DynamicFeePolicy | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -131,6 +137,7 @@ export default function DashboardClient() {
         const normalizedPoolStats = normalizePoolStats(poolStatsPayload);
         setTotalHashrate(normalizedPoolStats.poolHashrate);
         setOnlineClients(normalizedPoolStats.miners);
+        setTelemetryStale(normalizedPoolStats.telemetryStale);
         setPoolEffort(poolStatsPayload.currentEffort ?? poolStatsPayload.stratum?.current_effort ?? null);
         setP2PoolSharesFound(normalizedPoolStats.p2poolSharesFound);
         const lastShare = Number(poolStatsPayload.p2poolLastShareFoundAt || 0);
@@ -138,6 +145,7 @@ export default function DashboardClient() {
         setPoolNodes(normalizedPoolStats.pools);
         setLiveMiners(normalizedPoolStats.minerLeaderboard as LiveMiner[]);
         setAvailableRewards(Number(poolStatsPayload.rewards?.availableBmtRewards || 0));
+        setDynamicFee(poolStatsPayload.dynamicFee ?? null);
         setLastUpdated(new Date().toISOString());
       } else {
         setTotalHashrate(0);
@@ -148,6 +156,8 @@ export default function DashboardClient() {
         setPoolNodes([]);
         setLiveMiners([]);
         setAvailableRewards(0);
+        setDynamicFee(null);
+        setTelemetryStale(true);
         setLastUpdated(null);
       }
 
@@ -416,6 +426,10 @@ export default function DashboardClient() {
           </div>
         </FadeContent>
 
+        <FadeContent as="section" className="mb-10">
+          <DynamicManagedFeePanel policy={dynamicFee} />
+        </FadeContent>
+
         <FadeContent as="section" className="mb-14 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.55fr)_minmax(340px,0.65fr)]">
           <PoolHashrateChart />
           <LiveMinerLeaderboard miners={liveMiners} onlineConnections={onlineClients} />
@@ -552,7 +566,9 @@ export default function DashboardClient() {
                 </div>
                 <div className="flex justify-between border-b border-zinc-900 pb-1">
                   <span className="text-zinc-500">WORKERS (LIVE):</span>
-                  <span className="text-white font-bold text-yellow-400">{onlineClients}</span>
+                  <span className={`font-bold ${telemetryStale ? 'text-red-400' : 'text-yellow-400'}`}>
+                    {telemetryStale ? 'UNAVAILABLE' : onlineClients}
+                  </span>
                 </div>
                 <div className="flex justify-between border-b border-zinc-900 pb-1">
                   <span className="text-zinc-500">CURRENT EFFORT:</span>
