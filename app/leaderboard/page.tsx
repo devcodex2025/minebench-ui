@@ -2,14 +2,14 @@ import type { Metadata } from 'next';
 import LeaderboardClient from './LeaderboardClient';
 
 export const metadata: Metadata = {
-  title: 'Mining Benchmark Leaderboard | CPU and GPU Mining Rankings | MineBench',
-  description: 'Compare MineBench CPU and GPU mining benchmark rankings, RandomX hashrate, power draw, thermals, and unique hardware performance results.',
+  title: 'RandomX & Mining Benchmark Leaderboard | MineBench',
+  description: 'Compare RandomX CPU mining benchmarks and public hardware results by hashrate, power, temperature, algorithm, and benchmark duration.',
   alternates: {
     canonical: 'https://minebench.cloud/leaderboard',
   },
   openGraph: {
-    title: 'MineBench Mining Benchmark Leaderboard',
-    description: 'Ranked CPU and GPU mining benchmark results from real MineBench client submissions.',
+    title: 'RandomX & Mining Benchmark Leaderboard | MineBench',
+    description: 'Compare public RandomX CPU benchmarks and GPU mining benchmark submissions with visible hashrate and test context.',
     url: 'https://minebench.cloud/leaderboard',
     type: 'website',
   },
@@ -19,8 +19,8 @@ export default function LeaderboardPage() {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
-    name: 'MineBench Mining Benchmark Leaderboard',
-    description: 'CPU and GPU mining benchmark rankings with hashrate, power, thermal, and hardware performance data.',
+    name: 'RandomX and Mining Benchmark Leaderboard',
+    description: 'Public CPU and GPU mining benchmark results with algorithm, hashrate, power, temperature, and duration when submitted.',
     about: [
       'CPU mining benchmark',
       'GPU mining benchmark',

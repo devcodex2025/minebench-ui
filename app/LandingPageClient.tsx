@@ -1,9 +1,15 @@
 'use client';
 
-import Link from 'next/link';
-import dynamic from 'next/dynamic';
+import Link from '@/components/refresh/WorkspaceLink';
+import BenchmarkHero from '@/components/marketing/BenchmarkHero';
+import { GettingStarted, BenchmarkFAQ } from '@/components/marketing/GettingStarted';
+import { BorderBeam } from 'border-beam';
+import ShowcaseReveal from '@/components/marketing/ShowcaseReveal';
 import { useState, useEffect, useRef } from 'react';
-import { motion, useInView, useSpring, useMotionValue, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
+import CountUp from '@/components/reactbits/CountUp';
+import SpotlightCard from '@/components/reactbits/SpotlightCard';
+import { StatusDot } from '@/components/base/indicators/status-dot';
 import {
     Download,
     Activity,
@@ -14,7 +20,6 @@ import {
     VolumeX,
     Shield,
     Cpu,
-    Github,
     ExternalLink,
     MessageSquare,
     Plus,
@@ -25,11 +30,11 @@ import {
 import Image from 'next/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import BitbucketIcon from '@/components/icons/BitbucketIcon';
 import { supabase } from '@/lib/supabaseClient';
 import { getLeaderboardDeviceCount } from '@/lib/leaderboard';
 import { BenchmarkResult } from '@/types/benchmark';
 
-const Scene3D = dynamic(() => import('@/components/Scene3D'), { ssr: false, loading: () => null });
 
 export type LandingStats = {
     benchmarks: number;
@@ -62,25 +67,12 @@ const formatAssetAmount = (value: number | null | undefined, suffix: string, dec
 };
 
 function Counter({ value, label }: { value: number; label: string }) {
-    const ref = useRef(null);
-    const isInView = useInView(ref, { once: true, margin: '-50px' });
-    const motionValue = useMotionValue(0);
-    const springValue = useSpring(motionValue, { damping: 30, stiffness: 100 });
-    const displayValue = useTransform(springValue, formatCounterValue);
-    const staticValue = formatCounterValue(value);
-
-    useEffect(() => {
-        if (isInView) {
-            motionValue.set(value);
-        }
-    }, [isInView, value, motionValue]);
-
     return (
-        <div ref={ref} className="border border-zinc-800 p-6 transition-all duration-300 hover:border-yellow-400">
-            <div className="mb-2 text-4xl font-bold text-yellow-400 md:text-5xl font-mono-system">
-                <motion.span>{isInView ? displayValue : staticValue}</motion.span>
+        <div className="surface-panel p-6 transition-colors duration-200 hover:border-yellow-400/30">
+            <div className="mb-2 text-4xl font-medium tracking-tight text-white md:text-5xl tabular-nums">
+                <CountUp to={value} format={formatCounterValue} />
             </div>
-            <div className="text-xs font-bold uppercase tracking-widest text-zinc-500">{label}</div>
+            <div className="text-xs font-medium text-zinc-400">{label}</div>
         </div>
     );
 }
@@ -101,7 +93,7 @@ export default function LandingPageClient({
         online: null as number | null,
         guildName: 'MineBench Discord',
     });
-    const [activeCta, setActiveCta] = useState<'benchmark' | 'token' | 'opensource' | null>(null);
+    const [discordUnavailable, setDiscordUnavailable] = useState(false);
     const [isMuted, setIsMuted] = useState(true);
     const [volume, setVolume] = useState(0.5);
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -170,7 +162,8 @@ export default function LandingPageClient({
             try {
                 const response = await fetch('/api/discord');
                 if (!response.ok) {
-                    throw new Error('Failed to fetch Discord stats');
+                    setDiscordUnavailable(true);
+                    return;
                 }
 
                 const data = await response.json();
@@ -179,8 +172,9 @@ export default function LandingPageClient({
                     online: data.approximate_presence_count ?? data.profile?.online_count ?? null,
                     guildName: data.guild?.name ?? data.profile?.name ?? 'MineBench Discord',
                 });
-            } catch (err) {
-                console.error('Error fetching Discord stats:', err);
+                setDiscordUnavailable(false);
+            } catch {
+                setDiscordUnavailable(true);
             }
         };
 
@@ -221,73 +215,41 @@ export default function LandingPageClient({
     }, []);
 
     return (
-        <div className="relative flex min-h-screen flex-col overflow-hidden bg-black">
-            <Scene3D />
+        <div className="board-page refresh-home relative flex min-h-screen flex-col overflow-hidden bg-[hsl(var(--canvas))]">
+
             <Header />
 
-            <main className="relative z-10 flex-grow pt-[88px]">
-                <section className="relative flex min-h-screen items-center justify-center px-4 pb-12 pt-10 sm:px-6 lg:px-8">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
-                        className="mx-auto max-w-7xl text-center"
-                    >
-                        <div className="mb-8 inline-block border border-yellow-400 bg-yellow-400/5 px-4 py-2 backdrop-blur-sm">
-                            <span className="font-mono-system text-sm font-bold uppercase tracking-widest text-yellow-400">
-                                {latestClientVersion} Stable Release
-                            </span>
+            <main id="refresh-content" tabIndex={-1} className="relative z-10 flex-grow">
+                <BenchmarkHero clientVersion={latestClientVersion} />
+
+                <section aria-label="MineBench community statistics" className="px-4 pb-8 sm:px-6 lg:px-8">
+                        <div
+                            className="mx-auto grid max-w-7xl grid-cols-1 gap-3 sm:grid-cols-3"
+                        >
+                            <Counter value={stats.downloads} label="Total Downloads" />
+                            <Counter value={stats.benchmarks} label="Benchmarks Completed" />
+                            <Counter value={stats.miners} label="Unique Devices" />
                         </div>
-
-                        <h1 className="mb-8 text-6xl font-bold uppercase leading-none tracking-tighter text-white md:text-8xl lg:text-9xl">
-                            MINE<span className="text-yellow-400">BENCH</span>
-                        </h1>
-
-                        <h2 className="mb-6 flex flex-wrap items-center justify-center gap-4 text-2xl font-bold uppercase tracking-tight text-zinc-400 md:text-3xl">
-                            <span className="block w-full">The Mining Benchmark Platform</span>
-                            <span className="block">And</span>
-                            <Image
-                                src="/logos/Monero-logo.svg"
-                                alt="Monero"
-                                width={300}
-                                height={78}
-                                className="inline-block h-[1em] w-auto align-[-0.08em] transition duration-300 hover:scale-105 hover:brightness-125 hover:drop-shadow-[0_0_14px_rgba(255,102,0,0.45)]"
-                            />
-                            <span className="block">Mining App on</span>
-                            <Image
-                                src="/solanaLogo.svg"
-                                alt="Solana"
-                                width={160}
-                                height={24}
-                                className="inline-block h-[1em] w-auto align-[-0.08em] transition duration-300 hover:scale-105 hover:brightness-125 hover:drop-shadow-[0_0_14px_rgba(250,204,21,0.35)]"
-                            />
-                        </h2>
-
-                        <p className="mx-auto mb-12 max-w-4xl text-lg font-medium leading-relaxed text-zinc-500 md:text-xl">
-                            Benchmark GPU and CPU mining performance, compare RandomX results, and use desktop mining software with a cleaner UI.
-                            MineBench helps miners validate hardware, explore the mining leaderboard, and contribute benchmark data to a shared hashrate database.
-                        </p>
-
-                        <div className="flex flex-col items-center justify-center gap-6 sm:flex-row">
-                            <Link href="/downloads" className="btn-primary inline-flex items-center gap-3 px-10 py-5 text-lg transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(250,204,21,0.22)]">
-                                <Download className="h-6 w-6" />
-                                Download {latestClientVersion}
-                            </Link>
-                            <Link href="/dashboard" className="btn-secondary inline-flex items-center gap-3 px-10 py-5 text-lg transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] hover:border-yellow-400 hover:text-yellow-400 hover:shadow-[0_0_30px_rgba(250,204,21,0.14)]">
-                                <Activity className="h-6 w-6" />
-                                Live Dashboard
-                            </Link>
-                        </div>
-                    </motion.div>
                 </section>
 
-                <section className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-16 sm:px-6 lg:px-8">
+                <section className="refresh-product px-4 sm:px-6 lg:px-8">
+                    <div className="refresh-product-heading">
+                        <div><span className="refresh-overline">01 / YOUR MINING WORKSPACE</span><h2>All the detail.<br /><span className="text-yellow-400">A clearer picture.</span></h2></div>
+                        <p>Meet your hardware in the MineBench client. Inspect every benchmark, then compare your results with the community.</p>
+                    </div>
+                    <div className="refresh-product-frame">
+                        <div className="refresh-product-toolbar"><span>● ● ●</span><span>MineBench / Benchmarks</span><Link href="/downloads#application-overview">Explore the client ↗</Link></div>
+                        <Image src="/screenshots/app-overview-screenshots/benchmarks.png" alt="MineBench client with hardware details and benchmark telemetry" width={1440} height={900}/>
+                    </div>
+                </section>
+
+                <section className="relative flex items-center justify-center overflow-hidden px-4 py-10 sm:px-6 lg:px-8">
                     <motion.div
                         initial={{ opacity: 0, scale: 0.96 }}
                         whileInView={{ opacity: 1, scale: 1 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.8 }}
-                        className="group relative aspect-video w-full max-w-6xl overflow-hidden rounded-[28px] border-4 border-zinc-900 shadow-[0_0_60px_rgba(250,204,21,0.08)]"
+                        className="group relative aspect-video w-full max-w-6xl overflow-hidden rounded-[28px] border border-zinc-800 shadow-[0_0_60px_rgba(250,204,21,0.08)]"
                     >
                         <video
                             ref={videoRef}
@@ -304,13 +266,13 @@ export default function LandingPageClient({
 
                         <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-black/10" />
 
-                        <div className="absolute bottom-6 right-6 z-20 flex translate-y-4 items-center gap-4 rounded-full border border-white/10 bg-black/60 p-2 opacity-0 backdrop-blur-xl transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
+                        <div className="absolute bottom-6 right-6 z-20 flex translate-y-4 items-center gap-4 rounded-full border border-white/10 bg-black/60 p-2 opacity-100 backdrop-blur-xl transition-all duration-200 sm:opacity-0 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
                             <div className="flex items-center gap-2 border-r border-white/10 px-4">
                                 <button
                                     onClick={() => {
                                         handleVolumeChange(volume - 0.1);
                                     }}
-                                    className="text-white/60 hover:text-white"
+                                    aria-label="Decrease video volume" className="text-white/60 hover:text-white"
                                 >
                                     <Minus className="h-3 w-3" />
                                 </button>
@@ -318,7 +280,7 @@ export default function LandingPageClient({
                                     <div className="pointer-events-none absolute left-0 right-0 h-1.5 rounded-full bg-zinc-800" />
                                     <div className="pointer-events-none absolute left-0 h-1.5 rounded-full bg-yellow-400" style={{ width: `${volume * 100}%`, right: `${100 - volume * 100}%` }} />
                                     <input
-                                        type="range"
+                                        aria-label="Video volume" type="range"
                                         min="0"
                                         max="1"
                                         step="0.01"
@@ -331,7 +293,7 @@ export default function LandingPageClient({
                                     onClick={() => {
                                         handleVolumeChange(volume + 0.1);
                                     }}
-                                    className="text-white/60 hover:text-white"
+                                    aria-label="Increase video volume" className="text-white/60 hover:text-white"
                                 >
                                     <Plus className="h-3 w-3" />
                                 </button>
@@ -344,12 +306,12 @@ export default function LandingPageClient({
                                         videoRef.current.volume = volume;
                                     }
                                 }}
-                                className="rounded-full bg-yellow-400 p-3 text-black shadow-lg shadow-yellow-400/20 transition-transform hover:scale-110"
+                                aria-label={isMuted ? 'Unmute video' : 'Mute video'} className="rounded-full bg-yellow-400 p-3 text-black shadow-lg shadow-yellow-400/20 transition-transform hover:scale-110"
                             >
                                 {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
                             </button>
                             <button
-                                onClick={handleFullscreen}
+                                aria-label="Toggle video fullscreen" onClick={handleFullscreen}
                                 className="rounded-full bg-white/10 p-3 text-white transition-transform hover:scale-110 hover:bg-white/20"
                             >
                                 <Maximize className="h-5 w-5" />
@@ -358,18 +320,11 @@ export default function LandingPageClient({
                     </motion.div>
                 </section>
 
+                <GettingStarted />
+
                 <section className="px-4 py-20 sm:px-6 lg:px-8">
                     <div className="mx-auto max-w-7xl">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2, duration: 0.6 }}
-                            className="mb-20 grid grid-cols-2 gap-4 md:grid-cols-3"
-                        >
-                            <Counter value={stats.downloads} label="Total Downloads" />
-                            <Counter value={stats.benchmarks} label="Benchmarks Completed" />
-                            <Counter value={stats.miners} label="Unique Devices" />
-                        </motion.div>
+
 
                         <motion.div
                             initial={{ opacity: 0 }}
@@ -382,22 +337,21 @@ export default function LandingPageClient({
                                     <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-yellow-400">SPL Token Ecosystem</span>
                                 </div>
                                 <h2 className="text-5xl font-bold uppercase italic leading-none tracking-tighter text-white md:text-6xl">
-                                    Securing The <span className="text-yellow-400">Network</span> Through Data
+                                    Follow your <span className="text-yellow-400">pool rewards</span>
                                 </h2>
                                 <p className="text-xl font-medium leading-relaxed text-zinc-400">
-                                    Our native token <span className="font-black italic text-white">$BMT</span> turns mining benchmark data into on-chain utility.
-                                    Pool earnings convert XMR to BMT, so miners can measure hardware value, benchmark output, and tokenized network participation in one workflow.
+                                    MineBench pool rewards use <span className="text-white">BMT on Solana</span>.
+                                    View pool activity and reward status separately from your benchmark results.
                                 </p>
                                 <div className="flex flex-wrap gap-6 pt-4">
                                     <Link
-                                        href={`https://pump.fun/coin/${tokenContract}`}
-                                        target="_blank"
-                                        className="flex items-center gap-4 border border-yellow-400/50 bg-yellow-400 px-10 py-5 text-lg font-black uppercase tracking-widest text-black shadow-[0_0_35px_rgba(250,204,21,0.24)] transition-all hover:bg-[#ffe36d]"
+                                        href="/pool-rewards"
+                                        className="flex items-center gap-4 rounded-xl border border-yellow-400/50 bg-yellow-400 px-10 py-5 text-lg font-black uppercase tracking-widest text-black shadow-[0_0_35px_rgba(250,204,21,0.24)] transition-all hover:bg-[#ffe36d]"
                                     >
-                                        <Image src="/img/pumpfun_logo.png" alt="Pump.fun" width={24} height={24} />
-                                        Trade On Pumpfun
+                                        <Activity className="h-6 w-6" aria-hidden="true" />
+                                        View pool rewards
                                     </Link>
-                                    <div className="flex flex-col justify-center border border-zinc-900 bg-zinc-950 p-4">
+                                    <div className="flex flex-col justify-center rounded-xl border border-zinc-900 bg-zinc-950 p-4">
                                         <span className="mb-2 border-l-2 border-yellow-400 px-2 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
                                             Token Contract
                                         </span>
@@ -407,9 +361,9 @@ export default function LandingPageClient({
                             </div>
                             <div className="relative group">
                                 <div className="pointer-events-none absolute -inset-4 bg-yellow-400/20 blur-3xl opacity-0 transition-opacity duration-700 group-hover:opacity-100" />
-                                <div className="relative overflow-hidden border-4 border-zinc-900 bg-zinc-950 shadow-[0_0_80px_rgba(0,0,0,0.5)]">
+                                <div className="relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 shadow-[0_0_80px_rgba(0,0,0,0.5)]">
                                     <div className="absolute left-6 top-6 z-10 flex items-center gap-4 border border-yellow-400/30 bg-black/80 p-4 backdrop-blur-xl">
-                                        <div className="h-3 w-3 animate-pulse rounded-full bg-red-600" />
+                                        <StatusDot tone="warn" className="h-3 w-3" />
                                         <span className="font-mono text-xs font-black uppercase tracking-widest text-white italic">
                                             Real-Time Hashrate Tracking
                                         </span>
@@ -439,13 +393,10 @@ export default function LandingPageClient({
                         <div className="mb-32 grid grid-cols-1 gap-8 md:grid-cols-3">
                             <motion.div
                                 whileHover={{ y: -10 }}
-                                onClick={() => setActiveCta('benchmark')}
-                                className={`group flex cursor-pointer flex-col items-center border bg-zinc-950 p-12 text-center shadow-xl shadow-black transition-all ${
-                                    activeCta === 'benchmark' ? 'border-yellow-400 shadow-[0_0_35px_rgba(250,204,21,0.14)]' : 'border-zinc-900 hover:border-yellow-400'
-                                }`}
+                                className="group flex flex-col items-center rounded-2xl border border-zinc-900 bg-zinc-950 p-8 text-center shadow-xl shadow-black transition-all hover:border-yellow-400"
                             >
                                 <div className="mb-4 text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Desktop Benchmark</div>
-                                <div className="mb-10 flex h-24 w-24 rotate-3 items-center justify-center border border-zinc-800 bg-zinc-900 transition-all group-hover:rotate-0 group-hover:bg-yellow-400 group-hover:text-black">
+                                        <div className="mb-10 flex h-24 w-24 rotate-3 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-900 transition-all group-hover:rotate-0 group-hover:bg-yellow-400 group-hover:text-black">
                                     <Zap className="h-12 w-12" />
                                 </div>
                                 <h3 className="mb-6 text-3xl font-black uppercase italic text-white">Benchmark Rig</h3>
@@ -453,25 +404,20 @@ export default function LandingPageClient({
                                     Run a CPU mining benchmark or GPU mining benchmark, validate hardware performance, and compare results against the broader network.
                                 </p>
                                 <Link href="/downloads" className="mt-auto inline-flex items-center justify-center rounded-full border border-yellow-400/40 bg-yellow-400/10 px-5 py-3 text-xs font-black uppercase tracking-[0.28em] text-yellow-400 transition-all duration-300 hover:-translate-y-0.5 hover:border-yellow-400 hover:bg-yellow-400 hover:text-black hover:shadow-[0_0_22px_rgba(250,204,21,0.28)]">
-                                    Start Validation &rarr;
+                                    Download free client &rarr;
                                 </Link>
                             </motion.div>
                             <motion.div
                                 whileHover={{ y: -10 }}
-                                onClick={() => setActiveCta('token')}
-                                className={`group flex cursor-pointer flex-col items-center bg-zinc-950 p-12 text-center transition-all ${
-                                    activeCta === 'token'
-                                        ? 'border-4 border-yellow-400 shadow-[0_0_40px_rgba(250,204,21,0.18)]'
-                                        : 'border border-zinc-900 shadow-xl shadow-black hover:border-yellow-400'
-                                }`}
+                                className="group flex flex-col items-center rounded-2xl border border-zinc-900 bg-zinc-950 p-12 text-center shadow-xl shadow-black transition-all hover:border-yellow-400"
                             >
                                 <div className="mb-4 text-[10px] font-black uppercase tracking-[0.35em] text-yellow-200">Token Market</div>
-                                <div className="mb-10 flex h-24 w-24 -rotate-3 items-center justify-center bg-yellow-400 text-black transition-transform group-hover:rotate-0">
+                                <div className="mb-10 flex h-24 w-24 -rotate-3 items-center justify-center rounded-2xl bg-yellow-400 text-black transition-transform group-hover:rotate-0">
                                     <TrendingUp className="h-12 w-12" />
                                 </div>
-                                <h3 className="mb-6 text-3xl font-black uppercase italic text-white">Buy BMT Token</h3>
+                                <h3 className="mb-6 text-3xl font-black uppercase italic text-white">Explore BMT</h3>
                                 <p className="mb-10 text-sm font-medium leading-relaxed text-zinc-400">
-                                    Back the network, follow token traction, and hold exposure to the mining benchmark ecosystem built around MineBench data.
+                                    BMT is the Solana token used for MineBench pool rewards. Review the token listing and contract details.
                                 </p>
                                 <Link href={`https://pump.fun/coin/${tokenContract}`} target="_blank" className="mt-auto inline-flex items-center justify-center rounded-full border border-yellow-400/40 bg-yellow-400/10 px-5 py-3 text-xs font-black uppercase tracking-[0.28em] text-yellow-400 transition-all duration-300 hover:-translate-y-0.5 hover:border-yellow-400 hover:bg-yellow-400 hover:text-black hover:shadow-[0_0_22px_rgba(250,204,21,0.28)]">
                                     View On Pumpfun &rarr;
@@ -480,21 +426,18 @@ export default function LandingPageClient({
 
                             <motion.div
                                 whileHover={{ y: -10 }}
-                                onClick={() => setActiveCta('opensource')}
-                                className={`group flex cursor-pointer flex-col items-center border bg-zinc-950 p-12 text-center shadow-xl shadow-black transition-all ${
-                                    activeCta === 'opensource' ? 'border-yellow-400 shadow-[0_0_35px_rgba(250,204,21,0.14)]' : 'border-zinc-900 hover:border-yellow-400'
-                                }`}
+                                className="group flex flex-col items-center rounded-2xl border border-zinc-900 bg-zinc-950 p-8 text-center shadow-xl shadow-black transition-all hover:border-yellow-400"
                             >
                                 <div className="mb-4 text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500">Open Development</div>
-                                <div className="mb-10 flex h-24 w-24 items-center justify-center border border-zinc-800 bg-zinc-900 transition-all group-hover:bg-white group-hover:text-black">
-                                    <Github className="h-12 w-12" />
+                                        <div className="mb-10 flex h-24 w-24 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-900 transition-all group-hover:bg-white group-hover:text-black">
+                                    <BitbucketIcon className="h-12 w-12" />
                                 </div>
                                 <h3 className="mb-6 text-3xl font-black uppercase italic text-white">Open Source</h3>
                                 <p className="mb-10 text-sm font-medium leading-relaxed text-zinc-500">
                                     Review the code, inspect the benchmark logic, and build with us in the open around decentralized mining infrastructure.
                                 </p>
-                                <Link href="https://github.com/devcodex2025/minebench-mining-benchmark-client" target="_blank" className="mt-auto inline-flex items-center justify-center rounded-full border border-yellow-400/40 bg-yellow-400/10 px-5 py-3 text-xs font-black uppercase tracking-[0.28em] text-yellow-400 transition-all duration-300 hover:-translate-y-0.5 hover:border-yellow-400 hover:bg-yellow-400 hover:text-black hover:shadow-[0_0_22px_rgba(250,204,21,0.28)]">
-                                    Go To GitHub &rarr;
+                                <Link href="https://bitbucket.org/minebenchapp/minebench-client" target="_blank" className="mt-auto inline-flex items-center justify-center rounded-full border border-yellow-400/40 bg-yellow-400/10 px-5 py-3 text-xs font-black uppercase tracking-[0.28em] text-yellow-400 transition-all duration-300 hover:-translate-y-0.5 hover:border-yellow-400 hover:bg-yellow-400 hover:text-black hover:shadow-[0_0_22px_rgba(250,204,21,0.28)]">
+                                    Go To Bitbucket &rarr;
                                 </Link>
                             </motion.div>
                         </div>
@@ -502,7 +445,7 @@ export default function LandingPageClient({
                         <div className="mb-32">
                             <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
                                 <div className="order-2 lg:order-1">
-                                    <div className="relative overflow-hidden border border-[#5865F2]/30 bg-gradient-to-br from-[#171b2d] via-zinc-950 to-black p-8 shadow-[0_0_50px_rgba(88,101,242,0.15)]">
+                                    <div className="relative overflow-hidden rounded-2xl border border-[#5865F2]/30 bg-gradient-to-br from-[#171b2d] via-zinc-950 to-black p-8 shadow-[0_0_50px_rgba(88,101,242,0.15)]">
                                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(88,101,242,0.14),transparent_40%)]" />
                                         <div className="relative space-y-8">
                                             <div className="flex items-center gap-4">
@@ -515,16 +458,16 @@ export default function LandingPageClient({
                                                 </div>
                                             </div>
                                             <div className="grid grid-cols-2 gap-4">
-                                                <div className="border border-white/10 bg-white/5 p-5">
+                                                <div className="rounded-xl border border-white/10 bg-white/5 p-5">
                                                     <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Members</p>
-                                                    <p className="mt-3 text-4xl font-black text-white">{discordStats.members ?? '...'}</p>
+                                                    <p className="mt-3 text-4xl font-black text-white">{discordStats.members ?? (discordUnavailable ? '—' : '...')}</p>
                                                 </div>
-                                                <div className="border border-white/10 bg-white/5 p-5">
+                                                <div className="rounded-xl border border-white/10 bg-white/5 p-5">
                                                     <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Online Now</p>
-                                                    <p className="mt-3 text-4xl font-black text-white">{discordStats.online ?? '...'}</p>
+                                                    <p className="mt-3 text-4xl font-black text-white">{discordStats.online ?? (discordUnavailable ? '—' : '...')}</p>
                                                 </div>
                                             </div>
-                                            <div className="border border-white/10 bg-black/40 p-5">
+                                            <div className="rounded-xl border border-white/10 bg-black/40 p-5">
                                                 <div className="flex items-center gap-3 text-zinc-300">
                                                     <Users className="h-5 w-5 text-[#5865F2]" />
                                                     <p className="text-sm leading-relaxed">
@@ -561,15 +504,17 @@ export default function LandingPageClient({
                         <div className="mx-auto mb-16 max-w-3xl">
                             <div className="group relative overflow-hidden rounded-[28px] border border-yellow-400/25 bg-gradient-to-br from-zinc-950 via-black to-zinc-950 p-3 shadow-[0_0_45px_rgba(250,204,21,0.08)] transition-all duration-500 hover:border-yellow-400/55 hover:shadow-[0_0_65px_rgba(250,204,21,0.14)]">
                                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(250,204,21,0.14),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.06),transparent_25%)] opacity-80" />
-                                <div className="relative overflow-hidden rounded-[20px] border border-zinc-800 bg-black">
-                                    <Image
-                                        src="/screenshots/MineBench-Pool-stats-cards.jpg"
-                                        alt="MineBench pool statistics overview screenshot"
-                                        width={920}
-                                        height={552}
-                                        className="mx-auto h-auto w-full max-w-[920px] transition-transform duration-700 group-hover:scale-[1.035]"
-                                    />
-                                </div>
+                                <ShowcaseReveal>
+                                    <div className="relative overflow-hidden rounded-[20px] border border-zinc-800 bg-black">
+                                        <Image
+                                            src="/screenshots/MineBench-Pool-stats-cards.jpg"
+                                            alt="MineBench pool statistics overview screenshot"
+                                            width={920}
+                                            height={552}
+                                            className="mx-auto h-auto w-full max-w-[920px] transition-transform duration-700 group-hover:scale-[1.035]"
+                                        />
+                                    </div>
+                                </ShowcaseReveal>
                             </div>
                             <p className="mt-4 text-center text-sm font-medium leading-relaxed text-zinc-500">
                                 Live MineBench pool statistics view with miner activity, performance cards, and benchmark-focused network visibility.
@@ -580,17 +525,19 @@ export default function LandingPageClient({
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.3, duration: 0.6 }}
-                            className="mx-auto mb-32 max-w-4xl border-l-4 border-yellow-400 bg-zinc-950 p-12 shadow-2xl"
+                            className="mx-auto mb-32 max-w-4xl rounded-2xl border-l-4 border-yellow-400 bg-zinc-950 p-12 shadow-2xl"
                         >
                             <h2 className="mb-8 text-4xl font-black uppercase tracking-tighter text-white italic">What Is MineBench?</h2>
                             <div className="space-y-6 text-lg font-medium leading-relaxed text-zinc-400">
                                 <p>
-                                    <strong className="text-yellow-400">MineBench</strong> is a hardware benchmark platform with blockchain-based rewards.
-                                    It works as mining benchmark software for users who want a cleaner way to compare hardware performance, track a mining leaderboard, and publish benchmark results into a shared database.
+                                    <strong className="text-yellow-400">MineBench</strong> combines a desktop mining benchmark client,
+                                    a public hardware leaderboard, and a live pool dashboard. Run a test on your own hardware
+                                    or browse existing results before downloading.
                                 </p>
                                 <p>
-                                    MineBench provides real-time performance metrics for mining hardware including hashrate, power consumption, and efficiency across multiple algorithms like <span className="italic text-white">RandomX</span> (Monero), <span className="italic text-white">Zephyr</span>, and <span className="italic text-white">Ravencoin</span>.
-                                    Whether you&apos;re searching for a CPU mining benchmark, GPU mining benchmark, RandomX benchmark, or a Monero mining app with benchmark visibility, MineBench gives you reliable data and Solana-based rewards for contributing hardware results.
+                                    The leaderboard groups submitted results by device name and shows the highest positive average hashrate.
+                                    Hardware settings and test conditions vary. Use the <Link href="/leaderboard" className="text-yellow-400 hover:underline">hardware results</Link> for
+                                    comparison and the <Link href="/dashboard" className="text-yellow-400 hover:underline">live dashboard</Link> for current network activity.
                                 </p>
                             </div>
                         </motion.div>
@@ -605,16 +552,16 @@ export default function LandingPageClient({
                         </h3>
                     </div>
                     <div className="grid gap-8 md:grid-cols-2">
-                        <div className="group flex flex-col items-start border border-zinc-900 bg-zinc-950/50 p-10 shadow-xl transition-all hover:border-yellow-400 hover:bg-zinc-950">
+                        <SpotlightCard className="group flex flex-col items-start border border-zinc-900 bg-zinc-950/50 p-10 shadow-xl transition-all hover:border-yellow-400 hover:bg-zinc-950">
                             <div className="mb-8 flex h-16 w-16 items-center justify-center border border-zinc-800 bg-zinc-900 transition-all group-hover:bg-yellow-400 group-hover:text-black">
                                 <Database className="h-8 w-8" />
                             </div>
                             <h3 className="mb-6 text-3xl font-black uppercase text-yellow-400 italic">Blockchain Rewards</h3>
                             <p className="text-lg font-medium leading-relaxed text-zinc-400">
-                                Pool earnings convert <span className="text-white">XMR to BMT</span> at real-time rates. Earn rewards directly for your hardware contribution and withdraw instantly to your Solana address without juggling multiple wallet flows.
+                                Follow <span className="text-white">BMT reward status</span> alongside pool activity. A submitted benchmark measures performance; it does not by itself establish a mining reward.
                             </p>
-                        </div>
-                        <div className="group flex flex-col items-start border border-zinc-900 bg-zinc-950/50 p-10 shadow-xl transition-all hover:border-yellow-400 hover:bg-zinc-950">
+                        </SpotlightCard>
+                        <SpotlightCard className="group flex flex-col items-start border border-zinc-900 bg-zinc-950/50 p-10 shadow-xl transition-all hover:border-yellow-400 hover:bg-zinc-950">
                             <div className="mb-8 flex h-16 w-16 items-center justify-center border border-zinc-800 bg-zinc-900 transition-all group-hover:bg-yellow-400 group-hover:text-black">
                                 <Activity className="h-8 w-8" />
                             </div>
@@ -622,30 +569,33 @@ export default function LandingPageClient({
                             <p className="text-lg font-medium leading-relaxed text-zinc-400">
                                 Watch hashrate in real time with power consumption and temperature indicators for smarter hardware optimization, efficiency tracking, and better benchmark context.
                             </p>
-                        </div>
-                        <div className="group flex flex-col items-start border border-zinc-900 bg-zinc-950/50 p-10 shadow-xl transition-all hover:border-yellow-400 hover:bg-zinc-950">
+                        </SpotlightCard>
+                        <SpotlightCard className="group flex flex-col items-start border border-zinc-900 bg-zinc-950/50 p-10 shadow-xl transition-all hover:border-yellow-400 hover:bg-zinc-950">
                             <div className="mb-8 flex h-16 w-16 items-center justify-center border border-zinc-800 bg-zinc-900 transition-all group-hover:bg-yellow-400 group-hover:text-black">
                                 <Cpu className="h-8 w-8" />
                             </div>
                             <h3 className="mb-6 text-3xl font-black uppercase text-yellow-400 italic">Multi-Algo Support</h3>
                             <p className="text-lg font-medium leading-relaxed text-zinc-400">
-                                Supports <span className="text-white">RandomX (Monero)</span> for CPU and <span className="text-white">GhostRider</span>. Built for miners who care about desktop mining software, benchmark accuracy, and native performance on Windows, Linux, and macOS.
+                                Explore <span className="text-white">CPU and GPU benchmark results</span> and check the algorithm used in each run. Available client builds are listed by platform on the downloads page.
                             </p>
-                        </div>
-                        <div className="group flex flex-col items-start border border-zinc-900 bg-zinc-950/50 p-10 shadow-xl transition-all hover:border-yellow-400 hover:bg-zinc-950">
+                        </SpotlightCard>
+                        <SpotlightCard className="group flex flex-col items-start border border-zinc-900 bg-zinc-950/50 p-10 shadow-xl transition-all hover:border-yellow-400 hover:bg-zinc-950">
                             <div className="mb-8 flex h-16 w-16 items-center justify-center border border-zinc-800 bg-zinc-900 transition-all group-hover:bg-yellow-400 group-hover:text-black">
                                 <Shield className="h-8 w-8" />
                             </div>
                             <h3 className="mb-6 text-3xl font-black uppercase text-yellow-400 italic">Open & Transparent</h3>
                             <p className="text-lg font-medium leading-relaxed text-zinc-400">
-                                Repository is public on GitHub and the benchmark workflow is visible end to end. Transparency is the foundation of verified benchmark results and a public mining dataset.
+                                Inspect the public client repository on Bitbucket and browse submitted benchmark results. Check how the software works before running it on your hardware.
                             </p>
-                        </div>
+                        </SpotlightCard>
                     </div>
                 </section>
 
-                <section className="mx-auto max-w-7xl px-4 py-32 sm:px-6 lg:px-8">
-                    <div className="group relative overflow-hidden border-8 border-yellow-400 bg-zinc-950 p-10 text-center md:p-16">
+                <BenchmarkFAQ />
+
+                <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+                    <BorderBeam size="md" colorVariant="sunset" theme="dark" strength={0.55} className="rounded-[1.5rem]">
+                    <div className="group relative overflow-hidden rounded-[1.5rem] border border-yellow-400 bg-zinc-950 p-10 text-center shadow-[0_0_50px_rgba(250,204,21,0.08)] md:p-16">
                         <div className="absolute inset-0 bg-[url('/img/cta_background.png')] bg-cover bg-center opacity-10 grayscale transition-opacity duration-700 group-hover:opacity-20" />
                         <div className="relative z-10 space-y-10">
                             <h2 className="mb-4 text-4xl font-black uppercase tracking-tighter text-white md:text-6xl">
@@ -657,14 +607,15 @@ export default function LandingPageClient({
                             <div className="flex flex-col items-center justify-center gap-6 lg:flex-row">
                                 <Link href="/downloads" className="btn-primary inline-flex items-center gap-4 px-12 py-6 text-xl">
                                     <Download className="h-6 w-6" />
-                                    Get {latestClientVersion} Now
+                                    Download {latestClientVersion}
                                 </Link>
-                                <Link href="/premium" className="border-2 border-yellow-400 px-10 py-6 text-xl font-black uppercase tracking-[0.2em] text-yellow-400 transition-all hover:bg-yellow-400 hover:text-black">
-                                    Upgrade To Premium
+                                <Link href="/premium" className="rounded-xl border border-yellow-400 px-10 py-6 text-xl font-black uppercase tracking-[0.2em] text-yellow-400 transition-all hover:bg-yellow-400 hover:text-black">
+                                    Compare Free & Premium
                                 </Link>
                             </div>
                         </div>
                     </div>
+                    </BorderBeam>
                 </section>
             </main>
 

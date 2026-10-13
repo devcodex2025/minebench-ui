@@ -1,0 +1,26 @@
+# MineBench
+
+> MineBench is a desktop mining benchmark client with public CPU/GPU results and a live mining pool dashboard.
+
+The client is free to download. Premium is an optional one-time upgrade for custom Monero wallet and pool settings with no expiry. CPU tuning controls are also available in the free client. Benchmark submissions and pool rewards are different: a benchmark is not proof of earnings. Release availability is listed on the downloads page.
+
+## Product and setup
+- [MineBench overview](https://minebench.cloud/): Product overview, first benchmark steps, and questions about results.
+- [Downloads](https://minebench.cloud/downloads): Available release files by operating system and architecture.
+- [Premium](https://minebench.cloud/premium): Free/Premium comparison, one-time price, additional SOL fees, and upgrade requirements.
+- [Pricing in plain text](https://minebench.cloud/pricing.txt): The same public offer in a text format.
+
+## Public data and documentation
+- [Hardware leaderboard](https://minebench.cloud/leaderboard): Highest submitted positive average hashrate per device name, from different systems and test conditions.
+- [Live dashboard](https://minebench.cloud/dashboard): Current network and benchmark activity.
+- [Pool rewards](https://minebench.cloud/pool-rewards): Pool activity and BMT reward status.
+- [Whitepaper](https://minebench.cloud/whitepaper): Project model and technical background.
+- [Mining benchmark guides](https://minebench.cloud/guides): Practical guides for RandomX benchmarking, hashrate efficiency, and download verification.
+- [RandomX benchmarking guide](https://minebench.cloud/guides/randomx-benchmarking): How to run and interpret a repeatable CPU mining benchmark.
+- [Hashrate per watt guide](https://minebench.cloud/guides/measure-hashrate-per-watt): How to measure mining efficiency without treating it as a profit guarantee.
+- [Mining profitability calculator inputs](https://minebench.cloud/guides/mining-profitability-calculator): Inputs and limitations to check before estimating mining profitability.
+- [Download verification guide](https://minebench.cloud/guides/verify-minebench-download): How to verify the official client download and investigate security warnings.
+- [Client source and releases](https://bitbucket.org/minebenchapp/minebench-client): Public Bitbucket repository.
+
+## Support
+- [MineBench Discord](https://discord.gg/vsDyYh4rma): Setup and upgrade support.

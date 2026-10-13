@@ -1,7 +1,9 @@
 'use client';
 
+import SpotlightCard from '@/components/reactbits/SpotlightCard';
+import FadeContent from '@/components/reactbits/FadeContent';
+
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { Download, Cpu, HardDrive, TrendingUp, Zap } from "lucide-react";
 import Image from "next/image";
@@ -10,6 +12,9 @@ import MacOSIcon from "@/public/img/macos-logo.svg";
 import LinuxIcon from "@/public/img/linux-logo.svg";
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { Button, ButtonLink } from '@/components/base/buttons/button';
+import { Badge } from '@/components/base/badges/badge';
+import { trackMarketingEvent } from '@/lib/marketingAnalytics';
 import { motion } from 'framer-motion';
 import ShaderScreenshotSlider, {
     ShaderSlide,
@@ -31,7 +36,8 @@ type BuildVariant = {
     url: string | null;
 };
 
-const Scene3D = dynamic(() => import('@/components/Scene3D'), { ssr: false, loading: () => null });
+const availableOnly = (variants: BuildVariant[]) => variants.filter((variant) => Boolean(variant.url));
+
 
 const createBuildVariants = (release: Release | null): Record<string, BuildVariant[]> => {
     const assets = release?.assets || [];
@@ -43,7 +49,7 @@ const createBuildVariants = (release: Release | null): Record<string, BuildVaria
     const universalMacDmg = findAssetUrl((n) => n.endsWith('.dmg') && n.includes('universal'));
 
     return {
-        windows: [
+        windows: availableOnly([
             {
                 arch: 'x64',
                 label: '64-bit Intel/AMD',
@@ -56,16 +62,16 @@ const createBuildVariants = (release: Release | null): Record<string, BuildVaria
                 description: 'For managed Windows installs and enterprise deployment',
                 url: findAssetUrl((n) => n.endsWith('.msi')),
             },
-        ],
-        macos: [
+        ]),
+        macos: availableOnly([
             {
                 arch: 'universal',
                 label: 'Universal',
                 description: 'For Intel and Apple Silicon Mac computers',
                 url: universalMacDmg || findAssetUrl((n) => n.endsWith('.dmg')),
             },
-        ],
-        linux: [
+        ]),
+        linux: availableOnly([
             {
                 arch: 'appimage',
                 label: 'AppImage',
@@ -84,7 +90,7 @@ const createBuildVariants = (release: Release | null): Record<string, BuildVaria
                 description: 'RPM package for Fedora, RHEL, and compatible distributions',
                 url: findAssetUrl((n) => n.endsWith('.rpm')),
             },
-        ],
+        ]),
     };
 };
 
@@ -165,6 +171,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
     };
 
     const handleDownloadClick = async (platform: string, arch: string) => {
+        trackMarketingEvent('download_selected', { platform, arch });
         try {
             await fetch('/api/increment-download', {
                 method: 'POST',
@@ -208,16 +215,12 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
         fetchReleases();
     }, [initialClientRelease]);
 
-    const PlatformSection = ({ platform, variants }: { platform: 'windows' | 'macos' | 'linux'; variants: BuildVariant[] }) => {
+    const renderPlatformSection = ({ platform, variants }: { platform: 'windows' | 'macos' | 'linux'; variants: BuildVariant[] }) => {
         const info = platformInfo[platform];
         
         return (
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: platform === 'windows' ? 0.1 : platform === 'macos' ? 0.2 : 0.3 }}
-                className="border-2 border-zinc-800 hover:border-yellow-400 transition-all duration-300 p-8"
+            <FadeContent key={platform}
+                className="surface-panel p-6 sm:p-8 transition-colors hover:border-yellow-400/30"
             >
                 <div className="flex items-center gap-4 mb-6 pb-4 border-b border-zinc-900">
                     <Image 
@@ -251,56 +254,46 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                 </div>
 
                 <div className="space-y-2">
-                    {variants.map((variant) => (
+                    {variants.map((variant) => variant.url && (
                         <div
                             key={variant.arch}
-                            className="border border-zinc-700 hover:border-yellow-400/50 p-3 transition-all"
+                            className="rounded-xl border border-zinc-700 hover:border-yellow-400/50 p-3 transition-colors"
                         >
                             <div className="flex items-start justify-between gap-3">
                                 <div>
-                                    <p className="font-bold text-white text-sm uppercase tracking-wide">{variant.label}</p>
+                                    <p className="font-medium text-white text-sm">{variant.label}</p>
                                     <p className="text-xs text-zinc-400 mt-1">{variant.description}</p>
                                 </div>
-                                <div className="px-3 py-2 border border-yellow-500/50 text-yellow-500 text-[10px] font-bold uppercase whitespace-nowrap">
-                                    STABLE RELEASE
-                                </div>
+                                <Badge>Stable</Badge>
                             </div>
-                            {variant.url ? (
-                                <a
-                                    href={variant.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={() => handleDownloadClick(platform, variant.arch)}
-                                    className="mt-4 inline-flex items-center gap-2 bg-yellow-400 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-black transition-all hover:bg-white"
-                                >
-                                    <Download className="w-4 h-4" />
-                                    Download
-                                </a>
-                            ) : (
-                                <div className="mt-4 inline-flex items-center gap-2 border border-zinc-700 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-zinc-500">
-                                    <Download className="w-4 h-4" />
-                                    Coming Soon
-                                </div>
-                            )}
+                            <ButtonLink
+                                href={variant.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={() => handleDownloadClick(platform, variant.arch)}
+                                leadingIcon={Download}
+                                className="mt-4"
+                            >
+                                Download
+                            </ButtonLink>
                         </div>
                     ))}
                 </div>
-            </motion.div>
+            </FadeContent>
         );
     };
 
     return (
-        <div className="min-h-screen relative overflow-hidden bg-black flex flex-col">
-            <Scene3D />
+        <div className="board-page refresh-downloads min-h-screen relative overflow-hidden bg-black flex flex-col">
             <Header />
 
-            <main className="flex-grow pt-24 pb-20 px-4 sm:px-6 lg:px-8 relative z-10">
+            <main id="refresh-content" tabIndex={-1} className="flex-grow pt-24 pb-20 px-4 sm:px-6 lg:px-8 relative z-10">
                 <div className="max-w-6xl mx-auto">
                     {/* Header */}
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={false}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-center mb-16 border-b border-zinc-900 pb-12"
+                        className="refresh-download-cover text-center mb-16 border-b border-zinc-900 pb-12"
                     >
                         <div className="flex flex-col items-center mb-8">
                             <div className="flex items-start gap-6 mb-8">
@@ -314,10 +307,10 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                                 />
                                 <div className="flex flex-col text-left">
                                     <h1 className="text-5xl md:text-7xl font-bold text-white tracking-tighter uppercase leading-none">
-                                        MineBench
+                                        Download MineBench
                                     </h1>
                                     {clientRelease && (
-                                        <p className="text-xl text-yellow-400 font-bold uppercase tracking-[0.3em] mt-2">
+                                        <p className="text-sm text-yellow-400 font-medium mt-3">
                                             {clientRelease.version}
                                         </p>
                                     )}
@@ -331,8 +324,8 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                         </div>
 
                         {/* Media Showcase */}
-                        <div className="max-w-4xl mx-auto mb-12 border border-zinc-800 p-2 bg-zinc-950">
-                            <div className="aspect-video relative overflow-hidden group">
+                        <div className="surface-panel max-w-4xl mx-auto mb-8 p-2">
+                            <div className="aspect-video relative overflow-hidden rounded-xl group">
                                 <video 
                                     ref={showcaseVideoRef}
                                     className="w-full h-full object-contain opacity-80 group-hover:opacity-100 transition-opacity"
@@ -367,25 +360,23 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
 
                         {/* Large Download CTA */}
                         <div className="flex justify-center mb-20">
-                            <motion.button
+                            <Button
                                 onClick={() => {
                                     const el = document.getElementById('download-section');
-                                    el?.scrollIntoView({ behavior: 'smooth' });
+                                    if (el) window.scrollTo({
+                                        top: el.getBoundingClientRect().top + window.scrollY - 112,
+                                        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+                                    });
                                 }}
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                className="group relative bg-yellow-400 text-black px-12 py-5 font-black uppercase tracking-tighter text-2xl flex items-center gap-4 hover:bg-white transition-colors overflow-hidden"
+                                leadingIcon={Download}
+                                className="h-11 px-5"
                             >
-                                <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500 skew-x-12" />
-                                <Download className="w-8 h-8 group-hover:bounce" />
-                                DOWNLOAD MINEBENCH
-                            </motion.button>
+                                Choose your download
+                            </Button>
                         </div>
 
                     {/* Application Overview Section */}
-                    <div className="mb-24">
+                    <FadeContent id="application-overview" className="mb-24 scroll-mt-28">
                         <div className="flex items-center gap-4 mb-10 border-b border-zinc-900 pb-6">
                             <div>
                                 <h2 className="text-3xl font-bold text-white uppercase tracking-tighter">Application Overview</h2>
@@ -394,7 +385,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                         </div>
 
                         <ShaderScreenshotSlider slides={APP_SCREENSHOTS} />
-                    </div>
+                    </FadeContent>
 
                     <p className="text-xl text-zinc-400 max-w-2xl mx-auto text-center font-sans font-semibold tracking-wide uppercase">
                         OPTIMIZED CPU MINING BENCHMARK
@@ -404,52 +395,89 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                     {/* Features Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
                         {[
-                            { title: "HYBRID CORE", desc: "Simultaneous CPU & GPU optimization for maximum hashrate." },
-                            { title: "AUTO-NODE", desc: "Automatically switches to the lowest latency mining node." },
-                            { title: "SILENT MODE", desc: "Runs in background with minimal system impact and noise." },
-                            { title: "REAL-TIME", desc: "Instant sync with the live dashboard and network stats." }
+                            { title: "Benchmarks", desc: "Run a test and inspect the reported hashrate for your hardware." },
+                            { title: "Hardware comparison", desc: "Compare your device with public CPU and GPU benchmark submissions." },
+                            { title: "Pool statistics", desc: "View workers, accepted shares, and pool activity in the client." },
+                            { title: "Optional Premium", desc: "Add custom wallet and pool settings when you need more control." }
                         ].map((f, i) => (
-                            <div key={i} className="p-6 border border-zinc-900 bg-zinc-950">
-                                <h4 className="text-yellow-400 font-bold uppercase text-xs tracking-widest mb-2">{f.title}</h4>
-                                <p className="text-zinc-500 text-[10px] uppercase leading-relaxed font-mono">{f.desc}</p>
-                            </div>
+                            <SpotlightCard key={i} className="surface-panel p-6">
+                                <h3 className="text-yellow-400 font-semibold text-sm mb-2">{f.title}</h3>
+                                <p className="text-zinc-400 text-sm leading-relaxed">{f.desc}</p>
+                            </SpotlightCard>
+                        ))}
+                    </div>
+
+                    <div className="mb-20 grid gap-5 md:grid-cols-3" aria-label="Mining benchmark setup guides">
+                        {[
+                            ['Run a RandomX CPU benchmark', '/guides/randomx-benchmarking'],
+                            ['Measure hashrate per watt', '/guides/measure-hashrate-per-watt'],
+                            ['Verify your MineBench download', '/guides/verify-minebench-download'],
+                        ].map(([label, href]) => (
+                            <Link key={href} href={href} className="surface-panel p-5 text-sm font-semibold text-yellow-300 transition-colors hover:text-white">
+                                {label} <span aria-hidden="true">→</span>
+                            </Link>
                         ))}
                     </div>
 
                     {/* Platform Sections */}
                     <div
                         id="download-section"
-                        className="grid grid-cols-1 gap-8 mb-16 md:grid-cols-3"
+                        className="scroll-mt-28 grid grid-cols-1 gap-8 mb-16 md:grid-cols-2 xl:grid-cols-3"
                     >
-                        <PlatformSection platform="windows" variants={builds.windows} />
-                        <PlatformSection platform="macos" variants={builds.macos} />
-                        <PlatformSection platform="linux" variants={builds.linux} />
+                        {([
+                            ['windows', builds.windows],
+                            ['macos', builds.macos],
+                            ['linux', builds.linux],
+                        ] as const)
+                            .filter(([, variants]) => variants.length > 0)
+                            .map(([platform, variants]) => (
+                                renderPlatformSection({ platform, variants })
+                            ))}
+                        {!loading && ![builds.windows, builds.macos, builds.linux].some((variants) => variants.length > 0) && (
+                            <div className="col-span-full rounded-2xl border border-zinc-800 bg-zinc-950 p-10 text-center">
+                                <p className="text-sm font-black uppercase tracking-[0.3em] text-zinc-500">No builds available</p>
+                                <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-zinc-400">
+                                    Download packages are being prepared. Check back shortly, or join our Discord for release updates.
+                                </p>
+                            </div>
+                        )}
                     </div>
 
-                    {/* Important Notice Section */}
-                    <div className="border border-orange-500/60 bg-orange-500/10 p-8 mb-12 text-center relative overflow-hidden group">
+                    {/* Reward System Section */}
+                    <div className="rounded-2xl border border-emerald-400/50 bg-emerald-400/10 p-8 mb-12 text-center relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Zap className="w-32 h-32 text-orange-500" />
+                            <Zap className="w-32 h-32 text-emerald-400" />
                         </div>
-                        <h3 className="text-2xl font-bold text-orange-500 mb-4 uppercase tracking-tighter flex items-center justify-center gap-3">
+                        <h3 className="text-2xl font-bold text-emerald-400 mb-4 uppercase tracking-tighter flex items-center justify-center gap-3">
                             <TrendingUp className="w-6 h-6" />
-                            REWARD SYSTEM STATUS: TESTING
+                            REWARD SYSTEM: LIVE
                         </h3>
                         <div className="max-w-3xl mx-auto space-y-4 text-zinc-300 text-sm leading-relaxed">
                             <p>
-                                The automated reward system is currently in <strong className="text-white">Beta Testing</strong>.
-                                Benchmark submissions still appear on the live dashboard, but <span className="text-orange-400 font-bold">direct rewards are temporarily disabled</span> while the payout flow is being verified.
+                                MineBench rewards are active. Connect your Solana wallet in the desktop app and mine through the MineBench pool. Authenticated mining sessions contribute accepted shares to the current reward window.
                             </p>
                             <p>
-                                Reward eligibility for the public launch is planned around valid benchmark submissions, stable miner participation, a configured wallet, and compliance with the anti-spam / anti-duplicate device rules that will be announced before payouts go live.
+                                When P2Pool confirms earned XMR, MineBench divides the reward proportionally to each miner&apos;s accepted shares, converts the XMR value to <strong className="text-white">BMT at the current XMR/BMT rate</strong>, and credits the confirmed BMT balance in the app.
                             </p>
                             <p>
-                                Join our Discord for testing updates, reward rules, and launch announcements:{' '}
+                                The client shows your current reward-window share, confirmed balance, and reward history. Use <strong className="text-white">Claim</strong> to review the estimated Solana payout cost and request a BMT transfer to your connected wallet; the payout cost is deducted from the claimed amount.
+                            </p>
+                            <p>
+                                <strong className="text-white">MineBench Premium</strong> is an optional upgrade for direct XMR wallet routing, P2Pool and custom pool support, RandomX tuning, huge pages, and advanced mining controls.
+                            </p>
+                            <p>
+                                <strong className="text-white">Benchmark rewards</strong> depend on how many accepted shares your miner finds while the benchmark is running. Only shares linked to your authenticated Solana wallet and accepted by the server count toward the reward calculation; more accepted shares mean a larger benchmark reward.
+                            </p>
+                            <p>
+                                <strong className="text-white">Stress tests</strong> run a sustained RandomX CPU load while tracking hashrate, temperature, and power in real time. Connect your Solana wallet before starting: pool-verified shares found during the test count toward your BMT reward, while unverified client-reported shares are ignored. The test stops automatically if temperature or power telemetry becomes unavailable.
+                            </p>
+                            <p>
+                                Join our Discord for reward updates and support:{' '}
                                 <a
                                     href="https://discord.gg/vsDyYh4rma"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="font-bold text-orange-300 underline decoration-orange-400/50 underline-offset-4 transition-colors hover:text-white"
+                                    className="font-bold text-emerald-300 underline decoration-emerald-400/50 underline-offset-4 transition-colors hover:text-white"
                                 >
                                     Join MineBench Discord
                                 </a>
@@ -461,13 +489,14 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="border border-yellow-400/40 bg-yellow-400/5 p-8 mb-12 text-center"
+                        className="rounded-2xl border border-yellow-400/40 bg-yellow-400/5 p-8 mb-12 text-center"
                     >
                         <h3 className="text-2xl font-bold text-white mb-4 uppercase tracking-wide">
-                            Want More Mining Control?
+                            Want to choose your own wallet and pool?
                         </h3>
                         <p className="text-zinc-300 text-sm max-w-3xl mx-auto leading-relaxed mb-6">
-                            If you want more features than the free app includes, upgrade to MineBench Premium for direct wallet routing, P2Pool and custom pool support, RandomX tuning, huge pages, and full mining control through a cleaner UI.
+                            Premium adds custom Monero wallet routing and P2Pool or custom pool settings.
+                            CPU tuning and benchmarks remain available in the free client. Compare the plans before upgrading.
                         </p>
                         <Link
                             href="/premium"
@@ -482,7 +511,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="border border-yellow-500/60 bg-yellow-500/5 p-6 mb-12"
+                        className="rounded-2xl border border-yellow-500/60 bg-yellow-500/5 p-6 mb-12"
                     >
                         <h3 className="text-2xl font-bold text-white mb-4 uppercase tracking-wide flex items-center gap-2">
                             Security / Antivirus Notice
@@ -493,7 +522,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                         <div className="space-y-3 text-zinc-200 text-sm">
                             <div className="flex gap-3">
                                 <span className="text-yellow-400 font-bold font-mono-system">1.</span>
-                                <p>Verify you downloaded from the official GitHub release on this page.</p>
+                                <p>Verify you downloaded from the official Bitbucket download on this page.</p>
                             </div>
                             <div className="flex gap-3">
                                 <span className="text-yellow-400 font-bold font-mono-system">2.</span>
@@ -515,7 +544,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="border border-zinc-900 p-8 mb-12"
+                        className="rounded-2xl border border-zinc-900 p-8 mb-12"
                     >
                         <h3 className="text-2xl font-bold text-white mb-6 uppercase tracking-wide border-b border-zinc-900 pb-4">
                             INSTALLATION GUIDE
@@ -550,7 +579,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="border border-yellow-400/50 bg-yellow-400/5 p-8"
+                        className="rounded-2xl border border-yellow-400/50 bg-yellow-400/5 p-8"
                     >
                         <h3 className="text-2xl font-bold text-white mb-6 uppercase tracking-wide border-b border-yellow-400/50 pb-4">
                             System Requirements
@@ -571,7 +600,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                                     <li>8+ GB RAM</li>
                                     <li>4 GB free disk space</li>
                                     <li>8+ core processor</li>
-                                    <li>Gigabit internet</li>
+                                    <li>Gigabit intenet</li>
                                     <li>Dedicated GPU (NVIDIA/AMD)</li>
                                 </ul>
                             </div>
@@ -582,7 +611,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="border border-zinc-800 bg-zinc-950 p-8 mt-12"
+                        className="rounded-2xl border border-zinc-800 bg-zinc-950 p-8 mt-12"
                     >
                         <h3 className="text-2xl font-bold text-white mb-6 uppercase tracking-wide border-b border-zinc-900 pb-4">
                             Open Mining Stack
@@ -604,14 +633,14 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                                 MineBench adds its own desktop UI, benchmark workflow, dashboard integration, telemetry views, and release packaging on top of that mining stack.
                             </p>
                             <p>
-                                You can study the MineBench application source code on GitHub here:{' '}
+                                You can study the MineBench application source code on Bitbucket here:{' '}
                                 <a
-                                    href="https://github.com/devcodex2025/minebench-mining-benchmark-client"
+                                    href="https://bitbucket.org/minebenchapp/minebench-client"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="font-bold text-yellow-400 underline decoration-yellow-400/40 underline-offset-4 transition-colors hover:text-white"
                                 >
-                                    MineBench Client GitHub Repository
+                                    MineBench Client Bitbucket Repository
                                 </a>
                                 .
                             </p>
@@ -625,4 +654,3 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
         </div>
     );
 }
-

@@ -1,0 +1,593 @@
+'use client';
+
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
+import { Activity, Blocks, ExternalLink, RefreshCw, TrendingDown, TrendingUp } from 'lucide-react';
+import { buildSmoothLine, getHashrateLayers, mergeLiveMinerHashrate, type PoolHashratePoint } from '@/lib/pool-hashrate';
+import { formatHashrate } from '@/lib/utils';
+import { normalizeRewardCoverage, type RewardCoverage } from '@/lib/pool-stats';
+import { ThinkingOrb } from 'thinking-orbs';
+
+// The reference line and its swatch use the same colour as the y-axis hashrate
+// labels (zinc-600) so the threshold reads as a neutral axis annotation.
+const AXIS_LABEL_COLOR = 'rgb(82 82 91)';
+const COVERAGE_MARKER_COLORS: Record<'mini' | 'nano', string> = {
+  mini: 'rgb(232 121 249)',
+  nano: AXIS_LABEL_COLOR
+};
+// The on-chart label needs to stay readable over the dark panel.
+const COVERAGE_LINE_LABEL_COLOR = 'rgb(161 161 170)';
+
+// The layers behave like two immiscible liquids: denser copper XMR settles at
+// the bottom while lighter golden BMT sits above it. Their shared edge stays
+// crisp, and the upper gold surface represents the combined pool hashrate.
+const BMT_LINE_COLOR = 'rgb(232 183 45)';
+const BMT_BODY_COLOR = 'rgb(203 145 31)';
+const XMR_LINE_COLOR = 'rgb(204 112 44)';
+const XMR_BODY_COLOR = 'rgb(154 71 29)';
+
+// The mini threshold usually sits far above the pool's own hashrate, so drawing
+// it would squeeze the real hashrate into a sliver of the chart. Show its value
+// but only draw the line that is actually comparable to the data (nano).
+const COVERAGE_DRAW_LINE: Record<'mini' | 'nano', boolean> = { mini: false, nano: true };
+
+type Point = PoolHashratePoint;
+type PoolBlock = {
+  id: string;
+  foundAt: string;
+  blockHeight: number;
+  blockHash: string | null;
+  finderScope: 'local' | 'p2pool_peer' | 'unknown';
+  moneroPayoutStatus: 'pending' | 'received' | 'none';
+  walletPayoutXmr: number | null;
+  payoutDetectedAt: string | null;
+  grossBmt: number;
+  userBmt: number;
+  treasuryBmt: number;
+  distributions: number;
+  bmtSettlementStatus: 'not_created' | 'processing' | 'credited' | 'partially_paid' | 'paid';
+};
+type Range = '1h' | '24h' | '7d' | '30d';
+
+const RANGES: { key: Range; label: string }[] = [
+  { key: '1h', label: '1H' },
+  { key: '24h', label: '24H' },
+  { key: '7d', label: '7D' },
+  { key: '30d', label: '30D' }
+];
+const HEIGHT = 300;
+const PAD = { top: 20, right: 20, bottom: 30, left: 64 };
+
+function useMeasuredWidth() {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [width, setWidth] = useState(0);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    const element = ref.current;
+    const update = () => setWidth(element.clientWidth);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  return { ref, width };
+}
+
+function formatTick(iso: string, range: Range): string {
+  const date = new Date(iso);
+  return range === '7d' || range === '30d'
+    ? date.toLocaleDateString([], { month: 'short', day: 'numeric' })
+    : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+export default function PoolHashrateChart() {
+  const [range, setRange] = useState<Range>('24h');
+  const [points, setPoints] = useState<Point[]>([]);
+  const [blocks, setBlocks] = useState<PoolBlock[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [hover, setHover] = useState<number | null>(null);
+  const [hoverRewardId, setHoverRewardId] = useState<string | null>(null);
+  const [pinnedRewardId, setPinnedRewardId] = useState<string | null>(null);
+  const [coverage, setCoverage] = useState<RewardCoverage | null>(null);
+  const refreshRef = useRef<() => void>(() => undefined);
+  const gradientId = `hashrate-fill-${useId().replace(/:/g, '')}`;
+  const xmrGradientId = `xmr-fill-${useId().replace(/:/g, '')}`;
+  const stackClipId = `hashrate-stack-${useId().replace(/:/g, '')}`;
+  const bmtMaskId = `hashrate-bmt-${useId().replace(/:/g, '')}`;
+  const { ref, width } = useMeasuredWidth();
+
+  const load = useCallback(async (selectedRange: Range, signal: AbortSignal) => {
+    try {
+      const [historyResult, blocksResult, coverageResult] = await Promise.allSettled([
+        fetch(`/api/pool-stats-history?range=${selectedRange}`, { signal }),
+        fetch(`/api/pool-blocks?range=${selectedRange}&limit=400`, { signal }),
+        fetch('/api/pool-stats', { signal })
+      ]);
+      if (historyResult.status !== 'fulfilled' || !historyResult.value.ok) throw new Error('bad status');
+      const coverageData = coverageResult.status === 'fulfilled' && coverageResult.value.ok
+        ? await coverageResult.value.json()
+        : null;
+      if (!signal.aborted) setCoverage(normalizeRewardCoverage(coverageData?.rewardCoverage));
+      const data = await historyResult.value.json();
+      if (signal.aborted) return;
+      setPoints(mergeLiveMinerHashrate(Array.isArray(data.points) ? data.points : [], coverageData));
+      setLastUpdated(data.generatedAt || new Date().toISOString());
+      if (blocksResult.status === 'fulfilled' && blocksResult.value.ok) {
+        const blocksData = await blocksResult.value.json();
+        if (!signal.aborted) setBlocks(Array.isArray(blocksData.blocks) ? blocksData.blocks : []);
+      } else {
+        setBlocks([]);
+      }
+      setError(false);
+    } catch (loadError) {
+      if (signal.aborted || (loadError instanceof Error && loadError.name === 'AbortError')) return;
+      setError(true);
+    } finally {
+      if (!signal.aborted) setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(false);
+    setHover(null);
+    setHoverRewardId(null);
+    setPinnedRewardId(null);
+    setPoints([]);
+    setBlocks([]);
+    let controller: AbortController | null = null;
+    let timer: number | null = null;
+
+    const refresh = () => {
+      controller?.abort();
+      controller = new AbortController();
+      void load(range, controller.signal);
+    };
+    const stop = () => {
+      if (timer !== null) window.clearInterval(timer);
+      timer = null;
+      controller?.abort();
+    };
+    const start = () => {
+      if (document.hidden || timer !== null) return;
+      refresh();
+      timer = window.setInterval(refresh, 30_000);
+    };
+    const onVisibilityChange = () => {
+      stop();
+      if (!document.hidden) start();
+    };
+
+    refreshRef.current = refresh;
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    start();
+
+    return () => {
+      stop();
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [range, load]);
+
+  const view = useMemo(() => {
+    const innerWidth = Math.max(0, width - PAD.left - PAD.right);
+    const innerHeight = HEIGHT - PAD.top - PAD.bottom;
+    const maxRate = Math.max(...points.map((point) => getHashrateLayers(point).total), 1);
+    const thresholdLines = (['mini', 'nano'] as const).flatMap((key) => {
+      const line = coverage?.sidechains[key];
+      if (!line || !(line.hashrate > 0)) return [];
+      return [{ key, color: COVERAGE_MARKER_COLORS[key], source: line.source, hashrate: line.hashrate, draw: COVERAGE_DRAW_LINE[key] }];
+    });
+    const drawnLines = thresholdLines.filter((entry) => entry.draw);
+    const yMax = Math.max(maxRate, ...drawnLines.map((entry) => entry.hashrate), 1) * 1.15;
+    const times = points.map((point) => new Date(point.t).getTime());
+    const blockTimes = blocks
+      .map((block) => new Date(block.foundAt).getTime())
+      .filter((timestamp) => Number.isFinite(timestamp));
+    const allTimes = [...times, ...blockTimes];
+    const fromTime = allTimes.length ? Math.min(...allTimes) : 0;
+    const toTime = allTimes.length ? Math.max(...allTimes) : fromTime;
+    const xAt = (timestamp: number) => toTime <= fromTime
+      ? PAD.left + innerWidth / 2
+      : PAD.left + ((timestamp - fromTime) / (toTime - fromTime)) * innerWidth;
+    const y = (value: number) => PAD.top + innerHeight - (value / yMax) * innerHeight;
+    const coordinates = points.map((point, index) => ({ x: xAt(times[index]), y: y(getHashrateLayers(point).total) }));
+    const baseY = PAD.top + innerHeight;
+    const line = buildSmoothLine(coordinates);
+    const totalArea = coordinates.length >= 2
+      ? `${line} L ${coordinates[coordinates.length - 1].x.toFixed(2)} ${baseY} L ${coordinates[0].x.toFixed(2)} ${baseY} Z`
+      : '';
+    // The lower XMR layer grows from the baseline. The BMT layer is the band
+    // between XMR and the combined total, so the two fills meet without a
+    // stroke, glow or blur. History without a split remains entirely BMT.
+    const xmrCoordinates = points.map((point, index) => ({
+      x: xAt(times[index]),
+      y: y(getHashrateLayers(point).xmr)
+    }));
+    const xmrLine = buildSmoothLine(xmrCoordinates);
+    const xmrArea = xmrCoordinates.length >= 2
+      ? `${xmrLine} L ${xmrCoordinates[xmrCoordinates.length - 1].x.toFixed(2)} ${baseY} L ${xmrCoordinates[0].x.toFixed(2)} ${baseY} Z`
+      : '';
+    const gridY = Array.from({ length: 4 }, (_, index) => {
+      const value = (yMax / 4) * (index + 1);
+      return { value, y: y(value) };
+    });
+    const blockMarkers = blocks.flatMap((block) => {
+      const timestamp = new Date(block.foundAt).getTime();
+      if (!Number.isFinite(timestamp) || timestamp < fromTime || timestamp > toTime) return [];
+      const nearestIndex = times.reduce((best, pointTime, index) => (
+        Math.abs(pointTime - timestamp) < Math.abs(times[best] - timestamp) ? index : best
+      ), 0);
+      return [{ block, x: xAt(timestamp), y: coordinates[nearestIndex]?.y ?? PAD.top }];
+    });
+    const thresholdMarkers = thresholdLines.map((entry) => ({ ...entry, y: y(entry.hashrate) }));
+    return { coordinates, xmrCoordinates, totalLine: line, totalArea, xmrArea, gridY, baseY, innerWidth, fromTime, toTime, times, blockMarkers, thresholdMarkers };
+  }, [points, blocks, width, coverage]);
+
+  const latest = points.length ? getHashrateLayers(points[points.length - 1]).total : 0;
+  const first = points.length ? getHashrateLayers(points[0]).total : 0;
+  const deltaPct = first > 0 ? ((latest - first) / first) * 100 : 0;
+  const trendingUp = deltaPct >= 0;
+
+  const onMove = (event: React.PointerEvent<SVGSVGElement>) => {
+    if (points.length < 2 || view.innerWidth <= 0) return;
+    const mouseX = event.clientX - event.currentTarget.getBoundingClientRect().left;
+    const ratio = (mouseX - PAD.left) / view.innerWidth;
+    const timestamp = view.fromTime + Math.max(0, Math.min(1, ratio)) * (view.toTime - view.fromTime);
+    const index = view.times.reduce((best, pointTime, pointIndex) => (
+      Math.abs(pointTime - timestamp) < Math.abs(view.times[best] - timestamp) ? pointIndex : best
+    ), 0);
+    setHover(index);
+  };
+
+  const activeRewardId = pinnedRewardId || hoverRewardId;
+  const activeMarker = view.blockMarkers.find((marker) => marker.block.id === activeRewardId);
+  const hoverPoint = hover !== null ? points[hover] : undefined;
+
+  const retry = () => {
+    setLoading(true);
+    setError(false);
+    refreshRef.current();
+  };
+
+  return (
+    <div className="glass-panel overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/60">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-900 bg-zinc-950/50 px-6 py-4">
+        <div className="flex items-center gap-3">
+          <Activity className="h-5 w-5 text-yellow-400" />
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-black uppercase tracking-[0.2em] text-white">Pool Hashrate</h2>
+              {error && points.length > 0 && <span className="text-[9px] font-bold uppercase text-amber-400">Stale</span>}
+            </div>
+            <div className="mt-1 flex flex-wrap items-baseline gap-3">
+              <span className="font-mono text-2xl font-black tracking-tighter text-yellow-400">{formatHashrate(latest)}</span>
+              {points.length > 1 && (
+                <span className={`inline-flex items-center gap-1 font-mono text-xs font-bold ${trendingUp ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {trendingUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                  {trendingUp ? '+' : ''}{deltaPct.toFixed(1)}%
+                </span>
+              )}
+              {lastUpdated && <span className="text-[9px] uppercase text-zinc-600">Updated {new Date(lastUpdated).toLocaleTimeString()}</span>}
+            </div>
+            <div className="mt-2 flex items-center gap-3 text-[9px] font-black uppercase tracking-[0.16em] text-zinc-500">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-2 w-2 rotate-45 border border-emerald-300 bg-emerald-400" />
+                {blocks.length} pool {blocks.length === 1 ? 'block' : 'blocks'}
+              </span>
+              <Link href="/pool-rewards" className="inline-flex items-center gap-1 text-yellow-400 hover:text-white">
+                History <ExternalLink className="h-3 w-3" />
+              </Link>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-1 rounded-lg border border-zinc-800 bg-black p-1" aria-label="Hashrate history range">
+          {RANGES.map((option) => (
+            <button
+              key={option.key}
+              type="button"
+              aria-pressed={range === option.key}
+              onClick={() => setRange(option.key)}
+              className={`rounded px-3 py-1.5 text-[11px] font-black uppercase tracking-widest transition-colors ${
+                range === option.key ? 'bg-yellow-400 text-black' : 'text-zinc-500 hover:text-yellow-400'
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {view.thresholdMarkers.length > 0 && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-zinc-900 bg-zinc-950/40 px-6 py-3 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+          <span>100% rewards above</span>
+          {view.thresholdMarkers.map((threshold) => (
+            <span key={threshold.key} className="inline-flex items-center gap-2">
+              {threshold.draw
+                ? <span className="h-0 w-4 border-t-2 border-dashed" style={{ borderColor: threshold.color }} />
+                : <span className="h-2 w-2 rounded-full" style={{ backgroundColor: threshold.color }} />}
+              {threshold.key} {formatHashrate(threshold.hashrate)}{threshold.source === 'nominal' ? ' est' : ''}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div ref={ref} className="relative pb-2 pt-4">
+        {loading && points.length === 0 ? (
+          <div className="flex h-[300px] items-center justify-center" role="status" aria-label="Loading pool hashrate history">
+            <ThinkingOrb state="searching" size={64} theme="dark" aria-label="Loading pool hashrate history" />
+          </div>
+        ) : error && points.length === 0 ? (
+          <div className="flex h-[300px] flex-col items-center justify-center gap-4 text-center">
+            <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">Hashrate history unavailable</span>
+            <button type="button" onClick={retry} className="inline-flex items-center gap-2 rounded-lg border border-zinc-700 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white hover:border-yellow-400 hover:text-yellow-400">
+              <RefreshCw className="h-3.5 w-3.5" /> Retry
+            </button>
+          </div>
+        ) : points.length === 0 ? (
+          <div className="flex h-[300px] flex-col items-center justify-center gap-2 text-center">
+            <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">Collecting hashrate data</span>
+            <span className="text-[10px] text-zinc-600">History appears as the pool reports over time</span>
+          </div>
+        ) : width > 0 ? (
+          <svg
+            width={width}
+            height={HEIGHT}
+            onPointerMove={onMove}
+            onPointerDown={onMove}
+            onMouseLeave={() => {
+              setHover(null);
+              setHoverRewardId(null);
+            }}
+            className="block"
+            role="img"
+            aria-label={`Pool hashrate history for ${range}, latest total ${formatHashrate(latest)}, ${view.blockMarkers.length} pool blocks, total hashrate line with stacked BMT and XMR miner layers`}
+          >
+            <defs>
+              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={BMT_LINE_COLOR} stopOpacity="0.96" />
+                <stop offset="100%" stopColor={BMT_BODY_COLOR} stopOpacity="0.9" />
+              </linearGradient>
+              <linearGradient id={xmrGradientId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={XMR_LINE_COLOR} stopOpacity="0.95" />
+                <stop offset="100%" stopColor={XMR_BODY_COLOR} stopOpacity="0.98" />
+              </linearGradient>
+              <clipPath id={stackClipId}>
+                <path d={view.totalArea} />
+              </clipPath>
+              <mask id={bmtMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width={width} height={HEIGHT}>
+                <rect width={width} height={HEIGHT} fill="black" />
+                <path d={view.totalArea} fill="white" />
+                <path d={view.xmrArea} fill="black" />
+              </mask>
+            </defs>
+            {view.gridY.map((grid, index) => (
+              <g key={index}>
+                <line x1={PAD.left} y1={grid.y} x2={width - PAD.right} y2={grid.y} stroke="rgb(39 39 42)" strokeWidth="1" strokeDasharray="3 4" />
+                <text x={PAD.left - 10} y={grid.y + 3} textAnchor="end" className="fill-zinc-600 font-mono" fontSize="10">{formatHashrate(grid.value)}</text>
+              </g>
+            ))}
+            {/* XMR is the lower wave; BMT occupies the non-overlapping wave above it. */}
+            {view.xmrArea && <path d={view.xmrArea} fill={`url(#${xmrGradientId})`} clipPath={`url(#${stackClipId})`} />}
+            {view.totalArea && <path d={view.totalArea} fill={`url(#${gradientId})`} mask={`url(#${bmtMaskId})`} />}
+            {view.coordinates.length === 1 && (
+              <g aria-hidden="true">
+                <line
+                  x1={view.coordinates[0].x}
+                  y1={view.baseY}
+                  x2={view.xmrCoordinates[0].x}
+                  y2={view.xmrCoordinates[0].y}
+                  stroke={XMR_BODY_COLOR}
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                />
+                <line
+                  x1={view.xmrCoordinates[0].x}
+                  y1={view.xmrCoordinates[0].y}
+                  x2={view.coordinates[0].x}
+                  y2={view.coordinates[0].y}
+                  stroke={BMT_BODY_COLOR}
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                />
+                <circle cx={view.coordinates[0].x} cy={view.coordinates[0].y} r="4" fill={BMT_LINE_COLOR} />
+              </g>
+            )}
+            {/* The upper gold edge is the combined pool hashrate, without a white contour. */}
+            {view.totalLine && <path d={view.totalLine} fill="none" stroke={BMT_LINE_COLOR} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />}
+            {/* Open reservoir sides and base make the combined liquid level explicit. */}
+            <path
+              d={`M ${PAD.left} ${PAD.top} V ${view.baseY} H ${width - PAD.right} V ${PAD.top}`}
+              fill="none"
+              stroke="rgb(63 63 70)"
+              strokeOpacity="0.72"
+              strokeWidth="1"
+              vectorEffect="non-scaling-stroke"
+            />
+            {/* Coverage guides stay above the liquid layers instead of being hidden by them. */}
+            {view.thresholdMarkers.filter((threshold) => threshold.draw).map((threshold) => (
+              <g key={threshold.key}>
+                <line x1={PAD.left} y1={threshold.y} x2={width - PAD.right} y2={threshold.y} stroke={threshold.color} strokeWidth="1.5" strokeDasharray="6 4" />
+                <text x={width - PAD.right - 4} y={threshold.y - 6} textAnchor="end" fontSize="10" fontWeight="700" fill={COVERAGE_LINE_LABEL_COLOR} stroke="rgb(9 9 11)" strokeWidth="3" paintOrder="stroke">
+                  {`${threshold.key} 100% ≈ ${formatHashrate(threshold.hashrate)}`}
+                </text>
+              </g>
+            ))}
+            {view.blockMarkers.map((marker) => {
+              const isActive = marker.block.id === activeRewardId;
+              const color = marker.block.moneroPayoutStatus === 'received'
+                ? 'rgb(52 211 153)'
+                : marker.block.moneroPayoutStatus === 'none'
+                  ? 'rgb(113 113 122)'
+                  : 'rgb(250 204 21)';
+              const fill = marker.block.moneroPayoutStatus === 'pending' ? 'rgb(9 9 11)' : color;
+              const payoutLabel = marker.block.moneroPayoutStatus === 'received'
+                ? `${marker.block.walletPayoutXmr?.toFixed(6) || 'unknown'} XMR received`
+                : marker.block.moneroPayoutStatus === 'none'
+                  ? 'no wallet payout'
+                  : 'wallet payout pending';
+              return (
+                <g
+                  key={marker.block.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Pool block ${marker.block.blockHeight}, ${payoutLabel}, found ${new Date(marker.block.foundAt).toLocaleString()}`}
+                  className="cursor-pointer outline-none"
+                  onMouseMove={(event) => event.stopPropagation()}
+                  onMouseEnter={() => setHoverRewardId(marker.block.id)}
+                  onMouseLeave={() => setHoverRewardId(null)}
+                  onFocus={() => setHoverRewardId(marker.block.id)}
+                  onBlur={() => setHoverRewardId(null)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setPinnedRewardId((current) => current === marker.block.id ? null : marker.block.id);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      setPinnedRewardId((current) => current === marker.block.id ? null : marker.block.id);
+                    }
+                  }}
+                >
+                  <line
+                    x1={marker.x}
+                    y1={marker.y + 7}
+                    x2={marker.x}
+                    y2={view.baseY}
+                    stroke={color}
+                    strokeOpacity={isActive ? 0.65 : 0.25}
+                    strokeWidth="1"
+                    strokeDasharray="2 4"
+                  />
+                  <circle cx={marker.x} cy={marker.y} r="12" fill="transparent" />
+                  <path
+                    d={`M ${marker.x} ${marker.y - (isActive ? 8 : 6)} L ${marker.x + (isActive ? 8 : 6)} ${marker.y} L ${marker.x} ${marker.y + (isActive ? 8 : 6)} L ${marker.x - (isActive ? 8 : 6)} ${marker.y} Z`}
+                    fill={fill}
+                    stroke={color}
+                    strokeWidth={isActive ? 3 : 2}
+                  />
+                </g>
+              );
+            })}
+            {points.map((point, index) => {
+              if (points.length > 12 && index % Math.ceil(points.length / 6) !== 0 && index !== points.length - 1) return null;
+              return <text key={point.t} x={view.coordinates[index].x} y={HEIGHT - 8} textAnchor="middle" className="fill-zinc-600 font-mono" fontSize="10">{formatTick(point.t, range)}</text>;
+            })}
+            {hover !== null && view.coordinates[hover] && (
+              <g>
+                <line x1={view.coordinates[hover].x} y1={PAD.top} x2={view.coordinates[hover].x} y2={view.baseY} stroke={BMT_LINE_COLOR} strokeOpacity="0.4" strokeWidth="1" />
+                <circle cx={view.coordinates[hover].x} cy={view.coordinates[hover].y} r="4" fill={BMT_LINE_COLOR} stroke="rgb(9 9 11)" strokeWidth="2" />
+              </g>
+            )}
+          </svg>
+        ) : <div className="h-[300px]" />}
+
+        {activeMarker && width > 0 && (
+          <div
+            className="pointer-events-none absolute z-20 w-64 -translate-x-1/2 rounded-lg border border-zinc-700 bg-black/95 px-4 py-3 shadow-2xl"
+            style={{
+              left: Math.min(Math.max(activeMarker.x, 136), width - 136),
+              top: Math.max(activeMarker.y - 176, 8)
+            }}
+          >
+            <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] text-white">
+              <Blocks className="h-3.5 w-3.5 text-yellow-400" /> Pool block found
+            </div>
+            <div className="mt-2 font-mono text-sm font-black text-white">Block #{activeMarker.block.blockHeight.toLocaleString()}</div>
+            <div className={`mt-2 font-mono text-sm font-black ${
+              activeMarker.block.moneroPayoutStatus === 'received'
+                ? 'text-emerald-400'
+                : activeMarker.block.moneroPayoutStatus === 'none'
+                  ? 'text-zinc-500'
+                  : 'text-yellow-400'
+            }`}>
+              {activeMarker.block.moneroPayoutStatus === 'received'
+                ? `${activeMarker.block.walletPayoutXmr?.toFixed(6) || '—'} XMR received`
+                : activeMarker.block.moneroPayoutStatus === 'none'
+                  ? 'No wallet PPLNS payout'
+                  : 'Awaiting wallet payout'}
+            </div>
+            {activeMarker.block.userBmt > 0 ? (
+              <div className="mt-1 font-mono text-xs text-yellow-400">
+                {activeMarker.block.userBmt.toFixed(2)} BMT · {activeMarker.block.bmtSettlementStatus.replace(/_/g, ' ')}
+              </div>
+            ) : null}
+            <div className="mt-2 text-[10px] text-zinc-500">Found {new Date(activeMarker.block.foundAt).toLocaleString()}</div>
+            {activeMarker.block.payoutDetectedAt ? (
+              <div className="mt-0.5 text-[10px] text-zinc-600">Payout event {new Date(activeMarker.block.payoutDetectedAt).toLocaleString()}</div>
+            ) : null}
+            <div className="mt-1 text-[9px] uppercase tracking-widest text-zinc-600">
+              {activeMarker.block.finderScope === 'local'
+                ? 'Found by this node'
+                : activeMarker.block.finderScope === 'p2pool_peer'
+                  ? 'Found by a P2Pool peer'
+                  : 'Found by P2Pool'}
+            </div>
+            {activeMarker.block.blockHash ? (
+              <div className="mt-1 truncate font-mono text-[9px] text-zinc-700">{activeMarker.block.blockHash}</div>
+            ) : null}
+            <div className="mt-2 text-[9px] uppercase tracking-widest text-zinc-600">
+              {pinnedRewardId === activeMarker.block.id ? 'Click marker to close' : 'Click marker to pin'}
+            </div>
+          </div>
+        )}
+
+        {!activeMarker && hoverPoint && width > 0 && (
+          <div className="pointer-events-none absolute z-10 -translate-x-1/2 rounded-lg border border-zinc-700 bg-black/90 px-3 py-2 shadow-xl" style={{ left: Math.min(Math.max(view.coordinates[hover as number].x, 70), width - 70), top: Math.max(view.coordinates[hover as number].y - 64, 8) }}>
+            <div className="flex items-baseline justify-between gap-4 font-mono text-sm font-black text-white">
+              <span className="text-[9px] uppercase tracking-widest text-zinc-500">Total</span>
+              <span>{formatHashrate(getHashrateLayers(hoverPoint).total)}</span>
+            </div>
+            <div className="mt-1 flex items-center gap-2 font-mono text-[10px] font-bold">
+              <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: BMT_LINE_COLOR }} />
+              <span className="uppercase tracking-widest text-zinc-500">BMT</span>
+              <span style={{ color: BMT_LINE_COLOR }}>
+                {formatHashrate(getHashrateLayers(hoverPoint).bmt)}
+              </span>
+            </div>
+            <div className="mt-0.5 flex items-center gap-2 font-mono text-[10px] font-bold">
+              <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: XMR_LINE_COLOR }} />
+              <span className="uppercase tracking-widest text-zinc-500">XMR</span>
+              <span style={{ color: XMR_LINE_COLOR }}>
+                {formatHashrate(getHashrateLayers(hoverPoint).xmr)}
+              </span>
+            </div>
+            <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-zinc-500">{hoverPoint.miners} miners</div>
+            <div className="text-[10px] text-zinc-600">{new Date(hoverPoint.t).toLocaleString()}</div>
+          </div>
+        )}
+      </div>
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-zinc-900 bg-black/30 px-6 py-3 text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-500">
+        <span className="inline-flex items-center gap-2">
+          <span className="h-2.5 w-2.5 rotate-45 border-2 border-yellow-400 bg-zinc-950" /> Block found · payout pending
+        </span>
+        <span className="inline-flex items-center gap-2">
+          <span className="h-2.5 w-2.5 rotate-45 border border-emerald-300 bg-emerald-400" /> XMR received
+        </span>
+        <span className="inline-flex items-center gap-2">
+          <span className="h-2.5 w-2.5 rotate-45 border border-zinc-400 bg-zinc-500" /> No wallet PPLNS payout
+        </span>
+        <span className="inline-flex items-center gap-2">
+          <span className="h-0 w-4 border-t-2" style={{ borderColor: BMT_LINE_COLOR }} /> Total hashrate
+        </span>
+        <span className="inline-flex items-center gap-2">
+          <span className="h-2 w-4 rounded-sm" style={{ backgroundColor: BMT_LINE_COLOR }} /> BMT miners
+        </span>
+        <span className="inline-flex items-center gap-2">
+          <span className="h-2 w-4 rounded-sm" style={{ backgroundColor: XMR_LINE_COLOR }} /> XMR miners
+        </span>
+        {view.thresholdMarkers.map((threshold) => (
+          <span key={threshold.key} className="inline-flex items-center gap-2">
+            {threshold.draw
+              ? <span className="h-0 w-4 border-t-2 border-dashed" style={{ borderColor: threshold.color }} />
+              : <span className="h-2 w-2 rounded-full" style={{ backgroundColor: threshold.color }} />}
+            {' '}{threshold.key} {formatHashrate(threshold.hashrate)} for 100% rewards{threshold.source === 'nominal' ? ' (est)' : ''}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}

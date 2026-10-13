@@ -55,6 +55,30 @@ export const formatProfitability = (profit: number): string => {
   return `$${profit.toFixed(4)}/day`;
 };
 
+export const BMT_DECIMALS = 6;
+
+const incrementDigits = (digits: string): string => {
+  const chars = digits.split('');
+  for (let i = chars.length - 1; i >= 0; i -= 1) {
+    if (chars[i] === '9') { chars[i] = '0'; continue; }
+    chars[i] = String(Number(chars[i]) + 1);
+    return chars.join('');
+  }
+  return `1${chars.join('')}`;
+};
+
+// BMT has 6 on-chain decimals; round longer decimal strings to token precision and trim trailing zeros.
+export const formatBmtAmount = (value: string): string => {
+  if (!/^\d+(?:\.\d+)?$/.test(value)) return value;
+  const [rawInteger, fraction = ''] = value.split('.');
+  const integer = rawInteger.replace(/^0+(?=\d)/, '');
+  const kept = fraction.slice(0, BMT_DECIMALS).padEnd(BMT_DECIMALS, '0');
+  const roundUp = fraction.length > BMT_DECIMALS && Number(fraction[BMT_DECIMALS]) >= 5;
+  const digits = (roundUp ? incrementDigits(integer + kept) : integer + kept).padStart(BMT_DECIMALS + 1, '0');
+  const rest = digits.slice(-BMT_DECIMALS).replace(/0+$/, '');
+  return rest ? `${digits.slice(0, -BMT_DECIMALS)}.${rest}` : digits.slice(0, -BMT_DECIMALS);
+};
+
 export const calculateEfficiency = (hashrate: number, powerConsumption: number): number => {
   return hashrate / powerConsumption;
 };

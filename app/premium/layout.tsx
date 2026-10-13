@@ -1,52 +1,50 @@
 import type { Metadata } from 'next';
+import { PREMIUM_PRICE_USDC, PREMIUM_FAQS } from '@/lib/marketing';
+
+const title = `MineBench Premium | ${PREMIUM_PRICE_USDC} USDC Once, More Mining Control`;
+const description = `Compare Free and Premium. Add custom Monero wallet routing and pool settings for ${PREMIUM_PRICE_USDC} USDC once, plus Solana network fees.`;
 
 export const metadata: Metadata = {
-  title: 'MineBench Premium | Monero Mining Software With Full UI Control',
-  description: 'Upgrade to MineBench Premium and control Monero mining through a powerful UI instead of console-only miners. Direct wallet mining, P2Pool, RandomX tuning, huge pages, and Windows, macOS, Linux support.',
-  alternates: {
-    canonical: 'https://minebench.cloud/premium',
-  },
-  keywords: [
-    'Monero mining software',
-    'Monero premium mining',
-    'mine Monero to own wallet',
-    'P2Pool mining software',
-    'P2Pool GUI',
-    'RandomX tuning',
-    'RandomX huge pages',
-    'CPU mining optimization',
-    'custom stratum mining',
-    'Monero direct payouts',
-    'Monero wallet mining app',
-    'mining software with gui',
-    'monero mining gui',
-    'monero miner gui',
-    'xmrig gui alternative',
-    'cross platform mining software',
-    'monero mining app for windows mac linux',
-    'windows macos linux mining app',
-    'monero miner with user interface',
-    'console alternative to xmrig',
-  ],
-  openGraph: {
-    title: 'MineBench Premium | Full UI Control For Monero Mining',
-    description: 'A Monero mining app with direct wallet mining, P2Pool, RandomX tuning, and full UI/UX controls across Windows, macOS, and Linux.',
-    url: 'https://minebench.cloud/premium',
-    siteName: 'Minebench',
-    images: [{ url: 'https://minebench.cloud/og-downloads.png' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'MineBench Premium | Monero Mining With Full UI Control',
-    description: 'Mine Monero with direct wallet payouts, P2Pool, RandomX tuning, and a clean UI instead of console-only workflows.',
-    images: ['https://minebench.cloud/og-downloads.png'],
-  },
+  title,
+  description,
+  alternates: { canonical: 'https://minebench.cloud/premium' },
+  openGraph: { title, description, url: 'https://minebench.cloud/premium', siteName: 'MineBench' },
+  twitter: { card: 'summary_large_image', title, description },
 };
 
-export default function PremiumLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return <>{children}</>;
+export default function PremiumLayout({ children }: { children: React.ReactNode }) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'SoftwareApplication',
+        '@id': 'https://minebench.cloud/premium#software',
+        name: 'MineBench Premium',
+        applicationCategory: 'UtilitiesApplication',
+        operatingSystem: 'Windows, Linux',
+        url: 'https://minebench.cloud/premium',
+        description,
+        screenshot: 'https://minebench.cloud/screenshots/app-overview-screenshots/premium.png',
+        offers: {
+          '@type': 'Offer',
+          url: 'https://minebench.cloud/premium#premium-purchase',
+          price: PREMIUM_PRICE_USDC,
+          priceCurrency: 'USDC',
+          description: 'One-time payment on Solana. SOL network fees are additional. No expiry or recurring subscription.',
+        },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://minebench.cloud/' },
+          { '@type': 'ListItem', position: 2, name: 'Premium', item: 'https://minebench.cloud/premium' },
+        ],
+      },
+      {
+        '@type': 'FAQPage',
+        mainEntity: PREMIUM_FAQS.map(faq => ({ '@type': 'Question', name: faq.question, acceptedAnswer: { '@type': 'Answer', text: faq.answer } })),
+      },
+    ],
+  };
+  return <><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />{children}</>;
 }

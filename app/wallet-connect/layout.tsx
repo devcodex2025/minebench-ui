@@ -1,14 +1,10 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Phantom Wallet Authentication - MineBench',
-  description: 'Connect your Phantom wallet to MineBench mining application',
+  title: 'Connect Your Wallet | MineBench',
+  robots: { index: false, follow: false, googleBot: { index: false, follow: false } },
 };
 
-export default function WalletConnectLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function WalletConnectLayout({ children }: { children: React.ReactNode }) {
   return children;
 }

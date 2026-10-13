@@ -2,19 +2,20 @@ import type { Metadata } from 'next';
 import WhitepaperClient from './WhitepaperClient';
 
 export const metadata: Metadata = {
-    title: 'Whitepaper - Minebench | BMT Tokenomics & Mining Architecture',
-    description: 'Explore the Minebench whitepaper. Decentralized hardware benchmarking on Solana, BenchMark Token (BMT) tokenomics, and the Colosseum Hackathon journey.',
+    alternates: { canonical: 'https://minebench.cloud/whitepaper' },
+    title: 'MineBench Whitepaper | Mining, BMT Rewards & AI Compute Roadmap',
+    description: 'MineBench architecture, off-chain benchmarks, P2Pool reward stages, lifetime Premium and the planned MineBench IQ AI compute marketplace. Updated September 2026.',
     openGraph: {
-        title: 'Whitepaper - Minebench | BMT Tokenomics',
-        description: 'Decentralized hardware benchmarking on Solana. Learn about architecture and tokenomics.',
+        title: 'MineBench Whitepaper | Product, Rewards & Roadmap',
+        description: 'What MineBench delivers today, how BMT rewards work, and what is planned for MineBench IQ.',
         url: 'https://minebench.cloud/whitepaper',
-        siteName: 'Minebench',
+        siteName: 'MineBench',
         images: [
             {
                 url: 'https://minebench.cloud/og-whitepaper.png',
                 width: 1200,
                 height: 630,
-                alt: 'Minebench Whitepaper - Decentralized Benchmarking',
+                alt: 'MineBench Whitepaper',
             },
         ],
         locale: 'en_US',
@@ -22,8 +23,8 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'Whitepaper - Minebench | BMT Tokenomics',
-        description: 'Decentralized mining architecture on Solana.',
+        title: 'MineBench Whitepaper | Product, Rewards & Roadmap',
+        description: 'Mining architecture, BMT settlement and the planned MineBench IQ AI compute direction.',
         images: ['https://minebench.cloud/og-whitepaper.png'],
         creator: '@MineBenchdapp',
     },

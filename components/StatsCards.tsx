@@ -1,5 +1,6 @@
 import { BenchmarkSummary, BenchmarkResult } from '@/types/benchmark';
 import { formatHashrate, formatEfficiency } from '@/lib/utils';
+import { StatusDot } from '@/components/base/indicators/status-dot';
 import { TrendingUp, Cpu, Zap, Award, Clock, Monitor } from 'lucide-react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
@@ -69,8 +70,7 @@ export default function StatsCards({ summary }: StatsCardsProps) {
           <motion.div
             key={index}
             variants={item}
-            whileHover={{ y: -5, scale: 1.02 }}
-            className="glass-panel group relative overflow-hidden rounded-xl border border-zinc-900 bg-zinc-950/30 p-6 transition-all hover:bg-zinc-950/50 hover:border-zinc-800"
+            className="surface-panel group relative min-w-0 overflow-hidden p-6 transition-colors hover:border-zinc-600"
           >
             {/* Background Glow */}
             <div className={`absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br ${stat.color} opacity-20 blur-2xl transition-opacity group-hover:opacity-40`}></div>
@@ -84,13 +84,13 @@ export default function StatsCards({ summary }: StatsCardsProps) {
               </div>
               
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-1">{stat.title}</p>
+                <p className="text-xs font-medium text-zinc-400 mb-2">{stat.title}</p>
                 <div className="flex items-baseline gap-2">
-                  <h4 className="text-3xl font-black text-white tracking-tighter uppercase font-mono-system">{stat.value}</h4>
+                  <h4 className="text-2xl font-semibold text-white tracking-tight break-words tabular-nums">{stat.value}</h4>
                 </div>
                 {stat.subtitle && (
                   <div className="mt-2 flex items-center gap-2">
-                    <div className="h-1 w-1 rounded-full bg-yellow-400 animate-pulse"></div>
+                    <StatusDot className="h-1 w-1" />
                     <p className="text-[10px] font-bold text-zinc-400 truncate uppercase tracking-widest">{stat.subtitle}</p>
                   </div>
                 )}
@@ -114,7 +114,8 @@ export function RecentTests({ tests }: RecentTestsProps) {
       const aTime = new Date(String(a.created_at ?? a.timestamp ?? 0)).getTime();
       const bTime = new Date(String(b.created_at ?? b.timestamp ?? 0)).getTime();
       return bTime - aTime;
-    });
+    })
+    .slice(0, 12);
 
   if (nonZeroTests.length === 0) return (
     <div className="border border-zinc-900/50 rounded-xl p-8 text-center bg-zinc-950/20 backdrop-blur-sm">
@@ -126,7 +127,7 @@ export function RecentTests({ tests }: RecentTestsProps) {
     <div className="glass-panel rounded-xl overflow-hidden shadow-2xl relative group h-full flex flex-col">
       <div className="p-5 border-b border-zinc-900 bg-zinc-950/40 flex items-center justify-between shrink-0">
         <h3 className="text-sm font-black text-white uppercase tracking-[0.2em] italic flex items-center gap-3">
-          <Clock className="w-4 h-4 text-yellow-400 animate-pulse" />
+          <Clock className="w-4 h-4 text-yellow-400 motion-safe:animate-pulse" />
           Recent Activity
         </h3>
         <div className="flex gap-1">

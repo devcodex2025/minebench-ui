@@ -1,10 +1,11 @@
 node_modules
 npm-debug.log
 README.md
+# Environment files — ignore every .env* variant except the safe template.
+# NEXT_PUBLIC_* values are supplied explicitly as --build-arg by the build script.
 .env
-.env.local
-.env.production.local
-.env.development.local
+.env.*
+!.env.example
 .next
 .git
 .gitignore
@@ -14,3 +15,16 @@ coverage
 .parcel-cache
 .DS_Store
 *.log
+.codex-home.html
+# Private keys / credentials must never enter the image
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa
+id_ed25519
+**/*keypair*.json
+**/*secret*.json
+secrets-trash
