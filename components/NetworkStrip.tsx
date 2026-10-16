@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { formatHashrate } from '@/lib/utils';
+import { normalizePoolStats } from '@/lib/pool-stats';
 import { TrendingUp, Users, Activity, Server } from 'lucide-react';
 
 export default function NetworkStrip() {
@@ -14,41 +15,60 @@ export default function NetworkStrip() {
   });
 
   useEffect(() => {
+    let controller: AbortController | null = null;
+    let active = true;
     const fetchMetrics = async () => {
+      if (document.hidden || controller) return;
+      controller = new AbortController();
+      const timeout = setTimeout(() => controller?.abort(), 5000);
       try {
         const [poolRes, ratesRes] = await Promise.all([
-          fetch('/api/pool-stats').catch(() => null),
-          fetch('/api/rates').catch(() => null)
+          fetch('/api/pool-stats', { signal: controller.signal }).catch(() => null),
+          fetch('/api/rates', { signal: controller.signal }).catch(() => null)
         ]);
         const poolData = poolRes?.ok ? await poolRes.json() : {};
         const ratesData = ratesRes?.ok ? await ratesRes.json() : {};
+        const normalizedPool = normalizePoolStats(poolData);
         
+        if (!active || (!poolRes?.ok && !ratesRes?.ok)) return;
         setMetrics({
-          hashrate: Number(poolData.poolHashrate || 0),
-          miners: Number(poolData.stratum?.connections || poolData.miners || 0),
+          hashrate: normalizedPool.poolHashrate,
+          miners: normalizedPool.miners,
           xmrPrice: Number(ratesData.xmr_usd || 0),
           bmtPrice: Number(ratesData.bmt_usd || 0),
           xmrBmtRatio: Number(ratesData.rate_xmr_bmt || 0)
         });
-      } catch (err) { }
+      } catch {
+        // Keep the last public snapshot while auxiliary services are unavailable.
+      } finally {
+        clearTimeout(timeout);
+        controller = null;
+      }
     };
     
     fetchMetrics();
     const id = setInterval(fetchMetrics, 30000);
-    return () => clearInterval(id);
+    const onVisibilityChange = () => { if (!document.hidden) void fetchMetrics(); };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      active = false;
+      clearInterval(id);
+      controller?.abort();
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, []);
 
   const hasLiveData = metrics.hashrate > 0 || metrics.miners > 0 || metrics.xmrPrice > 0;
 
   return (
-    <div className="relative z-40 w-full overflow-hidden border-b border-yellow-500 bg-yellow-400 py-1.5 shadow-[0_0_15px_rgba(250,204,21,0.2)]">
-        <div className="mx-auto flex min-h-4 max-w-6xl items-center justify-between gap-3 px-3 font-mono text-[9px] font-black uppercase text-black/90 sm:gap-5 sm:px-6 sm:text-[10px] lg:px-8">
-            <div className="flex shrink-0 items-center gap-1.5"><Server className="h-3 w-3 shrink-0 text-black"/><span><span className="hidden sm:inline">Pool: </span>xmr.minebench.cloud:3333</span></div>
+    <div className="relative z-40 w-full overflow-x-auto border-t border-white/5 bg-white/[0.025] py-2">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 whitespace-nowrap px-4 text-[10px] font-medium text-zinc-400 sm:px-6 lg:px-8">
+            <div className="flex items-center gap-2"><Server className="w-3 h-3 text-yellow-400"/><span>Pool <span className="text-zinc-300">xmr.minebench.cloud:3334</span></span></div>
             {hasLiveData && (<>
-            <div className="hidden shrink-0 items-center gap-1.5 min-[420px]:flex"><TrendingUp className="h-3 w-3 shrink-0 text-black"/><span>Hashrate: {formatHashrate(metrics.hashrate)}</span></div>
-            <div className="flex shrink-0 items-center gap-1.5"><Users className="h-3 w-3 shrink-0 text-black"/><span>Miners: {metrics.miners}</span></div>
-            <div className="hidden shrink-0 items-center gap-1.5 md:flex"><Activity className="h-3 w-3 shrink-0 text-black"/><span>XMR: ${metrics.xmrPrice.toFixed(2)}</span></div>
-            <a href="https://pump.fun/coin/67ipDsgK6D7bqTW89H8T1KTxUvVuaFy92GX7Q2XFVdev" target="_blank" rel="noopener noreferrer" className="hidden shrink-0 items-center gap-1.5 transition-colors hover:text-white lg:flex"><span>BMT: ${metrics.bmtPrice.toFixed(8)}</span></a>
+            <div className="flex items-center gap-1.5"><TrendingUp className="w-3 h-3 text-yellow-400"/><span>Hashrate <span className="text-zinc-200">{formatHashrate(metrics.hashrate)}</span></span></div>
+            <div className="flex items-center gap-1.5"><Users className="w-3 h-3"/><span>Miners <span className="text-zinc-200">{metrics.miners}</span></span></div>
+            <div className="hidden sm:flex items-center gap-1.5"><Activity className="w-3 h-3"/><span>XMR: ${metrics.xmrPrice.toFixed(2)}</span></div>
+            <a href="https://pump.fun/coin/67ipDsgK6D7bqTW89H8T1KTxUvVuaFy92GX7Q2XFVdev" target="_blank" rel="noopener noreferrer" className="hidden sm:flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer"><span>BMT: ${metrics.bmtPrice.toFixed(8)}</span></a>
             </>)}
         </div>
     </div>

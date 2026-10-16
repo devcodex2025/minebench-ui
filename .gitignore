@@ -25,6 +25,7 @@
 AGENTS.md
 *.ps1
 *.yml
+!bitbucket-pipelines.yml
 *.yaml
 *.sh
 *.sql

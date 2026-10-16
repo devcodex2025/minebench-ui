@@ -1,0 +1,17 @@
+image: node:24-bookworm-slim
+
+pipelines:
+  custom:
+    performance:
+      - variables:
+          - name: PERF_DEPLOYMENT_ID
+            description: Exact identifier of the deployed UI being measured
+      - step:
+          name: Check public performance
+          max-time: 20
+          script:
+            - test -n "$PERF_DEPLOYMENT_ID"
+            - node --test tests/measure-performance.test.cjs
+            - node scripts/measure-performance.mjs --origin https://minebench.cloud --mode psi --runs 1 --routes /,/leaderboard,/downloads,/guides/randomx-benchmarking
+          artifacts:
+            - artifacts/performance/**

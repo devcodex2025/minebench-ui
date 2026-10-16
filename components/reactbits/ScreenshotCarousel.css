@@ -1,0 +1,19 @@
+.rb-screenshot-carousel{margin:0 0 64px}
+.rb-screenshot-window{overflow:hidden;width:100%;border-radius:14px;background:#101013;outline:1px solid #303035;aspect-ratio:1136/560}
+.rb-screenshot-track{display:flex;position:relative;align-items:center;height:100%;touch-action:pan-y;perspective:1200px;cursor:grab}
+.rb-screenshot-track:active{cursor:grabbing}
+.rb-screenshot-slide{flex-shrink:0;min-width:0;height:100%;transform-origin:center;backface-visibility:hidden}
+.rb-screenshot-slide a{display:flex;align-items:center;height:100%;user-select:none}
+.rb-screenshot-slide img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none}
+.rb-screenshot-controls{display:flex;justify-content:center;align-items:center;gap:22px;margin-top:20px}
+.rb-screenshot-controls>button{width:42px;height:42px;display:grid;place-items:center;border:1px solid #39393e;border-radius:50%;background:#19191d;color:#facc15}
+.rb-screenshot-controls>button:disabled{opacity:.25;cursor:default}
+.rb-screenshot-dots{display:flex;gap:4px}
+.rb-screenshot-dots button{width:32px;height:42px;display:grid;place-items:center}
+.rb-screenshot-dots span{width:7px;height:7px;border-radius:20px;background:#626269;transition:width .25s,background .25s}
+.rb-screenshot-dots [aria-current] span{width:24px;background:#facc15}
+.rb-screenshot-carousel :focus-visible{outline:2px solid #facc15;outline-offset:3px}
+.rb-screenshot-slide a:focus-visible{outline-offset:-3px}
+@media(prefers-reduced-motion:reduce){.rb-screenshot-dots span{transition:none}}
+
+.premium-lightbox{width:calc(100vw - 32px);max-width:1450px;max-height:95dvh;padding:48px 12px 12px;border:1px solid #4b4734;border-radius:14px;background:#0e0e10;color:#f4f4f5;margin:auto;overflow:auto}.premium-lightbox::backdrop{background:#000d;backdrop-filter:blur(8px)}.premium-lightbox img{display:block;max-width:100%;width:auto;height:auto;max-height:80dvh;object-fit:contain;margin:auto}.premium-lightbox-close{position:absolute;right:8px;top:5px;display:grid;place-items:center;width:40px;height:40px;border-radius:6px;background:#232325}.premium-lightbox-close:focus-visible{outline:2px solid #facc15;outline-offset:2px}

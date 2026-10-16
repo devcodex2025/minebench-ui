@@ -1,0 +1,13 @@
+# MineBench pricing
+
+## Free client and public results
+Download the client and browse public benchmark results without buying Premium.
+Download: https://minebench.cloud/downloads
+
+## Premium
+Price: 29 USDC once, paid on Solana. The checkout describes a one-time payment.
+Additional costs: SOL network fees. The current checkout requires at least 0.005 SOL available; this is not a fixed fee.
+Requires: a Solana wallet with USDC and SOL. Review the transaction in your wallet before approving payment.
+Current features and checkout: https://minebench.cloud/premium
+Payout conditions depend on the pool. No hashrate or earnings guarantee.
+Support: https://discord.gg/vsDyYh4rma

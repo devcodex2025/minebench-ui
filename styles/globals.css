@@ -1,0 +1,165 @@
+@import "tailwindcss";
+@import "./theme.css";
+@import "./typography.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Preserve MineBench's original brand ramp across the Tailwind v4 migration. */
+@theme {
+  --color-yellow-200: #fef08a;
+  --color-yellow-300: #fde047;
+  --color-yellow-400: #facc15;
+  --color-yellow-500: #eab308;
+  --color-yellow-600: #ca8a04;
+}
+
+/* BoardUI foundations, with MineBench's yellow accent and locally served font. */
+:root {
+  --font-inter: "Inter Variable";
+  --board-radius-control: 0.75rem;
+  --board-radius-card: 1rem;
+  --board-radius-feature: 1.25rem;
+  --board-radius-media: 1.5rem;
+  --color-accent-50: var(--color-yellow-50);
+  --color-accent-100: var(--color-yellow-100);
+  --color-accent-200: var(--color-yellow-200);
+  --color-accent-300: var(--color-yellow-300);
+  --color-accent-400: var(--color-yellow-300);
+  --color-accent-500: var(--color-yellow-400);
+  --color-accent-600: var(--color-yellow-500);
+  --color-accent-700: var(--color-yellow-600);
+  --color-accent-800: var(--color-yellow-700);
+  --color-accent-900: var(--color-yellow-800);
+  --color-accent-950: var(--color-yellow-950);
+}
+
+.dark {
+  --color-text-tertiary: var(--color-neutral-400);
+  --color-background-full: #09090b;
+  --color-background-primary-default: #18181b;
+  --color-background-secondary-default: #101012;
+  --gradient-button-primary-default: linear-gradient(180deg, var(--color-yellow-300), var(--color-yellow-400));
+  --gradient-button-primary-hover: linear-gradient(180deg, var(--color-yellow-200), var(--color-yellow-300));
+}
+
+.board-page {
+  background: var(--color-background-full);
+  isolation: isolate;
+}
+
+.board-page > main {
+  position: relative;
+  z-index: 10;
+  padding-top: 8.5rem;
+}
+
+.board-page > main:has(> .benchmark-hero) {
+  padding-top: 0;
+}
+
+.board-page :where(h1, h2, h3, h4) {
+  font-weight: 600;
+  font-style: normal;
+  text-transform: none;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.board-page h1:not(.benchmark-hero h1) {
+  font-size: clamp(2rem, 3.5vw, 3.25rem);
+  line-height: 1.15;
+}
+
+.board-page :where(h2, h3) {
+  line-height: 1.25;
+}
+
+.benchmark-hero {
+  background: radial-gradient(ellipse at 75% 15%, rgb(250 204 21 / 0.035), transparent 55%);
+}
+
+.benchmark-hero h1 {
+  font-weight: 700;
+  letter-spacing: -0.055em;
+}
+
+.board-stat {
+  border-radius: var(--board-radius-card);
+  background: var(--color-background-secondary-default);
+  border-color: var(--color-border-button-default);
+}
+
+/* Keep legacy page sections in the same rounded language as the newer Board UI surfaces. */
+.board-page :where(
+  [class~="border-zinc-900"][class*="bg-zinc-950"],
+  [class~="border-zinc-800"][class*="bg-zinc-950"],
+  [class~="border-zinc-800"][class~="bg-zinc-900"],
+  [class~="border-yellow-400"][class*="bg-yellow-400"],
+  [class~="border-emerald-400/50"][class~="bg-emerald-400/10"],
+  [class~="border-yellow-500/60"][class~="bg-yellow-500/5"]
+) {
+  border-radius: var(--board-radius-card);
+  overflow: hidden;
+}
+
+.board-page :where(input, select, textarea) {
+  border-radius: var(--board-radius-control);
+}
+
+.board-page button:not([class*="rounded-"]) {
+  border-radius: var(--board-radius-control);
+}
+
+.board-page a[class*="px-"]:not([class*="rounded-"]) {
+  border-radius: var(--board-radius-control);
+}
+
+.board-page :where(.border-4.border-yellow-400, .border-8.border-yellow-400) {
+  border-width: 1px;
+  border-radius: var(--board-radius-feature);
+}
+
+.board-page :where(.border-l-4.border-yellow-400) {
+  border-left-width: 3px;
+  border-radius: var(--board-radius-card);
+}
+
+.board-table th {
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--color-background-secondary-default);
+  color: var(--color-text-tertiary);
+}
+
+.board-table td {
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .board-page :where(.btn-primary, .btn-secondary, .bg-button-primary) {
+    transition: translate 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+  }
+  .board-page :where(.btn-primary, .btn-secondary, .bg-button-primary):hover {
+    translate: 0 -2px;
+    box-shadow: 0 6px 24px rgb(250 204 21 / 0.1);
+  }
+  .board-page :where(a.surface-panel, li.surface-panel) {
+    transition: translate 220ms ease, border-color 220ms ease;
+  }
+  .board-page :where(a.surface-panel, li.surface-panel):hover {
+    translate: 0 -3px;
+    border-color: rgb(250 204 21 / 0.3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

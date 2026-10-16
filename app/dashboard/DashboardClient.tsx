@@ -175,7 +175,7 @@ export default function DashboardClient() {
   return (
     <div className="min-h-screen bg-black text-zinc-400">
       <Header />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+      <main id="refresh-content" tabIndex={-1} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         <section className="border border-zinc-800 bg-zinc-950/60 p-8 md:p-10 mb-10">
           <div className="flex flex-col gap-8">
             <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">

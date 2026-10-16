@@ -134,7 +134,7 @@ const WalletConnectContent = () => {
       <Header />
       
       {/* Main content */}
-      <main className="flex-1 flex items-center justify-center px-4 py-24">
+      <main id="refresh-content" tabIndex={-1} className="flex-1 flex items-center justify-center px-4 py-24">
         <div className="w-full max-w-md">
           <div className="bg-zinc-950 border border-zinc-800 p-8 space-y-6">
             <div className="text-center space-y-2">

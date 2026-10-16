@@ -284,7 +284,7 @@ export default function PremiumPage() {
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Header />
       
-      <main className="flex-grow pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto w-full">
+      <main id="refresh-content" tabIndex={-1} className="flex-grow pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto w-full">
         <div className="text-center mb-16">
           <div className="inline-block border border-yellow-400 px-4 py-2 mb-6">
             <span className="text-yellow-400 font-mono text-sm uppercase tracking-widest">

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import WhitepaperClient from './WhitepaperClient';
 
 export const metadata: Metadata = {
+    alternates: { canonical: 'https://minebench.cloud/whitepaper' },
     title: 'Whitepaper - Minebench | BMT Tokenomics & Mining Architecture',
     description: 'Explore the Minebench whitepaper. Decentralized hardware benchmarking on Solana, BenchMark Token (BMT) tokenomics, and the Colosseum Hackathon journey.',
     openGraph: {

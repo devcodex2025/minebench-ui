@@ -1,6 +1,21 @@
 import type { Metadata } from 'next';
-import './globals.css';
-import { SolanaWalletProvider } from './providers';
+import localFont from 'next/font/local';
+import './shared.css';
+import { MotionBoundary } from './MotionBoundary';
+import { WalletBoundary } from './WalletBoundary';
+import MarketingAnalytics from '@/components/marketing/MarketingAnalytics';
+import GoogleAnalyticsConsent from '@/components/analytics/GoogleAnalyticsConsent';
+import { WorkspaceMotion } from '@/components/refresh/WorkspaceLink';
+
+const manrope = localFont({
+  src: '../public/fonts/Manrope.woff2',
+  weight: '200 800',
+  style: 'normal',
+  display: 'swap',
+  preload: true,
+  variable: '--font-manrope',
+  adjustFontFallback: 'Arial',
+});
 
 export const viewport = {
   width: 'device-width',
@@ -28,19 +43,12 @@ export const metadata: Metadata = {
     'miner software',
     'mining results dashboard'
   ].join(', '),
-  authors: [{ name: 'Minebench Team' }],
+  authors: [{ name: 'MineBench Team' }],
   openGraph: {
     title: 'MineBench | Mining Benchmark Software And Live Hardware Results',
     description: 'Compare CPU and GPU mining performance, inspect RandomX benchmark data, and download the MineBench client.',
     url: 'https://minebench.cloud',
-    siteName: 'Minebench',
-    images: [
-      {
-        url: 'https://minebench.cloud/og-home.png',
-        width: 1200,
-        height: 630,
-      },
-    ],
+    siteName: 'MineBench',
     locale: 'en_US',
     type: 'website',
   },
@@ -48,7 +56,6 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'MineBench | Mining Benchmark Software And Live Hardware Results',
     description: 'Track benchmark results, compare hardware, and download a cleaner mining client.',
-    images: ['https://minebench.cloud/og-home.png'],
     creator: '@MineBenchdapp',
   },
   robots: {
@@ -62,10 +69,7 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  alternates: {
-    canonical: 'https://minebench.cloud',
-  },
-  applicationName: 'Minebench',
+  applicationName: 'MineBench',
   generator: 'Next.js',
   referrer: 'origin-when-cross-origin',
   icons: {
@@ -85,45 +89,15 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'SoftwareApplication',
-    name: 'Minebench',
-    applicationCategory: 'UtilitiesApplication',
-    operatingSystem: 'Windows, Linux, macOS',
-    description: 'Mining benchmark software for CPU and GPU miners with a live results dashboard, RandomX benchmark visibility, download builds, and miner-focused telemetry.',
-    url: 'https://minebench.cloud',
-    offers: {
-      '@type': 'Offer',
-      price: '0',
-      priceCurrency: 'USD',
-    },
-    featureList: [
-      'CPU and GPU mining benchmark runs',
-      'RandomX benchmark visibility',
-      'Live hardware results dashboard',
-      'Hashrate, duration, and telemetry tracking',
-      'Windows, Linux, and macOS client downloads',
-      'Open mining stack and benchmark workflow',
-      'Pool statistics and recent test visibility'
-    ],
-    screenshot: 'https://minebench.cloud/og-home.png',
-    author: {
-      '@type': 'Organization',
-      name: 'Minebench Team',
-    },
-  };
-
   return (
-    <html lang="en">
-      <body className="antialiased">
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-        <SolanaWalletProvider>
-          {children}
-        </SolanaWalletProvider>
+    <html lang="en" className="dark">
+      <body className={`${manrope.variable} antialiased refresh-ui`}>
+        <GoogleAnalyticsConsent />
+        <MarketingAnalytics />
+        <WorkspaceMotion />
+        <WalletBoundary>
+          <MotionBoundary>{children}</MotionBoundary>
+        </WalletBoundary>
       </body>
     </html>
   );
