@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="760" viewBox="0 0 600 760" role="img" aria-labelledby="title desc">
+  <title id="title">Build a mining cost scenario</title>
+  <desc id="desc">Hypothetical US dollar example, not current mining earnings. At 240 watts for 20 hours, energy use is 4.8 kilowatt-hours. At 20 cents per kilowatt-hour, electricity costs 96 cents. A separate gross input of 1 dollar 50 cents for the same 20 hours, less a 2 percent fee and electricity, leaves 51 cents before other costs.</desc>
+  <rect width="600" height="760" rx="24" fill="#101310"/>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="36" y="52" fill="#facc15" font-size="18" font-weight="700" letter-spacing="1">MINEBENCH / COST INPUTS</text>
+    <text x="36" y="102" fill="#fafafa" font-size="34" font-weight="700">Build one daily scenario</text>
+    <text x="36" y="135" fill="#c4ccc0" font-size="20">HYPOTHETICAL USD EXAMPLE</text>
+    <rect x="36" y="156" width="528" height="110" rx="16" fill="#181c18" stroke="#424b3d"/>
+    <text x="60" y="195" fill="#e4e4e7" font-size="28">240 W × 20 h ÷ 1,000</text>
+    <text x="60" y="242" fill="#facc15" font-size="36" font-weight="700">4.8 kWh</text>
+    <rect x="36" y="284" width="528" height="110" rx="16" fill="#181c18" stroke="#424b3d"/>
+    <text x="60" y="323" fill="#e4e4e7" font-size="27">4.8 kWh × $0.20 / kWh</text>
+    <text x="60" y="370" fill="#facc15" font-size="34" font-weight="700">$0.96 electricity</text>
+    <rect x="36" y="412" width="528" height="182" rx="16" fill="#222716" stroke="#c0a52e"/>
+    <text x="60" y="450" fill="#fafafa" font-size="25">Gross input</text>
+    <text x="540" y="450" fill="#fafafa" font-size="25" text-anchor="end">$1.50</text>
+    <text x="60" y="485" fill="#e4e4e7" font-size="25">Fee (2%)</text>
+    <text x="540" y="485" fill="#e4e4e7" font-size="25" text-anchor="end">−$0.03</text>
+    <text x="60" y="520" fill="#e4e4e7" font-size="25">Electricity</text>
+    <text x="540" y="520" fill="#e4e4e7" font-size="25" text-anchor="end">−$0.96</text>
+    <path d="M60 537H540" stroke="#6a7046"/>
+    <text x="60" y="575" fill="#facc15" font-size="32" font-weight="700">Remaining</text>
+    <text x="540" y="575" fill="#facc15" font-size="32" font-weight="700" text-anchor="end">$0.51</text>
+    <text x="36" y="640" fill="#e4e4e7" font-size="22">Gross input covers the same 20 hours.</text>
+    <text x="36" y="680" fill="#c4ccc0" font-size="22">Before hardware, cooling and other costs.</text>
+    <text x="36" y="725" fill="#b4beb0" font-size="20">Not current earnings or a reward quote.</text>
+  </g>
+</svg>

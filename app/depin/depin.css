@@ -12,6 +12,10 @@
 .depin-main h1 span{color:var(--depin-yellow)}
 .depin-main .depin-lead{font-size:20px;line-height:1.6;color:#e4e4e7;margin:28px 0 16px;max-width:570px}
 .depin-hero-copy{max-width:550px}
+.depin-hero-visual{display:grid;gap:20px;min-width:0}
+.depin-hardware-image{margin:0;overflow:hidden;border:1px solid var(--depin-border);border-radius:12px;background:var(--depin-panel)}
+.depin-hardware-image img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:contain}
+.depin-hardware-image figcaption{padding:14px 18px;color:var(--depin-muted);font-size:11px;line-height:1.7}
 .depin-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
 .depin-button{display:inline-flex;align-items:center;justify-content:center;gap:16px;min-height:48px;padding:12px 20px;border:1px solid #45454d;border-radius:8px;font-size:13px;font-weight:600;color:#f4f4f5;background:var(--depin-panel)}
 .depin-primary{color:#17140b;background:var(--depin-yellow);border-color:var(--depin-yellow)}
@@ -96,6 +100,10 @@
 .depin-table tbody th{font-weight:500;color:#e4e4e7}
 .depin-table td:last-child{color:var(--depin-muted)}
 .depin-table tr:last-child>*{border-bottom:0}
+.depin-guide-links{display:grid;border-top:1px solid var(--depin-border)}
+.depin-guide-link{display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:64px;padding:18px 0;border-bottom:1px solid var(--depin-border);color:#e4e4e7;font-size:14px;line-height:1.6}
+.depin-guide-link svg{flex-shrink:0;color:var(--depin-yellow)}
+.depin-guide-link:hover span{text-decoration:underline;text-underline-offset:4px}
 .depin-final{padding:70px 44px;margin:0 0 80px;border:1px solid #65531d;border-radius:14px;background:#18170f}
 .depin-final .depin-heading{margin-bottom:0}
 .depin-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="760" viewBox="0 0 600 760" role="img" aria-labelledby="title desc">
+  <title id="title">Compare hashrate per watt</title>
+  <desc id="desc">Illustrative comparison on the same algorithm and wall-power boundary. Setting A produces 6,000 hashes per second at 240 watts, or 25 hashes per second per watt. Setting B produces 5,400 at 180 watts, or 30 hashes per second per watt: 20 percent more efficient.</desc>
+  <rect width="600" height="760" rx="24" fill="#101310"/>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="36" y="52" fill="#facc15" font-size="18" font-weight="700" letter-spacing="1">MINEBENCH / MEASUREMENT GUIDE</text>
+    <text x="36" y="104" fill="#fafafa" font-size="34" font-weight="700">More work per watt</text>
+    <rect x="36" y="134" width="528" height="120" rx="16" fill="#1c211b" stroke="#44513d"/>
+    <text x="60" y="174" fill="#c4ccc0" font-size="20">EFFICIENCY FORMULA</text>
+    <text x="60" y="221" fill="#facc15" font-size="34" font-weight="700">H/s ÷ W = H/s/W</text>
+    <rect x="36" y="282" width="528" height="146" rx="16" fill="#181c18" stroke="#424b3d"/>
+    <text x="60" y="318" fill="#c4ccc0" font-size="20">SETTING A · ILLUSTRATIVE</text>
+    <text x="60" y="359" fill="#fafafa" font-size="28">6,000 H/s ÷ 240 W</text>
+    <text x="60" y="404" fill="#fafafa" font-size="34" font-weight="700">25 H/s/W</text>
+    <rect x="36" y="446" width="528" height="146" rx="16" fill="#222716" stroke="#c0a52e"/>
+    <text x="60" y="482" fill="#e0dbb6" font-size="20">SETTING B · ILLUSTRATIVE</text>
+    <text x="60" y="523" fill="#fafafa" font-size="28">5,400 H/s ÷ 180 W</text>
+    <text x="60" y="568" fill="#facc15" font-size="34" font-weight="700">30 H/s/W</text>
+    <text x="36" y="643" fill="#facc15" font-size="30" font-weight="700">B: +20% efficiency</text>
+    <text x="36" y="681" fill="#e4e4e7" font-size="22">10% less hashrate · 25% less power</text>
+    <text x="36" y="725" fill="#b4beb0" font-size="20">Same algorithm + same wall-power boundary</text>
+  </g>
+</svg>

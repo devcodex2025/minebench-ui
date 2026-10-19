@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import Header from '@/components/Header';
@@ -17,12 +18,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const guide = Object.prototype.hasOwnProperty.call(GUIDE_BY_SLUG, slug) ? GUIDE_BY_SLUG[slug] : undefined;
   if (!guide) return {};
   const url = `${BASE_URL}/guides/${guide.slug}`;
+  const imageUrl = BASE_URL + (guide.image.socialSrc ?? guide.image.src);
   return {
     title: guide.title,
     description: guide.description,
     alternates: { canonical: url },
-    openGraph: { title: guide.title, description: guide.description, url, type: 'article' },
-    twitter: { card: 'summary_large_image', title: guide.title, description: guide.description }
+    openGraph: {
+      title: guide.title, description: guide.description, url, type: 'article',
+      publishedTime: guide.publishedAt, modifiedTime: guide.updatedAt,
+      images: [{ url: imageUrl, width: guide.image.socialSrc ? 1200 : guide.image.width, height: guide.image.socialSrc ? 630 : guide.image.height, alt: guide.image.alt }],
+    },
+    twitter: { card: 'summary_large_image', title: guide.title, description: guide.description, images: [{ url: imageUrl, alt: guide.image.alt }] }
   };
 }
 
@@ -31,6 +37,7 @@ export default async function GuidePage({ params }: Props) {
   const guide = Object.prototype.hasOwnProperty.call(GUIDE_BY_SLUG, slug) ? GUIDE_BY_SLUG[slug] : undefined;
   if (!guide) notFound();
   const url = `${BASE_URL}/guides/${guide.slug}`;
+  const isSvg = guide.image.src.endsWith('.svg');
   const relatedGuides = GUIDES.filter(({ slug }) => slug !== guide.slug).slice(0, 3);
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -39,8 +46,10 @@ export default async function GuidePage({ params }: Props) {
         '@type': 'Article',
         headline: guide.title,
         description: guide.description,
-        datePublished: guide.updatedAt,
+        datePublished: guide.publishedAt,
         dateModified: guide.updatedAt,
+        image: BASE_URL + (guide.image.socialSrc ?? guide.image.src),
+        inLanguage: 'en',
         mainEntityOfPage: url,
         author: { '@type': 'Organization', name: 'MineBench Team', url: BASE_URL },
         publisher: { '@type': 'Organization', name: 'MineBench', url: BASE_URL }
@@ -61,15 +70,27 @@ export default async function GuidePage({ params }: Props) {
   };
 
   return <>
-    <Header />
+    <Header liveMetrics={false} />
     <main id="refresh-content" tabIndex={-1} className="mx-auto max-w-3xl px-4 pb-24 pt-36 sm:px-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
-      <nav aria-label="Breadcrumb" className="text-sm text-zinc-400"><Link href="/" className="hover:text-white">Home</Link> <span aria-hidden="true">/</span> <Link href="/guides" className="hover:text-white">Guides</Link> <span aria-hidden="true">/</span> <span>{guide.title}</span></nav>
+      <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-x-3 text-sm text-zinc-300"><Link prefetch={false} href="/" className="inline-flex min-h-10 items-center hover:text-white">Home</Link> <span aria-hidden="true">/</span> <Link prefetch={false} href="/guides" className="inline-flex min-h-10 items-center hover:text-white">Guides</Link> <span aria-hidden="true">/</span> <span aria-current="page">{guide.title}</span></nav>
       <article className="mt-8">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-yellow-400">Technical guide</p>
         <h1 className="mt-4 text-4xl font-semibold tracking-tight text-white sm:text-5xl">{guide.title}</h1>
         <p className="mt-5 text-xl leading-8 text-zinc-300">{guide.summary}</p>
-        <p className="mt-5 text-sm text-zinc-500">Last updated: <time dateTime={guide.updatedAt}>{guide.updatedAt}</time> · MineBench Team</p>
+        <p className="mt-5 text-sm text-zinc-300">By MineBench Team · Updated <time dateTime={guide.updatedAt}>{guide.updatedAt}</time> · Published <time dateTime={guide.publishedAt}>{guide.publishedAt}</time></p>
+        <figure className="mt-8">
+          <Image
+            src={guide.image.src}
+            alt={guide.image.alt}
+            width={guide.image.width}
+            height={guide.image.height}
+            sizes="(max-width: 639px) calc(100vw - 32px), (max-width: 767px) calc(100vw - 48px), 720px"
+            {...(isSvg ? { loading: 'lazy' as const, unoptimized: true } : { priority: true })}
+            className="h-auto w-full rounded-2xl border border-white/10"
+          />
+          <figcaption className="mt-3 text-sm leading-6 text-zinc-400">{guide.image.caption}</figcaption>
+        </figure>
         <div className="mt-12 space-y-12">
           {guide.sections.map((section) => <section key={section.heading}>
             <h2 className="text-2xl font-semibold text-white">{section.heading}</h2>
@@ -79,23 +100,23 @@ export default async function GuidePage({ params }: Props) {
         </div>
         <section className="mt-12 border-t border-white/10 pt-8" aria-labelledby="guide-faqs">
           <h2 id="guide-faqs" className="text-2xl font-semibold text-white">Frequently asked questions</h2>
-          <div className="mt-5 divide-y divide-white/10">{guide.faqs.map((faq) => <details key={faq.question} className="py-5"><summary className="cursor-pointer font-medium text-white">{faq.question}</summary><p className="mt-3 leading-7 text-zinc-300">{faq.answer}</p></details>)}</div>
+          <div className="mt-5 divide-y divide-white/10">{guide.faqs.map((faq) => <details key={faq.question} className="py-5"><summary className="min-h-10 cursor-pointer py-2 font-medium text-white">{faq.question}</summary><p className="mt-3 leading-7 text-zinc-300">{faq.answer}</p></details>)}</div>
         </section>
         <section className="mt-12 border-t border-white/10 pt-8" aria-labelledby="related-guides">
           <h2 id="related-guides" className="text-2xl font-semibold text-white">Related mining guides</h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-3">
-            {relatedGuides.map((related) => <Link key={related.slug} href={`/guides/${related.slug}`} className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-zinc-300 hover:border-yellow-400/30 hover:text-yellow-200">
+            {relatedGuides.map((related) => <Link prefetch={false} key={related.slug} href={`/guides/${related.slug}`} className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-zinc-300 hover:border-yellow-400/30 hover:text-yellow-200">
               {related.title}
             </Link>)}
           </div>
         </section>
         <section className="mt-12 rounded-2xl border border-yellow-400/20 bg-yellow-400/10 p-6">
-          <h2 className="text-xl font-semibold text-white">Run your own benchmark</h2>
-          <p className="mt-2 text-zinc-300">Download the MineBench client and compare your hardware with public results.</p>
-          <div className="mt-4 flex flex-wrap gap-5">
-            <Link href="/downloads" className="inline-flex font-medium text-yellow-300 hover:text-yellow-200">Download MineBench <span aria-hidden="true">→</span></Link>
-            <Link href="/leaderboard" className="inline-flex font-medium text-yellow-300 hover:text-yellow-200">Compare benchmark results <span aria-hidden="true">→</span></Link>
-          </div>
+          <h2 className="text-xl font-semibold text-white">Useful next steps</h2>
+          <ul className="mt-4 space-y-2">
+            {guide.relatedLinks?.map(({ href, label }) => <li key={href}>
+              {href.startsWith('/') ? <Link prefetch={false} href={href} className="inline-flex min-h-10 items-center font-medium text-yellow-300 underline underline-offset-4 hover:text-yellow-200">{label}</Link> : <a href={href} className="inline-flex min-h-10 items-center font-medium text-yellow-300 underline underline-offset-4 hover:text-yellow-200">{label}</a>}
+            </li>)}
+          </ul>
         </section>
       </article>
     </main>

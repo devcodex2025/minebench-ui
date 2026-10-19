@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 900" width="600" height="900" role="img" aria-labelledby="title desc">
+  <title id="title">Connect a Monero RandomX miner to MineBench</title>
+  <desc id="desc">Three-step diagram: configure a RandomX miner, connect to MineBench Stratum at xmr.minebench.cloud port 3333, then verify accepted work.</desc>
+  <rect width="600" height="900" rx="28" fill="#111114"/>
+  <rect x="24" y="24" width="552" height="852" rx="20" fill="none" stroke="#3f3f46" stroke-width="2"/>
+  <text x="48" y="76" fill="#facc15" font-family="Arial,sans-serif" font-size="28" font-weight="700">MONERO POOL CONNECTION</text>
+  <text x="48" y="112" fill="#d4d4d8" font-family="Arial,sans-serif" font-size="20">RandomX miner setup</text>
+  <g font-family="Arial,sans-serif">
+    <rect x="48" y="156" width="504" height="166" rx="18" fill="#18181b" stroke="#52525b" stroke-width="2"/>
+    <circle cx="92" cy="206" r="28" fill="#facc15"/><text x="92" y="216" text-anchor="middle" fill="#111114" font-size="26" font-weight="700">1</text>
+    <text x="138" y="204" fill="#fafafa" font-size="25" font-weight="700">Configure your miner</text>
+    <text x="138" y="240" fill="#d4d4d8" font-size="20">Algorithm: Monero RandomX (rx/0)</text>
+    <text x="138" y="274" fill="#d4d4d8" font-size="20">Wallet address = Worker / User</text>
+    <path d="M300 332v52" stroke="#facc15" stroke-width="5"/><path d="m284 369 16 20 16-20" fill="none" stroke="#facc15" stroke-width="5"/>
+    <rect x="48" y="402" width="504" height="190" rx="18" fill="#18181b" stroke="#facc15" stroke-width="2"/>
+    <circle cx="92" cy="452" r="28" fill="#facc15"/><text x="92" y="462" text-anchor="middle" fill="#111114" font-size="26" font-weight="700">2</text>
+    <text x="138" y="450" fill="#fafafa" font-size="25" font-weight="700">MineBench Stratum</text>
+    <text x="138" y="492" fill="#facc15" font-family="monospace" font-size="22">xmr.minebench.cloud:3333</text>
+    <text x="138" y="532" fill="#d4d4d8" font-size="20">Plain Stratum TCP · TLS not verified</text>
+    <text x="138" y="566" fill="#d4d4d8" font-size="20">Password: x (placeholder)</text>
+    <path d="M300 602v52" stroke="#facc15" stroke-width="5"/><path d="m284 639 16 20 16-20" fill="none" stroke="#facc15" stroke-width="5"/>
+    <rect x="48" y="672" width="504" height="126" rx="18" fill="#18181b" stroke="#52525b" stroke-width="2"/>
+    <circle cx="92" cy="722" r="28" fill="#facc15"/><text x="92" y="732" text-anchor="middle" fill="#111114" font-size="26" font-weight="700">3</text>
+    <text x="138" y="720" fill="#fafafa" font-size="25" font-weight="700">Verify accepted work</text>
+    <text x="138" y="756" fill="#d4d4d8" font-size="20">Check the miner log and share count</text>
+    <text x="48" y="842" fill="#a1a1aa" font-size="18">Your Monero wallet is the login. Rig ID is a device label.</text>
+  </g>
+</svg>

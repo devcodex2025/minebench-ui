@@ -30,6 +30,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
             changeFrequency: 'weekly',
             priority: 0.75,
         },
+        {
+            url: 'https://minebench.cloud/guides/monero-hardware-pool-setup',
+            changeFrequency: 'monthly',
+            priority: 0.7,
+        },
         ...guidePages,
         {
             url: 'https://minebench.cloud/premium',

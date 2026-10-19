@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 900" width="600" height="900" role="img" aria-labelledby="title desc">
+  <title id="title">MineBench direct XMR payout flow</title>
+  <desc id="desc">Four-stage flow: verified eligible work, P2Pool receipt to the MineBench pool wallet, miner balance after applicable fees, and a separate transfer to the miner wallet.</desc>
+  <rect width="600" height="900" rx="28" fill="#111114"/>
+  <rect x="24" y="24" width="552" height="852" rx="20" fill="none" stroke="#3f3f46" stroke-width="2"/>
+  <text x="48" y="76" fill="#facc15" font-family="Arial,sans-serif" font-size="28" font-weight="700">DIRECT XMR PAYOUT FLOW</text>
+  <text x="48" y="112" fill="#d4d4d8" font-family="Arial,sans-serif" font-size="20">Custodial pool receipt first</text>
+  <g font-family="Arial,sans-serif">
+    <rect x="48" y="150" width="504" height="120" rx="18" fill="#18181b" stroke="#52525b" stroke-width="2"/>
+    <circle cx="92" cy="198" r="28" fill="#facc15"/><text x="92" y="208" text-anchor="middle" fill="#111114" font-size="26" font-weight="700">1</text>
+    <text x="138" y="196" fill="#fafafa" font-size="24" font-weight="700">Verified eligible work</text>
+    <text x="138" y="232" fill="#d4d4d8" font-size="19">Accepted work is not a payout</text>
+    <path d="M300 280v42" stroke="#facc15" stroke-width="5"/><path d="m284 307 16 20 16-20" fill="none" stroke="#facc15" stroke-width="5"/>
+    <rect x="48" y="338" width="504" height="150" rx="18" fill="#18181b" stroke="#facc15" stroke-width="2"/>
+    <circle cx="92" cy="386" r="28" fill="#facc15"/><text x="92" y="396" text-anchor="middle" fill="#111114" font-size="26" font-weight="700">2</text>
+    <text x="138" y="384" fill="#fafafa" font-size="24" font-weight="700">P2Pool receipt</text>
+    <text x="138" y="420" fill="#d4d4d8" font-size="19">XMR reaches the MineBench pool wallet</text>
+    <text x="138" y="454" fill="#a1a1aa" font-size="18">PPLNS window and confirmation apply</text>
+    <path d="M300 498v42" stroke="#facc15" stroke-width="5"/><path d="m284 525 16 20 16-20" fill="none" stroke="#facc15" stroke-width="5"/>
+    <rect x="48" y="556" width="504" height="120" rx="18" fill="#18181b" stroke="#52525b" stroke-width="2"/>
+    <circle cx="92" cy="604" r="28" fill="#facc15"/><text x="92" y="614" text-anchor="middle" fill="#111114" font-size="26" font-weight="700">3</text>
+    <text x="138" y="602" fill="#fafafa" font-size="24" font-weight="700">Miner XMR balance</text>
+    <text x="138" y="638" fill="#d4d4d8" font-size="19">Eligible net amount after applicable fees</text>
+    <path d="M300 686v42" stroke="#facc15" stroke-width="5"/><path d="m284 713 16 20 16-20" fill="none" stroke="#facc15" stroke-width="5"/>
+    <rect x="48" y="744" width="504" height="92" rx="18" fill="#18181b" stroke="#52525b" stroke-width="2"/>
+    <circle cx="92" cy="790" r="28" fill="#facc15"/><text x="92" y="800" text-anchor="middle" fill="#111114" font-size="26" font-weight="700">4</text>
+    <text x="138" y="788" fill="#fafafa" font-size="24" font-weight="700">Separate wallet transfer</text>
+    <text x="138" y="818" fill="#a1a1aa" font-size="18">Minimum, timing and fees are not fixed here</text>
+  </g>
+</svg>

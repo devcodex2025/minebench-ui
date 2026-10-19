@@ -2,14 +2,16 @@
 import Link from '@/components/refresh/WorkspaceLink';
 import { useIQHost } from '@/components/iq/SiteLinks';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Menu, X, RefreshCw, ArrowUpRight, Activity, Trophy, Layers, ArrowLeftRight, Download, Gem, BookOpen, Home, CircleHelp, ArrowRight, Network, Cpu } from 'lucide-react';
-import NetworkStrip from '@/components/NetworkStrip';
+import { Menu, X, RefreshCw, ArrowUpRight, Activity, Trophy, Layers, ArrowLeftRight, Download, Gem, BookOpen, Home, CircleHelp, ArrowRight, Network, Cpu, Server } from 'lucide-react';
 import BrandBackground from '@/components/refresh/BrandBackground';
 import { WorkspaceSoundButton } from '@/components/refresh/WorkspaceLink';
 
-interface HeaderProps { onRefresh?: () => void; loading?: boolean }
+const NetworkStrip = dynamic(() => import('@/components/NetworkStrip'));
+
+interface HeaderProps { onRefresh?: () => void; loading?: boolean; liveMetrics?: boolean }
 const links = [
   { name: 'Home', href: '/', icon: Home },
   { name: 'Dashboard', href: '/dashboard', icon: Activity },
@@ -19,7 +21,7 @@ const links = [
   { name: 'Whitepaper', href: '/whitepaper', icon: BookOpen },
   { name: 'DePIN', href: '/depin', icon: Network },
 ];
-export default function Header({ onRefresh, loading }: HeaderProps = {}) {
+export default function Header({ onRefresh, loading, liveMetrics = true }: HeaderProps = {}) {
   const iqHost = useIQHost();
   const currentPath = usePathname() ?? '/';
   const pathname = iqHost ? '/minebench-iq' : currentPath;
@@ -49,7 +51,9 @@ export default function Header({ onRefresh, loading }: HeaderProps = {}) {
           <button className="refresh-menu" aria-expanded={open} aria-controls="refresh-mobile-nav" aria-label={open ? 'Close navigation' : 'Open navigation'} onClick={() => setOpen(!open)}>{open ? <X/> : <Menu/>}</button>
         </div>
       </div>
-      <NetworkStrip/>
+      {liveMetrics ? <NetworkStrip/> : <div className="relative z-40 w-full overflow-x-auto border-t border-white/5 bg-white/[0.025] py-2">
+        <div className="mx-auto flex max-w-7xl items-center gap-2 whitespace-nowrap px-4 text-[10px] font-medium text-zinc-400 sm:px-6 lg:px-8"><Server className="h-3 w-3 text-yellow-400"/><span>Pool <span className="text-zinc-300">xmr.minebench.cloud:3333</span></span></div>
+      </div>}
       {open && <nav id="refresh-mobile-nav" className="refresh-mobile-nav" aria-label="Mobile navigation">{links.map(({name,href,icon:Icon}) => <Link key={href} href={href} onClick={() => setOpen(false)} aria-current={activePath === href ? (benchmarkDetail ? 'location' : 'page') : undefined}><Icon size={17}/>{name}<ArrowUpRight size={14}/></Link>)}</nav>}
     </header>
     {workspace && <aside className="refresh-sidebar">

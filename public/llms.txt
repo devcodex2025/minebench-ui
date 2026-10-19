@@ -11,6 +11,7 @@ The client is free to download. Premium is an optional one-time upgrade for cust
 - [Pricing in plain text](https://minebench.cloud/pricing.txt): The same public offer in a text format.
 
 ## Public data and documentation
+- [Monero hardware pool setup](https://minebench.cloud/guides/monero-hardware-pool-setup): RandomX hardware and Antminer X5 compatibility checks, Stratum settings, aggregate statistics, XMR payout stages, and support. Current payout terms require confirmation.
 - [Hardware leaderboard](https://minebench.cloud/leaderboard): Highest submitted positive average hashrate per device name, from different systems and test conditions.
 - [Live dashboard](https://minebench.cloud/dashboard): Current network and benchmark activity.
 - [Whitepaper](https://minebench.cloud/whitepaper): Project model and technical background.

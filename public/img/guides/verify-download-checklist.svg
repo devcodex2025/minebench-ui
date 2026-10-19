@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="760" viewBox="0 0 600 760" role="img" aria-labelledby="title desc">
+  <title id="title">Check a download before installation</title>
+  <desc id="desc">Four checks: start at the official MineBench downloads page; match the release, operating system and architecture; compare the official checksum or signature when provided; investigate warnings and requested permissions. This is a checklist, not a certification of any file.</desc>
+  <rect width="600" height="760" rx="24" fill="#101310"/>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="36" y="52" fill="#facc15" font-size="18" font-weight="700" letter-spacing="1">MINEBENCH / RELEASE CHECKS</text>
+    <text x="36" y="102" fill="#fafafa" font-size="33" font-weight="700">Check before you install</text>
+    <text x="36" y="135" fill="#c4ccc0" font-size="22">Use the current official release.</text>
+    <rect x="36" y="160" width="528" height="112" rx="16" fill="#181c18" stroke="#424b3d"/>
+    <circle cx="73" cy="200" r="21" fill="#facc15"/>
+    <text x="73" y="208" fill="#101310" font-size="25" font-weight="700" text-anchor="middle">1</text>
+    <text x="112" y="202" fill="#fafafa" font-size="27" font-weight="700">Official source</text>
+    <text x="112" y="239" fill="#c4ccc0" font-size="20">minebench.cloud/downloads</text>
+    <rect x="36" y="290" width="528" height="112" rx="16" fill="#181c18" stroke="#424b3d"/>
+    <circle cx="73" cy="330" r="21" fill="#facc15"/>
+    <text x="73" y="338" fill="#101310" font-size="25" font-weight="700" text-anchor="middle">2</text>
+    <text x="112" y="332" fill="#fafafa" font-size="27" font-weight="700">Release + platform</text>
+    <text x="112" y="369" fill="#c4ccc0" font-size="20">Match version, OS and architecture.</text>
+    <rect x="36" y="420" width="528" height="130" rx="16" fill="#222716" stroke="#c0a52e"/>
+    <circle cx="73" cy="460" r="21" fill="#facc15"/>
+    <text x="73" y="468" fill="#101310" font-size="25" font-weight="700" text-anchor="middle">3</text>
+    <text x="112" y="462" fill="#fafafa" font-size="25" font-weight="700">Integrity, when provided</text>
+    <text x="112" y="499" fill="#e0dbb6" font-size="20">Compare the full published digest.</text>
+    <text x="112" y="530" fill="#e0dbb6" font-size="20">Verify signature identity if available.</text>
+    <rect x="36" y="568" width="528" height="112" rx="16" fill="#181c18" stroke="#424b3d"/>
+    <circle cx="73" cy="608" r="21" fill="#facc15"/>
+    <text x="73" y="616" fill="#101310" font-size="25" font-weight="700" text-anchor="middle">4</text>
+    <text x="112" y="610" fill="#fafafa" font-size="25" font-weight="700">Warnings + permissions</text>
+    <text x="112" y="647" fill="#c4ccc0" font-size="20">Investigate before proceeding.</text>
+    <text x="36" y="729" fill="#b4beb0" font-size="20">Missing proof? Ask support before granting access.</text>
+  </g>
+</svg>
