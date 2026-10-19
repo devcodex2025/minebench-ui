@@ -10,17 +10,13 @@ function loadRelease(fetch) {
   const constants = { exports: {}, process: { env: {} } };
   vm.runInNewContext(transpile('../lib/clientReleaseConstants.ts'), constants);
   const module = { exports: {}, fetch, AbortSignal, console: { error() {} },
-    require: name => name === 'react' ? { cache: fn => fn } : constants.exports };
-  vm.runInNewContext(transpile('../lib/publicClientRelease.ts'), module);
+    require: name => name === 'react' ? { cache: fn => fn } : name === './verifiedClientRelease' ? { getVerifiedGithubClientRelease: () => { throw new Error('disabled'); } } : constants.exports };
+  vm.runInNewContext(transpile('../lib/clientRelease.ts'), module);
   return module.exports.getLatestClientRelease;
 }
 
-test('unavailable live metadata is explicitly a reference build and has no invented platform assets', async () => {
-  const release = await loadRelease(async () => ({ ok: false, status: 402 }))();
-  assert.equal(release.metadataStatus, 'fallback');
-  assert.equal(release.version, 'v0.8.28');
-  assert.equal(release.assets.length, 4);
-  assert.ok(release.assets.every(a => !/\.(dmg|msi)$/.test(a.name)));
+test('a cold failure never fabricates older installer URLs', async () => {
+  await assert.rejects(loadRelease(async () => ({ ok: false, status: 402 }))());
 });
 
 test('live release selection compares numeric versions and retains only matching public assets', async () => {
@@ -40,6 +36,6 @@ test('live release selection compares numeric versions and retains only matching
 
 test('network errors and empty release lists do not masquerade as verified metadata', async () => {
   for (const fetch of [async () => { throw new Error('timeout'); }, async () => ({ ok: true, json: async () => ({ values: [] }) })]) {
-    assert.equal((await loadRelease(fetch)()).metadataStatus, 'fallback');
+    await assert.rejects(loadRelease(fetch)());
   }
 });

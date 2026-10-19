@@ -1,128 +1,115 @@
+import { getVerifiedGithubClientRelease } from './verifiedClientRelease';
 import {
-  BITBUCKET_WORKSPACE,
-  CLIENT_RELEASE_FALLBACK_VERSION,
   CLIENT_RELEASE_REPO,
+  CLIENT_RELEASES_API_URL,
   CLIENT_RELEASES_URL,
-  getClientReleaseDownloadUrls,
+  CLIENT_RELEASE_GITHUB_API_URL,
+  CLIENT_RELEASE_GITHUB_ENABLED,
+  CLIENT_RELEASE_API_TIMEOUT_MS,
 } from './clientReleaseConstants';
+import { cache } from 'react';
 
 export {
-  BITBUCKET_WORKSPACE,
-  CLIENT_RELEASE_FALLBACK_VERSION,
   CLIENT_RELEASE_REPO,
+  CLIENT_RELEASES_API_URL,
   CLIENT_RELEASES_URL,
-  getClientReleaseDownloadUrls,
+  CLIENT_RELEASE_GITHUB_API_URL,
+  CLIENT_RELEASE_GITHUB_ENABLED,
+  CLIENT_RELEASE_API_TIMEOUT_MS,
 };
 
-export type Release = {
+export type ClientRelease = {
+  metadataStatus: 'live' | 'fallback';
   url?: string;
   html_url?: string;
   name: string | null;
   tag_name: string;
   version?: string;
-  assets?: any[];
-};
-
-type BitbucketTag = {
-  name: string;
-  links?: { html?: { href?: string } };
+  assets?: Array<{ name: string; browser_download_url: string; platform?: string; architecture?: string; package?: string; sha256?: string; size?: number }>;
+  provider?: 'bitbucket' | 'github';
+  sourceSha?: string;
+  releaseId?: number;
+  catalogDigest?: string;
+  freshness?: 'live' | 'fallback';
 };
 
 type BitbucketDownload = {
-  name: string;
-  links?: { self?: { href?: string } };
+  name?: string;
 };
 
-const bitbucketHeaders = (): Record<string, string> => {
-  const accessToken = process.env.BITBUCKET_ACCESS_TOKEN;
-  const apiToken = process.env.BITBUCKET_API_TOKEN;
-  const email = process.env.BITBUCKET_ACCOUNT_EMAIL;
-  const headers: Record<string, string> = {
-    Accept: 'application/json',
-    'User-Agent': 'MineBench-UI',
-  };
-
-  if (accessToken) {
-    headers.Authorization = `Bearer ${accessToken}`;
-  } else if (apiToken && email) {
-    headers.Authorization = `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`;
-  }
-
-  return headers;
+type BitbucketDownloadsResponse = {
+  values?: BitbucketDownload[];
 };
 
-const fetchBitbucket = async (url: string): Promise<Response> => {
-  const headers = bitbucketHeaders();
-  let response = await fetch(url, { headers, cache: 'no-store' });
-
-  if ((response.status === 401 || response.status === 403) && headers.Authorization) {
-    const { Authorization: _authorization, ...publicHeaders } = headers;
-    response = await fetch(url, { headers: publicHeaders, cache: 'no-store' });
-  }
-
-  return response;
+const extractVersion = (name: string): string | null => {
+  const match = name.match(/^MineBench\.Client(?:_|-)(\d+(?:\.\d+)+)(?:_|-)/i);
+  return match?.[1] || null;
 };
 
-export async function getLatestBitbucketRelease(repoSlug: string): Promise<Release> {
-  const apiBase = `https://api.bitbucket.org/2.0/repositories/${BITBUCKET_WORKSPACE}/${repoSlug}`;
-  const [tagsResponse, downloadsResponse] = await Promise.all([
-    fetchBitbucket(`${apiBase}/refs/tags?sort=-target.date&pagelen=1`),
-    fetchBitbucket(`${apiBase}/downloads?sort=-created_on&pagelen=100`),
-  ]);
+const compareVersions = (left: string, right: string): number => {
+  const leftParts = left.split('.').map(Number);
+  const rightParts = right.split('.').map(Number);
+  const length = Math.max(leftParts.length, rightParts.length);
 
-  if (!tagsResponse.ok) {
-    throw new Error(`Bitbucket tags fetch failed for ${repoSlug}: ${tagsResponse.status}`);
+  for (let index = 0; index < length; index += 1) {
+    const difference = (leftParts[index] || 0) - (rightParts[index] || 0);
+    if (difference !== 0) return difference;
   }
 
-  const tags = await tagsResponse.json() as { values?: BitbucketTag[] };
-  const tag = tags.values?.[0];
-  if (!tag?.name) {
-    throw new Error(`No release tag found for ${repoSlug}`);
-  }
-
-  const downloads = downloadsResponse.ok
-    ? await downloadsResponse.json() as { values?: BitbucketDownload[] }
-    : { values: [] };
-  const version = tag.name.replace(/^v/i, '');
-  const allAssets = (downloads.values || []).map((download) => ({
-    name: download.name,
-    browser_download_url:
-      download.links?.self?.href || `${apiBase}/downloads/${encodeURIComponent(download.name)}`,
-  }));
-  const versionAssets = allAssets.filter((asset) => asset.name.includes(version));
-
-  return {
-    html_url: `https://bitbucket.org/${BITBUCKET_WORKSPACE}/${repoSlug}/downloads/`,
-    name: tag.name,
-    tag_name: tag.name,
-    version: tag.name,
-    assets: versionAssets.length > 0 ? versionAssets : allAssets,
-  };
-}
-
-const createFallbackClientRelease = (): Release => {
-  const tagName = CLIENT_RELEASE_FALLBACK_VERSION;
-  const urls = getClientReleaseDownloadUrls(tagName);
-
-  return {
-    html_url: CLIENT_RELEASES_URL,
-    name: tagName,
-    tag_name: tagName,
-    version: tagName,
-    assets: [
-      { name: `MineBench.Client-${tagName.replace(/^v/i, '')}-1.x86_64.rpm`, browser_download_url: urls.rpm },
-      { name: `MineBench.Client_${tagName.replace(/^v/i, '')}_amd64.AppImage`, browser_download_url: urls.appimage },
-      { name: `MineBench.Client_${tagName.replace(/^v/i, '')}_amd64.deb`, browser_download_url: urls.deb },
-      { name: `MineBench.Client_${tagName.replace(/^v/i, '')}_x64-setup.exe`, browser_download_url: urls.exe },
-    ],
-  };
+  return 0;
 };
 
-export async function getLatestClientRelease(): Promise<Release> {
+const toDownloadUrl = (download: BitbucketDownload): string | null => {
+  if (!download.name) return null;
+  return `${CLIENT_RELEASES_URL}${encodeURIComponent(download.name)}`;
+};
+
+export const getLatestClientRelease = cache(async (): Promise<ClientRelease> => {
+  if (CLIENT_RELEASE_GITHUB_ENABLED) return getVerifiedGithubClientRelease();
   try {
-    return await getLatestBitbucketRelease(CLIENT_RELEASE_REPO);
+    const response = await fetch(`${CLIENT_RELEASES_API_URL}?pagelen=100`, {
+      headers: { Accept: 'application/json', 'User-Agent': 'MineBench-UI' },
+      cache: 'no-store',
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Bitbucket downloads fetch failed: ${response.status}`);
+    }
+
+    const payload = await response.json() as BitbucketDownloadsResponse;
+    const downloads = (payload.values || []).filter((download): download is BitbucketDownload & { name: string } => (
+      typeof download.name === 'string' && extractVersion(download.name) !== null
+    ));
+    const versions = downloads
+      .map((download) => extractVersion(download.name))
+      .filter((version): version is string => version !== null)
+      .sort(compareVersions);
+    const latestVersion = versions[versions.length - 1];
+
+    if (!latestVersion) {
+      throw new Error('Bitbucket downloads contain no MineBench client builds');
+    }
+
+    const assets = downloads
+      .filter((download) => extractVersion(download.name) === latestVersion)
+      .map((download) => ({
+        name: download.name,
+        browser_download_url: toDownloadUrl(download),
+      }))
+      .filter((asset): asset is { name: string; browser_download_url: string } => asset.browser_download_url !== null);
+    const tagName = `v${latestVersion}`;
+
+    return {
+      metadataStatus: 'live',
+      html_url: CLIENT_RELEASES_URL,
+      name: tagName,
+      tag_name: tagName,
+      version: tagName,
+      assets,
+    };
   } catch (err) {
-    console.error('[clientRelease] Latest client release unavailable:', err);
-    return createFallbackClientRelease();
+    console.error('[clientRelease] Latest Bitbucket client release unavailable:', err);
+    throw new Error('No verified client release is available');
   }
-}
+});

@@ -5,7 +5,6 @@ import { getLatestClientRelease } from '@/lib/publicClientRelease';
 export const dynamic = 'force-dynamic';
 
 const DETAIL_TAIL = 'Run a RandomX CPU mining benchmark and compare your hardware to public results.';
-const FALLBACK_PLATFORMS_LABEL = 'Windows and Linux';
 
 const PLATFORM_MATCHERS: Array<{ label: string; matches: (name: string) => boolean }> = [
   { label: 'Windows', matches: (name) => /\.(exe|msi)$/i.test(name) },
@@ -32,10 +31,10 @@ const buildDescription = (version: string, platformLabel: string): string => {
   return `Download the free MineBench ${versionLabel}desktop client for ${platformLabel}. ${DETAIL_TAIL}`;
 };
 
-const FALLBACK_DESCRIPTION = `Download the MineBench desktop client for ${FALLBACK_PLATFORMS_LABEL}. ${DETAIL_TAIL}`;
+const FALLBACK_DESCRIPTION = `Check MineBench desktop client download availability. ${DETAIL_TAIL}`;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const release = await getLatestClientRelease();
+  const release = await getLatestClientRelease().catch(() => null);
   const isFallback = release?.metadataStatus === 'fallback';
   const version = !isFallback ? (release?.version || release?.tag_name || '') : '';
   const platformLabel = resolvePlatformLabel(release?.assets);
@@ -67,6 +66,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function DownloadsPage() {
-  const clientRelease = await getLatestClientRelease();
+  const clientRelease = await getLatestClientRelease().catch(() => null);
   return <DownloadsPageClient initialClientRelease={clientRelease} />;
 }

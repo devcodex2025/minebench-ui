@@ -152,7 +152,7 @@ async function getLandingStats(): Promise<LandingStats> {
 export default async function LandingPage() {
   const [initialStats, clientRelease] = await Promise.all([
     getLandingStats(),
-    getLatestClientRelease(),
+    getLatestClientRelease().catch(() => null),
   ]);
 
   return (
@@ -165,8 +165,8 @@ export default async function LandingPage() {
       />
       <LandingPageClient
         initialStats={initialStats}
-        clientVersion={clientRelease.metadataStatus === 'fallback' ? 'Client downloads' : clientRelease.version || clientRelease.tag_name}
-        hero={<BenchmarkHero clientVersion={clientRelease.metadataStatus === 'fallback' ? 'Client downloads' : clientRelease.version || clientRelease.tag_name} />}
+        clientVersion={!clientRelease || clientRelease.metadataStatus === 'fallback' ? 'Client downloads' : clientRelease.version || clientRelease.tag_name}
+        hero={<BenchmarkHero clientVersion={!clientRelease || clientRelease.metadataStatus === 'fallback' ? 'Client downloads' : clientRelease.version || clientRelease.tag_name} />}
         footer={<Footer />}
         gettingStarted={<GettingStarted />}
         benchmarkFaq={<BenchmarkFAQ />}

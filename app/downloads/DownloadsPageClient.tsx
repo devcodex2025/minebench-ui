@@ -11,7 +11,7 @@ import MacOSIcon from "@/public/img/macos-logo.svg";
 import LinuxIcon from "@/public/img/linux-logo.svg";
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { ChooseDownloadButton, DownloadBuildLink } from './DownloadActions';
+import { ChooseDownloadButton, DownloadBuildLink, DownloadReleaseNotesLink, DownloadReleaseProvider } from './DownloadActions';
 import { Badge } from '@/components/base/badges/badge';
 import type { ShaderSlide } from '@/components/downloads/ShaderScreenshotSlider';
 import DeferredVideo from '@/components/marketing/DeferredVideo';
@@ -22,8 +22,12 @@ type Release = {
     url?: string | null;
     html_url?: string | null;
     name: string | null;
-    assets?: any[];
+    assets?: Array<{ name: string; browser_download_url: string; platform?: string; architecture?: string; package?: string; size?: number; sha256?: string }>;
     metadataStatus?: 'live' | 'fallback';
+    provider?: 'github' | 'bitbucket';
+    sourceSha?: string;
+    releaseId?: number;
+    catalogDigest?: string;
 };
 
 type BuildVariant = {
@@ -31,41 +35,47 @@ type BuildVariant = {
     label: string;
     description: string;
     url: string | null;
+    size?: number;
+    sha256?: string;
 };
 
 const availableOnly = (variants: BuildVariant[]) => variants.filter((variant) => Boolean(variant.url));
 
 
-const createBuildVariants = (release: Release | null): Record<string, BuildVariant[]> => {
+export const createBuildVariants = (release: Release | null): Record<string, BuildVariant[]> => {
     const assets = release?.assets || [];
-    const findAssetUrl = (predicate: (name: string) => boolean) => {
-        const item = assets.find((a: any) => typeof a?.name === 'string' && predicate(a.name));
+    const findAssetUrl = (predicate: (asset: NonNullable<Release['assets']>[number]) => boolean) => {
+        const item = assets.find((a) => typeof a?.name === 'string' && predicate(a));
         return item?.browser_download_url || null;
     };
 
-    const universalMacDmg = findAssetUrl((n) => n.endsWith('.dmg') && n.includes('universal'));
-
-    return {
+    const variants = {
         windows: availableOnly([
             {
                 arch: 'x64',
                 label: '64-bit Intel/AMD',
                 description: 'For standard 64-bit Windows systems',
-                url: findAssetUrl((n) => n.endsWith('.exe') && (n.includes('x64-') || n.includes('x64.'))),
+                url: findAssetUrl((a) => a.platform ? a.platform === 'windows' && a.architecture === 'x86_64' && a.package === 'nsis' : a.name.endsWith('.exe') && (a.name.includes('x64-') || a.name.includes('x64.'))),
             },
             {
                 arch: 'msi',
                 label: 'MSI Installer',
                 description: 'For managed Windows installs and enterprise deployment',
-                url: findAssetUrl((n) => n.endsWith('.msi')),
+                url: findAssetUrl((a) => a.platform ? a.platform === 'windows' && a.architecture === 'x86_64' && a.package === 'msi' : a.name.endsWith('.msi')),
             },
         ]),
         macos: availableOnly([
             {
-                arch: 'universal',
-                label: 'Universal',
-                description: 'For Intel and Apple Silicon Mac computers',
-                url: universalMacDmg || findAssetUrl((n) => n.endsWith('.dmg')),
+                arch: 'x86_64',
+                label: 'Intel',
+                description: 'For Intel Mac computers',
+                url: findAssetUrl((a) => a.platform ? a.platform === 'macos' && a.architecture === 'x86_64' && a.package === 'dmg' : a.name.endsWith('.dmg') && (a.name.toLowerCase().includes('x86_64') || a.name.toLowerCase().includes('intel'))),
+            },
+            {
+                arch: 'aarch64',
+                label: 'Apple Silicon',
+                description: 'For Apple Silicon Mac computers',
+                url: findAssetUrl((a) => a.platform ? a.platform === 'macos' && a.architecture === 'aarch64' && a.package === 'dmg' : a.name.endsWith('.dmg') && (a.name.toLowerCase().includes('aarch64') || a.name.toLowerCase().includes('arm64'))),
             },
         ]),
         linux: availableOnly([
@@ -73,22 +83,26 @@ const createBuildVariants = (release: Release | null): Record<string, BuildVaria
                 arch: 'appimage',
                 label: 'AppImage',
                 description: 'Portable Linux package for x86-64 systems',
-                url: findAssetUrl((n) => n.endsWith('.AppImage')),
+                url: findAssetUrl((a) => a.platform ? a.platform === 'linux' && a.architecture === 'x86_64' && a.package === 'appimage' : a.name.endsWith('.AppImage')),
             },
             {
                 arch: 'deb',
                 label: 'Debian/Ubuntu',
                 description: 'DEB package for Debian-based distributions',
-                url: findAssetUrl((n) => n.endsWith('.deb')),
+                url: findAssetUrl((a) => a.platform ? a.platform === 'linux' && a.architecture === 'x86_64' && a.package === 'deb' : a.name.endsWith('.deb')),
             },
             {
                 arch: 'rpm',
                 label: 'Fedora/RHEL',
                 description: 'RPM package for Fedora, RHEL, and compatible distributions',
-                url: findAssetUrl((n) => n.endsWith('.rpm')),
+                url: findAssetUrl((a) => a.platform ? a.platform === 'linux' && a.architecture === 'x86_64' && a.package === 'rpm' : a.name.endsWith('.rpm')),
             },
         ]),
     };
+    return Object.fromEntries(Object.entries(variants).map(([platform, entries]) => [platform, entries.map(variant => {
+        const asset = assets.find(a => a.browser_download_url === variant.url);
+        return { ...variant, size: asset?.size, sha256: asset?.sha256 };
+    })]));
 };
 
 const APP_SCREENSHOTS: ShaderSlide[] = [
@@ -148,21 +162,21 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
             icon: WindowsIcon,
             description: 'Windows x64 build',
             cpu: '64-bit Intel/AMD processors',
-            gpu: 'GPU support depends on the workload and installed drivers',
+            gpu: 'GPU mining is not available in this client',
         },
         macos: {
             name: 'macOS',
             icon: MacOSIcon,
             description: 'macOS build when listed below',
             cpu: 'Supported architecture depends on the listed release asset',
-            gpu: 'GPU support depends on the workload and installed drivers',
+            gpu: 'GPU mining is not available in this client',
         },
         linux: {
             name: 'Linux',
             icon: LinuxIcon,
             description: 'Ubuntu/Debian/Fedora (x64)',
-            cpu: 'Any Linux-compatible processor',
-            gpu: 'GPU support depends on the workload and installed drivers',
+            cpu: '64-bit x86-64 Intel/AMD processors',
+            gpu: 'GPU mining is not available in this client',
         },
     };
 
@@ -215,8 +229,10 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                                     <p className="font-medium text-white text-sm">{variant.label}</p>
                                     <p className="text-xs text-zinc-400 mt-1">{variant.description}</p>
                                 </div>
-                                <Badge>{isFallbackRelease ? 'Reference build' : 'Release'}</Badge>
+                                <Badge>{isFallbackRelease ? 'Verified cached release' : 'Release'}</Badge>
                             </div>
+                            {variant.size && <p className="mt-2 text-xs text-zinc-400">{(variant.size / 1024 / 1024).toFixed(1)} MiB</p>}
+                            {variant.sha256 && <p className="mt-2 break-all text-xs text-zinc-400">SHA-256: <code>{variant.sha256}</code></p>}
                             <DownloadBuildLink href={variant.url} platform={platform} arch={variant.arch} />
                         </div>
                     ))}
@@ -251,12 +267,12 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                                     </h1>
                                     {clientRelease && (
                                         <p className="text-sm text-yellow-400 font-medium mt-3">
-                                            {isFallbackRelease ? 'Reference build' : clientRelease.version}
+                                            {clientRelease.version || clientRelease.tag_name}{isFallbackRelease && ' · Verified cached release'}
                                         </p>
                                     )}
                                     {isFallbackRelease && (
                                         <p className="mt-3 max-w-xl text-left text-xs leading-5 text-amber-200">
-                                            Live release metadata is temporarily unavailable. The listed files use the configured reference version and may not be the newest release.
+                                            Live release verification is temporarily unavailable. These files come from a previously verified catalog within its allowed cache window.
                                         </p>
                                     )}
                                     {loading && (
@@ -344,6 +360,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                     </div>
 
                     {/* Platform Sections */}
+                    <DownloadReleaseProvider initialClientRelease={initialClientRelease}>
                     <div
                         id="download-section"
                         className="scroll-mt-28 grid grid-cols-1 gap-8 mb-16 md:grid-cols-2 xl:grid-cols-3"
@@ -361,11 +378,12 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                             <div className="col-span-full rounded-2xl border border-zinc-800 bg-zinc-950 p-10 text-center">
                                 <p className="text-sm font-black uppercase tracking-[0.3em] text-zinc-500">No builds available</p>
                                 <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-zinc-400">
-                                    Download packages are being prepared. Check back shortly, or join our Discord for release updates.
+                                    Downloads are temporarily unavailable. Refresh this page later, or join our Discord for release updates.
                                 </p>
                             </div>
                         )}
                     </div>
+
 
                     {/* Reward System Section */}
                     <div className="rounded-2xl border border-emerald-400/50 bg-emerald-400/10 p-8 mb-12 text-center relative overflow-hidden group">
@@ -427,6 +445,14 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                         </Link>
                     </div>
 
+                    {clientRelease?.provider === 'github' && <p className="mb-8 text-sm text-zinc-300">
+                        After installation, MineBench offers a separate verified CPU component setup with its source, publisher, size, and license. Internet access and your consent are required. You can skip setup; mining and benchmarks remain unavailable until setup is complete. Installation never starts mining. Optional sensors may be unavailable.
+                        {' '}{clientRelease.html_url && <DownloadReleaseNotesLink href={clientRelease.html_url} />}
+                    </p>}
+                    {clientRelease?.provider === 'github' && <p className="mb-8 text-sm text-zinc-300">
+                        Release metadata and updater packages require cryptographic signatures. These are separate from operating-system publisher signing and macOS notarization. Paid OS signing is deferred for engineering candidates; those candidates do not qualify as stable downloads. Keep operating-system protections enabled.
+                    </p>}
+                    </DownloadReleaseProvider>
                     {/* Security Notice */}
                     <div
                         className="rounded-2xl border border-yellow-500/60 bg-yellow-500/5 p-6 mb-12"
@@ -435,24 +461,24 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                             Security / Antivirus Notice
                         </h3>
                         <p className="text-zinc-300 mb-4 text-sm">
-                            Mining software can be flagged as a false-positive by antivirus. If you trust the download, add the app to exclusions to prevent deletion during install or first launch.
+                            Security software may flag mining components. Verify the publisher and checksum, keep your protections enabled, and request a review from the security vendor if a component is quarantined.
                         </p>
                         <div className="space-y-3 text-zinc-200 text-sm">
                             <div className="flex gap-3">
                                 <span className="text-yellow-400 font-bold font-mono-system">1.</span>
-                                <p>Verify you downloaded from the official Bitbucket download on this page.</p>
+                                <p>Use the verified download links on this page. Follow the release notes to verify the package checksum and applicable signatures before installing.</p>
                             </div>
                             <div className="flex gap-3">
                                 <span className="text-yellow-400 font-bold font-mono-system">2.</span>
-                                <p>Windows Defender: Settings → Privacy & security → Windows Security → Virus & threat protection → Manage settings → Exclusions → Add or remove exclusions → Add folder (point to the installed MineBench directory).</p>
+                                <p>If a download is blocked or quarantined, stop setup and review the detection in your security software.</p>
                             </div>
                             <div className="flex gap-3">
                                 <span className="text-yellow-400 font-bold font-mono-system">3.</span>
-                                <p>Other AV: add the installation folder or executable to the allowlist/exclusions list before first launch.</p>
+                                <p>Report a suspected false positive to the security vendor with the component version and checksum.</p>
                             </div>
                             <div className="flex gap-3">
                                 <span className="text-yellow-400 font-bold font-mono-system">4.</span>
-                                <p>Keep antivirus enabled; only exclude the miner folder to avoid accidental removal.</p>
+                                <p>Keep antivirus, SmartScreen, and Gatekeeper enabled. Do not add blanket folder exclusions.</p>
                             </div>
                         </div>
                     </div>
@@ -472,7 +498,7 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                             </div>
                             <div className="flex gap-4">
                                 <span className="text-yellow-400 font-bold font-mono-system flex-shrink-0">02.</span>
-                                <p><strong>Windows:</strong> Run the installer and follow the wizard. <strong>macOS/Linux:</strong> Extract and run the application.</p>
+                                <p><strong>Windows:</strong> Run the installer and follow the wizard. <strong>macOS:</strong> Open the DMG and copy MineBench to Applications. <strong>Linux:</strong> Install the DEB or RPM with your distribution&apos;s package manager, or make the AppImage executable and run it.</p>
                             </div>
                             <div className="flex gap-4">
                                 <span className="text-yellow-400 font-bold font-mono-system flex-shrink-0">03.</span>
@@ -513,7 +539,6 @@ export default function DownloadsPageClient({ initialClientRelease }: { initialC
                                     <li>4 GB free disk space</li>
                                     <li>8+ core processor</li>
                                     <li>Gigabit intenet</li>
-                                    <li>Dedicated GPU (NVIDIA/AMD)</li>
                                 </ul>
                             </div>
                         </div>
