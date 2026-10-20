@@ -17,7 +17,7 @@ import {
 import Image from 'next/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from '../../../lib/supabaseClient';
 import { Check, Shield, Zap, Wallet, ArrowRight, Flame, Cpu, Settings } from 'lucide-react';
 
 const USDC_MINT = new PublicKey('EPjFW36vc7J741696u75Rqd6j5uv69eeMT1p8rkAKz2w');

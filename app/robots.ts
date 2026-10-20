@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
         rules: {
             userAgent: '*',
             allow: '/',
-            disallow: ['/api/', '/private/'],
+            disallow: ['/api/', '/private/', '/account'],
         },
         sitemap: 'https://minebench.cloud/sitemap.xml',
     };

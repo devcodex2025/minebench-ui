@@ -1,14 +1,14 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
-import './shared.css';
-import { MotionBoundary } from './MotionBoundary';
-import { WalletBoundary } from './WalletBoundary';
+import '../shared.css';
+import { MotionBoundary } from '../MotionBoundary';
+import { WalletBoundary } from '../WalletBoundary';
 import MarketingAnalytics from '@/components/marketing/MarketingAnalytics';
 import GoogleAnalyticsConsent from '@/components/analytics/GoogleAnalyticsConsent';
 import { WorkspaceMotion } from '@/components/refresh/WorkspaceLink';
 
 const manrope = localFont({
-  src: '../public/fonts/Manrope.woff2',
+  src: '../../public/fonts/Manrope.woff2',
   weight: '200 800',
   style: 'normal',
   display: 'swap',

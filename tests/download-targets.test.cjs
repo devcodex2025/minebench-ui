@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const vm = require('node:vm');
 const { readFileSync } = require('node:fs');
 const ts = require('typescript');
-const source = ts.transpileModule(readFileSync(require.resolve('../app/downloads/DownloadsPageClient.tsx'),'utf8'), { compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX} }).outputText;
+const source = ts.transpileModule(readFileSync(require.resolve('../app/(public)/downloads/DownloadsPageClient.tsx'),'utf8'), { compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX} }).outputText;
 const context = { exports:{}, require:()=>({}), console };
 vm.runInNewContext(source,context);
 const build = context.exports.createBuildVariants;

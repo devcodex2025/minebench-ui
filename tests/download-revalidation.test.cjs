@@ -4,7 +4,7 @@ const { readFileSync } = require('node:fs');
 const vm = require('node:vm');
 const ts = require('typescript');
 
-const source = ts.transpileModule(readFileSync(require.resolve('../app/downloads/DownloadActions.tsx'), 'utf8'), {
+const source = ts.transpileModule(readFileSync(require.resolve('../app/(public)/downloads/DownloadActions.tsx'), 'utf8'), {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
 }).outputText;
 const href = 'https://github.com/approved/client/releases/download/v1.2.3/windows.exe';

@@ -63,7 +63,7 @@ export default function LandingPageClient({
     gettingStarted: ReactNode;
     benchmarkFaq: ReactNode;
 }) {
-    const tokenContract = '67ipDsgK6D7bqTW89H8T1KTxUvVuaFy92GX7Q2XFVdev';
+    const bmtTokenMint = '67ipDsgK6D7bqTW89H8T1KTxUvVuaFy92GX7Q2XFVdev';
     const stats = initialStats;
     const [discordStats, setDiscordStats] = useState({
         members: null as number | null,
@@ -267,7 +267,7 @@ export default function LandingPageClient({
                                         <span className="mb-2 border-l-2 border-yellow-400 px-2 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
                                             Token Contract
                                         </span>
-                                        <span className="break-all rounded bg-zinc-900 px-3 py-1 font-mono text-sm text-white">{tokenContract}</span>
+                                        <span className="break-all rounded bg-zinc-900 px-3 py-1 font-mono text-sm text-white">{bmtTokenMint}</span>
                                     </div>
                                 </div>
                             </div>
@@ -329,7 +329,7 @@ export default function LandingPageClient({
                                 <p className="mb-10 text-sm font-medium leading-relaxed text-zinc-400">
                                     BMT is the Solana token used for MineBench pool rewards. Review the token listing and contract details.
                                 </p>
-                                <Link href={`https://pump.fun/coin/${tokenContract}`} target="_blank" className="mt-auto inline-flex items-center justify-center rounded-full border border-yellow-400/40 bg-yellow-400/10 px-5 py-3 text-xs font-black uppercase tracking-[0.28em] text-yellow-400 transition-all duration-300 hover:-translate-y-0.5 hover:border-yellow-400 hover:bg-yellow-400 hover:text-black hover:shadow-[0_0_22px_rgba(250,204,21,0.28)]">
+                                <Link href={`https://pump.fun/coin/${bmtTokenMint}`} target="_blank" className="mt-auto inline-flex items-center justify-center rounded-full border border-yellow-400/40 bg-yellow-400/10 px-5 py-3 text-xs font-black uppercase tracking-[0.28em] text-yellow-400 transition-all duration-300 hover:-translate-y-0.5 hover:border-yellow-400 hover:bg-yellow-400 hover:text-black hover:shadow-[0_0_22px_rgba(250,204,21,0.28)]">
                                     View On Pumpfun &rarr;
                                 </Link>
                             </div>
